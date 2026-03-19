@@ -59,28 +59,36 @@ In this stage, you need to prepare a prompt template. The prompt example below s
 
 ```
 PROMPT_TEMPLATE = """
-You are an assistant answering questions strictly based on retrieved document context. Examine how the paper covers the question and rank it with a coding scheme from 0 to 2 with 0 showing no presence, 1 showing superficial presence and 2 suggesting detailed coverage of the topic in the paper.
+You are a systematic review assistant.
 
-You MUST:
-1. Answer concisely. 
-2. Give the paper a score from 0 to 2 regarding how well it answers the question. 0 means the paper does not talk about it, 1 means superficial presence and 2 means detailed coverage of the topic in the paper.
-3. Cite exact quotes from context.
-4. Explain your reasoning in 2–4 sentences.
-5. If information is missing, respond: "Not clearly stated in the document."
+Your task is to determine whether the provided question is explicitly addressed in the given context.
+
+STRICT INSTRUCTIONS:
+
+1. Use ONLY the provided context.
+2. The element must be explicitly stated in the text.
+3. If the element is explicitly present, set "answer" = 1.
+4. If the element is NOT explicitly present, set "answer" = 0.
+5. If "answer" = 1:
+   - "sources" MUST contain the exact SOURCE, CHUNK, and PAGE identifiers from the context header.
+   - "reasoning" MUST briefly explain why the criterion is satisfied, based strictly on the retrieved text.
+6. If "answer" = 0:
+   - "sources" MUST be an empty string "".
+   - "reasoning" MUST be an empty string "".
+7. Output ONLY valid JSON. No additional text.
 
 --- CONTEXT ---
 {context}
 ---
 
-Respond ONLY in valid JSON:
+Question: {question}
+
+Respond ONLY in this JSON format:
 {{
-  "answer": "...",
-  "score": "...",
-  "sources": "...",
+  "answer": 1 or 0,
+  "sources": "SOURCE=..., CHUNK=..., PAGE=...",
   "reasoning": "..."
 }}
-
-Question: {question}
 """
 
 ```
@@ -89,17 +97,11 @@ Question: {question}
 Finally, the code chains together the retriever, prompt template and the LLM. Once this is defined, it can be invoked with your query. In this case, multiple questions are asked about each paper in the pool, this is not a fixed amount. 
 
 ```
-questions = [
-    "What datasets, data formats and how much data are used in the paper?",
-    "Are the data public or private?",
-    "How is the raw data quality checked or analysed?",
-    "Does the paper use data cleaning techniques?",
-    "Does the paper use other data pre-processing techniques, like data transformations, aggregation, feature engineering or data integration?",
-    "Does the paper provide sufficient information to implement its methodology?",
-    "How are the developed machine learning or mathematical methods evaluated?",
-    "What are the recognised advantages and disadvantages of the developed models?",
-    "Does the paper describe which business KPIs the model influences?",
-    "Does the paper describe what actions should or can be taken from the retrieved model insights?"
+criteria = [
+    "Does the paper demonstrate an application related to any of the port call steps (vessel's pre-arrival, arrival, port visit, departure, or post-departure)?", #either this or the next one 
+    "Does the paper mention any port call–related processes, like vessel manevuering or trajectory analysis, route prediction, ETA prediction, movement planning within port area, port traffic management, vessel traffic coordination, arrival/departure scheduling and handling, berth allocation/operations, anchorage management?", 
+    "Does the paper focus on seaside, nautical, or vessel traffic-related aspects of a port call?", 
+    "Is the primary focus of the paper on operations conducted within or around port boundaries and infrastructure?",
+    "Does the paper demonstrate an application of machine learning or artificial intelligence (e.g., supervised learning, unsupervised learning, deep learning, reinforcement learning)?"
 ]
-
 ```
