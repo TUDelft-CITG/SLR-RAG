@@ -10,14 +10,21 @@ from langchain_core.output_parsers import StrOutputParser
 import pybliometrics
 from tqdm import tqdm
 from langchain_core.runnables.base import RunnableSequence
+from pyalex import Works
+
 pybliometrics.init()
 # --- User-defined variables ---
+
 SCOPUS_QUERY = """
-TITLE-ABS-KEY( 
 ("risk assessment" OR "risk analysis") AND
-("Offshore windfarm" OR "Offshore windmill" OR "Offshore wind turbine" OR "Offshore wind park" OR "OWF") AND
+("Offshore windfarm" OR "Offshore windmill" OR "Offshore wind turbine" OR "Offshore wind park" OR "OWF" OR "offshore platforms") AND
 ("maritime" OR  "navigational" OR "nautical")
-)
+"""
+
+OPENALEX_QUERY =  """
+("risk assessment") AND ('Static') AND ('UK') AND
+("Offshore windfarm") AND
+("navigational")
 """
 REFERENCE_DOIS = [
     "10.1007/s13437-018-0149-0",
@@ -44,16 +51,56 @@ OLLAMA_MODEL = "llama3.1"
 
 PROMPT_MODEL = "Title: {title}\nAbstract: {abstract}\nQuestion: {question}\nAnswer with 'Yes' or 'No'."
 
+THRESHOLD_BIG_COUNT_PAPER = 50
 # --- Scopus functions ---
 def query_scopus(query: str) -> ScopusSearch:
     """Query Scopus and return results."""
-    return ScopusSearch(query=query)
-
-def get_paper_stats(results: ScopusSearch, reference_dois: List[str]) -> Dict:
+    nb_paper = ScopusSearch(query=query,download=False).get_results_size()
+    if nb_paper > THRESHOLD_BIG_COUNT_PAPER:
+        user_input = input(f"{nb_paper} found in Scopus. Continue? (y/n)").lower()
+        if user_input == 'y':
+            return ScopusSearch(query=query,verbose=True)
+        else:
+            return None
+def get_paper_stats_scopus(results: ScopusSearch, reference_dois: List[str]) -> Dict:
     """Calculate basic stats: total papers and references found."""
     list_doi_results = [x.doi for x in results.results]
-    total_papers = results.get_results_size()
+    
     ref_count = len([doi for doi in reference_dois if doi in list_doi_results])
+    total_papers = results.get_results_size()
+    return {"total_papers": total_papers, "reference_count": ref_count}
+
+# --- Open Alex functions ---
+
+def query_openalex(query: str) -> Works:
+    """
+    Search OpenAlex API for papers matching the keywords.
+    Args:
+        keywords: Search query (e.g., "climate change mitigation").
+        max_results: Maximum number of results to return.
+    Returns:
+        A openAlex Work
+    """
+    works = Works().search(query)
+    nb_paper = works.count()
+    if nb_paper > THRESHOLD_BIG_COUNT_PAPER:
+        user_input = input(f"{nb_paper} found in OpenAlex. Continue? (y/n)").lower()
+        if user_input != 'y':
+            return None
+    else :
+        print(f"{nb_paper} found in OpenAlex.")
+    list_ret = []
+    pager = works.paginate(per_page=50)
+    for page in pager:
+        list_ret += page
+    return list_ret            
+
+
+def get_paper_stats_openalex(results: List[Dict], reference_dois: List[str]) -> Dict:
+    """Calculate basic stats: total papers and references found."""
+    list_doi_results = [x["doi"].removeprefix("https://doi.org/") for x in results if x.get("doi") is not None]
+    ref_count = len([doi for doi in reference_dois if doi in list_doi_results])
+    total_papers = len(results)
     return {"total_papers": total_papers, "reference_count": ref_count}
 
 # --- Ollama/LangChain agent ---
@@ -87,25 +134,45 @@ def main():
 
     # Step 1: Query Scopus
     
-    print("Getting query")
-    results = query_scopus(SCOPUS_QUERY)
-    print("Getting paper stats")
-    stats = get_paper_stats(results, REFERENCE_DOIS)
-    print(f"Retrieved {stats['total_papers']} papers. {stats['reference_count']} reference papers found over {len(REFERENCE_DOIS)}.")
+    # print("---- Getting query on Scopus ---")
+    # results_scopus = query_scopus(SCOPUS_QUERY)
+    # if results_scopus is None:
+    #     return
+    # print("Getting paper stats")
+    # stats_scopus = get_paper_stats_scopus(results_scopus, REFERENCE_DOIS)
+    # print(f"Retrieved {stats_scopus['total_papers']} papers on Scopus. {stats_scopus['reference_count']} reference papers found over {len(REFERENCE_DOIS)}.")
+    # # Step 3: User interaction
+    # while True:
+    #     action = prompt_user_for_action()
+    #     if action == 'e': # exit
+    #         return
+    #     elif action == 'p': # print names
+    #         for idx, paper in enumerate(results_openalex.results, 1):
+    #             print(f"{idx}. {paper.title}")
+    #         continue
+    #     elif action == 'c': # continue
+    #         break
 
-    # Step 2: User interaction
+    # Step 2: Query OpenAlex
+    print("---- Getting query on Scopus ---")
+    results_openalex = query_openalex(OPENALEX_QUERY)
+    print("getting papers stats")
+    stats_openalex = get_paper_stats_openalex(results_openalex, REFERENCE_DOIS)
+    print(f"Retrieved {stats_openalex['total_papers']} papers on Scopus. {stats_openalex['reference_count']} reference papers found over {len(REFERENCE_DOIS)}.")
+
+    # Step 3: User interaction
     while True:
         action = prompt_user_for_action()
         if action == 'e': # exit
             return
         elif action == 'p': # print names
-            for idx, paper in enumerate(results.results, 1):
-                print(f"{idx}. {paper.title}")
+            for idx, paper in enumerate(results_openalex, 1):
+                print(f"{idx}. {paper.get('title')}")
             continue
         elif action == 'c': # continue
             break
 
-    # Step 3: Initialize agent and process papers
+    # Step 4: Initialize agent and process papers
     print("Setting up ollama agent")
     agent = setup_ollama_agent()
     os.makedirs(OUTPUT_CSV_PATH.parent, exist_ok=True)
@@ -115,7 +182,7 @@ def main():
         print("writing header")
         writer.writeheader()
         print("Awnsering the questions")
-        for paper in tqdm(results.results):
+        for paper in tqdm(results_openalex.results):
             doi = paper.doi
             title = paper.title
             date = paper.coverDate
