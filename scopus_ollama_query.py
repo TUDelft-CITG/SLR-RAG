@@ -16,7 +16,6 @@ SCOPUS_QUERY = """
 TITLE-ABS-KEY( 
 ("risk assessment" OR "risk analysis") AND
 ("Offshore windfarm" OR "Offshore windmill" OR "Offshore wind turbine" OR "Offshore wind park" OR "OWF") AND
-("Strategic" OR "Static" OR "Long-term" OR "Marine spatial planning" OR "Large scale") AND
 ("maritime" OR  "navigational" OR "nautical")
 )
 """
@@ -72,6 +71,17 @@ def analyze_paper(agent, title: str, abstract: str, questions: List[str]) -> Dic
         answers[q] = response.strip()
     return answers
 
+def prompt_user_for_action() -> str:
+    """
+    Prompt the user for action: continue, print papers, or exit.
+    Returns 'c' (continue), 'p' (print), or 'e' (exit).
+    """
+    while True:
+        user_input = input("Choose an option:\n  'c' to continue with the agents\n  'p' to print papers' names\n  'e' to exit\n> ").lower()
+        if user_input in ['c', 'p', 'e']:
+            return user_input
+        print("Invalid option. Please try again.")
+
 # --- Main workflow ---
 def main():
 
@@ -83,9 +93,17 @@ def main():
     stats = get_paper_stats(results, REFERENCE_DOIS)
     print(f"Retrieved {stats['total_papers']} papers. {stats['reference_count']} reference papers found over {len(REFERENCE_DOIS)}.")
 
-    # Step 2: Ask user to continue
-    if input("Continue with analysis? (y/n): ").lower() != "y":
-        return
+    # Step 2: User interaction
+    while True:
+        action = prompt_user_for_action()
+        if action == 'e': # exit
+            return
+        elif action == 'p': # print names
+            for idx, paper in enumerate(results.results, 1):
+                print(f"{idx}. {paper.title}")
+            continue
+        elif action == 'c': # continue
+            break
 
     # Step 3: Initialize agent and process papers
     print("Setting up ollama agent")
