@@ -1,3 +1,4 @@
+from pathlib import Path
 import shutil
 import os
 import uuid
@@ -27,7 +28,6 @@ def format_docs_with_metadata(docs):
         out.append(f"{header}\n{d.page_content}")
 
     return "\n\n---\n\n".join(out)
-
 def get_retriever_for_doc(doc_name):
     # vectorstore.as_retriever() is a LangChain method to convert a vector db into a generic Retriever obejct,allowing for semantic searches
     return vectorstore.as_retriever(
@@ -87,7 +87,8 @@ text_splitter = RecursiveCharacterTextSplitter(
     separators=["\n\n", "\n", ".", " ", ""]
 )
 
-pdf_dir = "/Users/lvolu/Documents/1-DataProjects/1-RAG_LLM_Article1/data/1-TEXT-SCREENING/14Batch"
+main_path = Path(".")
+pdf_dir = main_path / "data" / "exampleFiles"
 
 all_chunks = []
 chunks_by_doc = defaultdict(list)
@@ -203,7 +204,8 @@ for doc_name in chunks_by_doc.keys():
 # create a final table and csv file 
 df = pd.DataFrame(rows).set_index("document")
 print(df)
-df.to_csv("/Users/lvolu/Documents/1-DataProjects/1-RAG_LLM_Article1/results/FullTextScreeningFeb2026/1_FullTextCriteria_Results14.csv")
+
+df.to_csv(main_path / "1_FullTextCriteria_Results14.csv")
 
 print("\nSaved to results directory as 1_FullTextCriteria_Results.csv")
 
