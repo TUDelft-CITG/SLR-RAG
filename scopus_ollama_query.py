@@ -223,7 +223,7 @@ def analyze_paper(agent, title: str, abstract: str, questions: List[str]) -> Dic
 def prompt_user_for_action() -> str:
     """Prompt the user for action: continue, print papers, or exit."""
     while True:
-        user_input = input("Choose an option:\n  'c' to continue with the agents\n  'p' to print papers' names\n  'e' to exit\n  's' to save to 'results.json'\n> ").lower()
+        user_input = input(f"Choose an option:\n  'c' to continue with the agents\n  'p' to print papers' names\n  'e' to exit\n  's' to save to '{OUTPUT_DOI_RESULTS}'\n> ").lower()
         if user_input in ['c', 'p', 'e', 's']:
             return user_input
         print("Invalid option. Please try again.")
@@ -265,11 +265,17 @@ def main():
                 print(f"{idx}. {paper['title']} {'(Reference)' if doi in REFERENCE_DOIS else ''}")
             continue
         elif action == 's': 
-            with open("results.json", "w") as file :
-                json.dump(merged_papers,file)
-            print('Results savec in results.json')
+            os.makedirs(OUTPUT_CSV_PATH.parent, exist_ok=True)
+            if OUTPUT_DOI_RESULTS.exists() and not AUTOMATICALLY_OVERWRITE and (input(f"File {OUTPUT_DOI_RESULTS} already exists. Overwrite? (y/n): ").lower() != 'y'):
+                print("Operation cancelled by user.")
+            else:
+                with open(OUTPUT_DOI_RESULTS, "w") as file:
+                    json.dump(merged_papers,file)
+                print(f'Results saved in {OUTPUT_DOI_RESULTS}')
         elif action == 'c':  # continue
+            os.makedirs(OUTPUT_CSV_PATH.parent, exist_ok=True)
             break
+
     # Check if file exists and prompt user for overwrite
     if OUTPUT_CSV_PATH.exists() and not AUTOMATICALLY_OVERWRITE:
         user_input = input(f"File {OUTPUT_CSV_PATH} already exists. Overwrite? (y/n): ").lower()
@@ -279,9 +285,7 @@ def main():
     # Step 5: Initialize agent and process papers
     print("Creating a chat with ollama")
     agent = setup_chat_agent()
-    os.makedirs(OUTPUT_CSV_PATH.parent, exist_ok=True)
     
-
     
     print(f"Opening {OUTPUT_CSV_PATH}")
     with open(OUTPUT_CSV_PATH, "w", newline="", encoding="utf-8") as csvfile:
