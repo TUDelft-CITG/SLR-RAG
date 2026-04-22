@@ -1,2 +1,4 @@
 output/
 vectorstore_chroma/
+.env
+results.json
