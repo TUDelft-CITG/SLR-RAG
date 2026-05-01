@@ -80,7 +80,7 @@ QUESTIONS = [
 AUTOMATICALLY_OVERWRITE = False
 OUTPUT_PATH = Path("output/")
 OUTPUT_CSV_PATH = OUTPUT_PATH / "paper_analysis.csv"
-OUTPUT_DOI_RESULTS = OUTPUT_PATH / "papers_selected.json"
+OUTPUT_DOI_RESULTS = OUTPUT_PATH / "papers_selected.csv"
 OLLAMA_MODEL = "llama3.1"
 MISTRAL_MODEL = "ministral-3b-2512"
 PROMPT_MODEL = "Title: {title}\nAbstract: {abstract}\nQuestion: {question}\nOnly answer with 'True' or 'False', without a dot, nothing else."
@@ -183,7 +183,7 @@ def merge_papers(scopus_df: pd.DataFrame, openalex_df: pd.DataFrame) -> pd.DataF
     return result_df
 
 
-def print_merged_stats(merged_papers: pd.DataFrame, reference_dois: List[str]) -> None:
+def show_merged_stats(merged_papers: pd.DataFrame, reference_dois: List[str]) -> None:
     """Print statistics about merged papers."""
     total_papers = len(merged_papers)
     merged_papers["in_scopus"] = merged_papers["id_scopus"].notna()
@@ -207,6 +207,37 @@ def print_merged_stats(merged_papers: pd.DataFrame, reference_dois: List[str]) -
     print(f"Number of reference papers in OpenAlex: {ref_in_openalex}")
     print(f"Number of reference papers in both: {ref_in_both}")
 
+
+# --- File I/O functions ---
+def save_dataframe_to_csv(df: pd.DataFrame, file_path: Path, automatically_overwrite: bool = AUTOMATICALLY_OVERWRITE) -> None:
+    """Save DataFrame to CSV with overwrite protection."""
+    os.makedirs(file_path.parent, exist_ok=True)
+
+    if file_path.exists() and not automatically_overwrite:
+        user_input = input(f"File {file_path} already exists. Overwrite? (y/n): ").lower()
+        if user_input != "y":
+            print("Operation cancelled by user.")
+            return
+
+    df.to_csv(file_path, index=False)
+    print(f"Results saved in {file_path}")
+
+def analyze_papers_with_agent(agent, papers_df: pd.DataFrame, questions: List[str]) -> pd.DataFrame:
+    """Analyze papers using agent and return DataFrame with answers."""
+    results = []
+
+    for paper in tqdm(papers_df.to_dict("records")):
+        answers = analyze_paper(agent, paper["title"], paper.get("abstract", ""), questions)
+        paper_with_answers = {
+            "doi": paper["doi"],
+            "title": paper["title"],
+            "date": paper["date"],
+            **answers
+        }
+        results.append(paper_with_answers)
+        sleep(1)  # To avoid rate limit
+
+    return pd.DataFrame(results)
 
 # --- LangChain agent ---
 def setup_chat_agent() -> ChatOllama:
@@ -263,7 +294,7 @@ def main():
     # Step 3: Merge papers
     print("---- Merging papers ---")
     merged_papers: pd.DataFrame = merge_papers(results_scopus, results_openalex)
-    print_merged_stats(merged_papers, REFERENCE_DOIS)
+    show_merged_stats(merged_papers, REFERENCE_DOIS)
     # Step 4: User interaction
     while True:
         action = prompt_user_for_action()
@@ -278,24 +309,8 @@ def main():
                 )
             continue
         elif action == "s":
-            os.makedirs(OUTPUT_CSV_PATH.parent, exist_ok=True)
-            if (
-                OUTPUT_DOI_RESULTS.exists()
-                and not AUTOMATICALLY_OVERWRITE
-                and (
-                    input(
-                        f"File {OUTPUT_DOI_RESULTS} already exists. Overwrite? (y/n): "
-                    ).lower()
-                    != "y"
-                )
-            ):
-                print("Operation cancelled by user.")
-            else:
-                # Convert DataFrame to dict with DOI as key for JSON export
-                merged_dict = merged_papers.set_index("doi").to_dict("index")
-                with open(OUTPUT_DOI_RESULTS, "w") as file:
-                    json.dump(merged_dict, file)
-                print(f"Results saved in {OUTPUT_DOI_RESULTS}")
+            # Save merged papers as CSV instead of JSON
+            save_dataframe_to_csv(merged_papers, OUTPUT_DOI_RESULTS)
         elif action == "c":  # continue
             os.makedirs(OUTPUT_CSV_PATH.parent, exist_ok=True)
             break
@@ -312,27 +327,11 @@ def main():
     print("Creating a chat with ollama")
     agent = setup_chat_agent()
 
-    print(f"Opening {OUTPUT_CSV_PATH}")
-    with open(OUTPUT_CSV_PATH, "w", newline="", encoding="utf-8") as csvfile:
-        writer = csv.DictWriter(
-            csvfile, fieldnames=["doi", "title", "date"] + QUESTIONS
-        )
-        print("Writing header")
-        writer.writeheader()
-        print("Answering the questions")
-        for paper in tqdm(merged_papers.to_dict("records")):
-            answers = analyze_paper(
-                agent, paper["title"], paper.get("abstract", ""), QUESTIONS
-            )
-            writer.writerow(
-                {
-                    "doi": paper["doi"],
-                    "title": paper["title"],
-                    "date": paper["date"],
-                    **answers,
-                }
-            )
-            sleep(1)  # Too avoid rate limit
+    print("Analyzing papers with agent")
+    results_df = analyze_papers_with_agent(agent, merged_papers, QUESTIONS)
+
+    print(f"Saving results to {OUTPUT_CSV_PATH}")
+    save_dataframe_to_csv(results_df, OUTPUT_CSV_PATH)
 
     print(f"Analysis complete. Results saved to {OUTPUT_CSV_PATH}")
 
