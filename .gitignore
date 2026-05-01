@@ -2,3 +2,7 @@ output/
 vectorstore_chroma/
 .env
 results.json
+.vscode/
+
+.zed
+__pycache__/
