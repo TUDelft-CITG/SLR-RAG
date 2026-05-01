@@ -86,141 +86,108 @@ MISTRAL_MODEL = "ministral-3b-2512"
 PROMPT_MODEL = "Title: {title}\nAbstract: {abstract}\nQuestion: {question}\nOnly answer with 'True' or 'False', without a dot, nothing else."
 SCOPUS_IS_SUBSCRIBER = True
 THRESHOLD_BIG_COUNT_PAPER = 1
+DEFAULT_OPEN_ALEX_PAGING = 50
+
+DEFAULT_DF_COLUMNS = ["doi", "id", "title", "date", "abstract"]
 
 
 # --- Scopus functions ---
-def query_scopus(query: str) -> Optional[ScopusSearch]:
+def query_scopus(query: str) -> pd.DataFrame:
     """Query Scopus and return results."""
     try:
         nb_paper = ScopusSearch(query=query, download=False).get_results_size()
+        if nb_paper > THRESHOLD_BIG_COUNT_PAPER:
+            if input(f"{nb_paper} found in Scopus. Continue? (y/n)").lower() == "y":
+                scopus_search = ScopusSearch(
+                    query=query, verbose=True, subscriber=SCOPUS_IS_SUBSCRIBER
+                )
+                return scopus_to_dict_list(scopus_search)
+            else:
+                return pd.DataFrame(columns=DEFAULT_DF_COLUMNS)
     except Exception as e:
-        print(e, "\nreturning None")
-        return None
-    if nb_paper > THRESHOLD_BIG_COUNT_PAPER:
-        user_input = input(f"{nb_paper} found in Scopus. Continue? (y/n)").lower()
-        if user_input == "y":
-            return ScopusSearch(
-                query=query, verbose=True, subscriber=SCOPUS_IS_SUBSCRIBER
-            )
-        else:
-            return None
-    return ScopusSearch(query=query, verbose=True, subscriber=SCOPUS_IS_SUBSCRIBER)
+        print(e, "\nReturning empty DataFrame")
+        return pd.DataFrame(columns=DEFAULT_DF_COLUMNS)
 
 
 def scopus_to_dict_list(results: ScopusSearch) -> pd.DataFrame:
     """Convert Scopus results to a pandas DataFrame."""
     if results.results is None:
-        return pd.DataFrame(
-            columns=["doi", "title", "date", "abstract", "in_scopus", "in_openalex"]
-        )
-
+        return pd.DataFrame(columns=DEFAULT_DF_COLUMNS)
     data = [
         {
             "doi": paper.doi,
             "title": paper.title,
             "date": paper.coverDate,
             "abstract": paper.description,
-            "in_scopus": True,
-            "in_openalex": False,
+            "id": paper.eid,
         }
         for paper in results.results
-        if paper.doi is not None
     ]
     return pd.DataFrame(data)
 
 
 # --- OpenAlex functions ---
-def query_openalex(query: str) -> Optional[pd.DataFrame]:
+def query_openalex(query: str) -> pd.DataFrame:
     """Query OpenAlex and return results as a pandas DataFrame."""
     works = Works().search_filter(title_and_abstract=query)
     nb_paper = works.count()
     if nb_paper > THRESHOLD_BIG_COUNT_PAPER:
         user_input = input(f"{nb_paper} found in OpenAlex. Continue? (y/n)").lower()
-        if user_input != "y":
-            return None
+        if user_input != "y":  # Return empty Dataframe
+            return pd.DataFrame(columns=["doi", "title", "date", "abstract"])
     print(f"{nb_paper} found in OpenAlex. Downloading.")
     list_ret = []
-    pager = works.paginate(per_page=50)
+    pager = works.paginate(per_page=DEFAULT_OPEN_ALEX_PAGING)
     for page in pager:
         list_ret += page
 
     # Convert to DataFrame
-    if list_ret:
-        df = pd.DataFrame(
-            [
-                {
-                    "doi": paper.get("doi").removeprefix("https://doi.org/"),
-                    "title": paper.get("title"),
-                    "date": paper.get("publication_date"),
-                    "abstract": paper.get("abstract", None),
-                    "in_scopus": False,
-                    "in_openalex": True,
-                }
-                for paper in list_ret
-                if paper.get("doi") is not None
-            ]
-        )
-        return df
-    else:
-        return pd.DataFrame(
-            columns=["doi", "title", "date", "abstract", "in_scopus", "in_openalex"]
-        )
+    return_df = pd.DataFrame(
+        list_ret, columns=["doi", "id", "title", "publication_date", "abstract"]
+    )
+    return_df = return_df.rename(columns={"publication_date": "date"})
+    return_df["doi"] = return_df["doi"].str.removeprefix("https://doi.org/")
+    return return_df
 
 
-# --- Merge functions ---
-
-
-def merge_papers(
-    scopus_papers: List[Dict], openalex_papers: List[Dict]
-) -> pd.DataFrame:
+def merge_papers(scopus_df: pd.DataFrame, openalex_df: pd.DataFrame) -> pd.DataFrame:
     """Merge Scopus and OpenAlex papers by DOI, keeping only specified fields."""
-
-    # Convert lists to DataFrames
-    scopus_df = pd.DataFrame(scopus_papers)
-    openalex_df = pd.DataFrame(openalex_papers)
-
-    # Count papers without DOI
-    nb_paper_without_doi = (
-        scopus_df["doi"].isna().sum() + openalex_df["doi"].isna().sum()
-    )
-
-    # Merge by DOI first
+    scopus_df["temp_key"] = scopus_df["doi"].fillna(scopus_df["title"])
+    openalex_df["temp_key"] = openalex_df["doi"].fillna(openalex_df["title"])
+    # Merge by DOI first, then by title if unavailable
     merged_df = pd.merge(
-        scopus_df, openalex_df, on="doi", how="outer", suffixes=("_scopus", "_openalex")
-    )
-
+        scopus_df,
+        openalex_df,
+        on=["temp_key"],
+        how="outer",
+        suffixes=("_scopus", "_openalex"),
+    )  # BUG: Will have duplicata if one has doi and not the other
     # Combine fields using vectorized operations
     # Title - prefer Scopus if available, otherwise OpenAlex
+    merged_df["doi"] = merged_df["doi_scopus"].fillna(merged_df["doi_openalex"])
     merged_df["title"] = merged_df["title_scopus"].fillna(merged_df["title_openalex"])
 
     # Date - prefer Scopus if available, otherwise OpenAlex
     merged_df["date"] = merged_df["date_scopus"].fillna(merged_df["date_openalex"])
 
-    # Abstract - combine from both sources
+    # Abstract - prefer Scopus if available, otherwise OpenAlex
     merged_df["abstract"] = merged_df["abstract_scopus"].fillna(
         merged_df["abstract_openalex"]
     )
 
-    # Source flags
-    merged_df["in_scopus"] = merged_df["title_scopus"].notna()
-    merged_df["in_openalex"] = merged_df["title_openalex"].notna()
-
     # Select only the columns we want to keep
     result_df: pd.DataFrame = merged_df[
-        ["doi", "title", "date", "abstract", "in_scopus", "in_openalex"]
-    ]  # pyright: ignore
+        ["doi", "title", "date", "abstract", "id_scopus", "id_openalex"]
+    ].copy()  # pyright: ignore
 
-    # Filter out papers without DOI
-    result_df = result_df[result_df["doi"].notna()]  # pyright: ignore
-    result_df = result_df[result_df["doi"].notna()]  # pyright: ignore
-
-    print(f"Number of papers without doi removed : {nb_paper_without_doi}")
     return result_df
 
 
 def print_merged_stats(merged_papers: pd.DataFrame, reference_dois: List[str]) -> None:
     """Print statistics about merged papers."""
     total_papers = len(merged_papers)
+    merged_papers["in_scopus"] = merged_papers["id_scopus"].notna()
+    merged_papers["in_openalex"] = merged_papers["id_openalex"].notna()
     common_papers = (merged_papers["in_scopus"] & merged_papers["in_openalex"]).sum()
     ref_in_scopus = (
         merged_papers["in_scopus"] & merged_papers["doi"].isin(reference_dois)
@@ -289,27 +256,14 @@ def main():
     print("Query :", SCOPUS_QUERY)
     # assert SCOPUS_QUERY == OLD_SCOPUS_QUERY
     results_scopus = query_scopus(SCOPUS_QUERY)
-    if results_scopus is None:
-        scopus_papers = []
-    else:
-        print(
-            f"Got {results_scopus.get_results_size()} papers .converting to dict_list"
-        )
-        scopus_papers = scopus_to_dict_list(results_scopus)
-
     # Step 2: Query OpenAlex
     print("---- Getting query on OpenAlex ---")
-    openalex_papers = query_openalex(OPENALEX_QUERY)
-    if openalex_papers is None:
-        openalex_papers = pd.DataFrame(
-            columns=["doi", "title", "date", "abstract", "in_scopus", "in_openalex"]
-        )
+    results_openalex = query_openalex(OPENALEX_QUERY)
 
     # Step 3: Merge papers
     print("---- Merging papers ---")
-    merged_papers: pd.DataFrame = merge_papers(scopus_papers, openalex_papers)
+    merged_papers: pd.DataFrame = merge_papers(results_scopus, results_openalex)
     print_merged_stats(merged_papers, REFERENCE_DOIS)
-
     # Step 4: User interaction
     while True:
         action = prompt_user_for_action()
