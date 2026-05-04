@@ -184,7 +184,7 @@ def merge_papers(scopus_df: pd.DataFrame, openalex_df: pd.DataFrame) -> pd.DataF
     result_df: pd.DataFrame = merged_df[
         ["doi", "title", "date", "abstract", "id_scopus", "id_openalex"]
     ].copy()  # pyright: ignore
-
+    result_df["is_reference"] = result_df["doi"].isin(REFERENCE_DOIS)
     return result_df
 
 
@@ -219,9 +219,8 @@ def plot_and_save_upset(df_input: pd.DataFrame, output_html : Path | str):
 
 def plot_upset(df_input: pd.DataFrame) -> plotly.graph_objs._figure.Figure:
     # set TRUE/FALSE if the paper exists or not for each database
-    df_input[LIST_NAME_DATABASE] = df_input[[f"id_{x}" for x in LIST_NAME_DATABASE]].notna() 
-    df_input[LIST_NAME_DATABASE].to_csv("output.csv",index=False)
-    return Upset.generate_plot(df_input[LIST_NAME_DATABASE])
+    df_input[LIST_NAME_DATABASE] = df_input[[f"id_{x}" for x in LIST_NAME_DATABASE]].notna()
+    return Upset.generate_plot(df_input[LIST_NAME_DATABASE + ["is_reference"]].rename(columns={"is_reference": "reference"}))
 
 # --- File I/O functions ---
 def check_overwrite(file_path: Path, automatically_overwrite: bool = AUTOMATICALLY_OVERWRITE) -> bool:
