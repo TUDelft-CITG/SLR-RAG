@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 from time import sleep
 from typing import Dict, List, Optional
-
+import plotly
 import pandas as pd
 import pybliometrics
 from langchain_core.output_parsers import StrOutputParser
@@ -16,6 +16,7 @@ from langchain_ollama import ChatOllama
 from pyalex import Works
 from pybliometrics.scopus import ScopusSearch
 from tqdm import tqdm
+from upsetty import Upset
 
 pybliometrics.init()
 
@@ -78,9 +79,13 @@ QUESTIONS = [
 ]
 
 AUTOMATICALLY_OVERWRITE = False
-OUTPUT_PATH = Path("output/")
+
+OUTPUT_PATH = Path("outputs/")
 OUTPUT_CSV_PATH = OUTPUT_PATH / "paper_analysis.csv"
 OUTPUT_DOI_RESULTS = OUTPUT_PATH / "papers_selected.csv"
+OUTPUT_UPSET = OUTPUT_PATH / "upset.html"
+
+
 OLLAMA_MODEL = "llama3.1"
 MISTRAL_MODEL = "ministral-3b-2512"
 PROMPT_MODEL = "Title: {title}\nAbstract: {abstract}\nQuestion: {question}\nOnly answer with 'True' or 'False', without a dot, nothing else."
@@ -149,7 +154,7 @@ def query_openalex(query: str) -> pd.DataFrame:
     return_df["doi"] = return_df["doi"].str.removeprefix("https://doi.org/")
     return return_df
 
-
+# --- Merge and stats functions ---
 def merge_papers(scopus_df: pd.DataFrame, openalex_df: pd.DataFrame) -> pd.DataFrame:
     """Merge Scopus and OpenAlex papers by DOI, keeping only specified fields."""
     scopus_df["temp_key"] = scopus_df["doi"].fillna(scopus_df["title"])
@@ -207,20 +212,34 @@ def show_merged_stats(merged_papers: pd.DataFrame, reference_dois: List[str]) ->
     print(f"Number of reference papers in OpenAlex: {ref_in_openalex}")
     print(f"Number of reference papers in both: {ref_in_both}")
 
+def plot_and_save_upset(df_input: pd.DataFrame, output_html : Path | str):
+    upset_fig = plot_upset(df_input)
+    if check_overwrite(output_html, AUTOMATICALLY_OVERWRITE):
+        upset_fig.write_html(output_html)
+
+def plot_upset(df_input: pd.DataFrame) -> plotly.graph_objs._figure.Figure:
+    # set TRUE/FALSE if the paper exists or not for each database
+    df_input[LIST_NAME_DATABASE] = df_input[[f"id_{x}" for x in LIST_NAME_DATABASE]].notna() 
+    df_input[LIST_NAME_DATABASE].to_csv("output.csv",index=False)
+    return Upset.generate_plot(df_input[LIST_NAME_DATABASE])
 
 # --- File I/O functions ---
-def save_dataframe_to_csv(df: pd.DataFrame, file_path: Path, automatically_overwrite: bool = AUTOMATICALLY_OVERWRITE) -> None:
-    """Save DataFrame to CSV with overwrite protection."""
-    os.makedirs(file_path.parent, exist_ok=True)
-
-    if file_path.exists() and not automatically_overwrite:
+def check_overwrite(file_path: Path, automatically_overwrite: bool = AUTOMATICALLY_OVERWRITE) -> bool:
+    if file_path.exists() and not AUTOMATICALLY_OVERWRITE:
         user_input = input(f"File {file_path} already exists. Overwrite? (y/n): ").lower()
         if user_input != "y":
             print("Operation cancelled by user.")
-            return
+            return False
+    return True
+def save_dataframe_to_csv(df: pd.DataFrame, file_path: Path) -> None:
+    """Save DataFrame to CSV with overwrite protection."""
+    os.makedirs(file_path.parent, exist_ok=True)
+    if check_overwrite(file_path, AUTOMATICALLY_OVERWRITE): 
+        df.to_csv(file_path, index=False)
+        print(f"Results saved in {file_path}")
+    
 
-    df.to_csv(file_path, index=False)
-    print(f"Results saved in {file_path}")
+    
 
 def analyze_papers_with_agent(agent, papers_df: pd.DataFrame, questions: List[str]) -> pd.DataFrame:
     """Analyze papers using agent and return DataFrame with answers."""
@@ -273,9 +292,9 @@ def prompt_user_for_action() -> str:
     """Prompt the user for action: continue, print papers, or exit."""
     while True:
         user_input = input(
-            f"Choose an option:\n  'c' to continue with the agents\n  'p' to print papers' names\n  'e' to exit\n  's' to save to '{OUTPUT_DOI_RESULTS}'\n> "
+            f"Choose an option:\n  'c' to continue with the agents\n  'p' to print papers' names\n  'e' to exit\n  's' to save to '{OUTPUT_DOI_RESULTS}'\n  'u' to plot upset plot at '{OUTPUT_UPSET}'\n> "
         ).lower()
-        if user_input in ["c", "p", "e", "s"]:
+        if user_input in ["c", "p", "e", "s", "u"]:
             return user_input
         print("Invalid option. Please try again.")
 
@@ -311,6 +330,9 @@ def main():
         elif action == "s":
             # Save merged papers as CSV instead of JSON
             save_dataframe_to_csv(merged_papers, OUTPUT_DOI_RESULTS)
+        elif action == "u":
+            plot_and_save_upset(merged_papers, OUTPUT_UPSET)
+            print(f"Upset plot saved to {OUTPUT_UPSET}")
         elif action == "c":  # continue
             os.makedirs(OUTPUT_CSV_PATH.parent, exist_ok=True)
             break
