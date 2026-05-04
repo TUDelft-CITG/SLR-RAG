@@ -44,11 +44,19 @@ pybliometrics.init()
 
 ### SECOND QUERY
 
+# MAIN_QUERY = """
+# ("risk assessment" OR "risk analysis") AND
+# ("Offshore windfarm" OR "Offshore windmill" OR "Offshore wind turbine" OR "Offshore wind park" OR "OWF") AND
+# ("Strategic" OR "Static" OR "Long-term" OR "Marine spatial planning" OR "Large scale") AND
+# ("maritime" OR  "navigational" OR "nautical")
+# """
+### THIRD QUERY
+
+
 MAIN_QUERY = """
 ("risk assessment" OR "risk analysis") AND
 ("Offshore windfarm" OR "Offshore windmill" OR "Offshore wind turbine" OR "Offshore wind park" OR "OWF") AND
-("Strategic" OR "Static" OR "Long-term" OR "Marine spatial planning" OR "Large scale") AND
-("maritime" OR  "navigational" OR "nautical")
+("maritime" OR "navigational" OR "nautical")
 """
 
 SCOPUS_QUERY = f"""
@@ -195,8 +203,9 @@ def merge_papers(left_df: pd.DataFrame, right_df: pd.DataFrame, right_db_name: s
     Returns:
         Merged DataFrame with columns: doi, title, date, abstract, plus all id_{db} columns
     """
-    left_df["temp_key"] = left_df["doi"].fillna(left_df["title"])
-    right_df["temp_key"] = right_df["doi"].fillna(right_df["title"])
+    #Sometimes, doi / title do not have same uppercase : 10.1017/S0373463319000444 == 10.1017/s0373463319000444.
+    left_df["temp_key"] = left_df["doi"].fillna(left_df["title"]).str.lower()
+    right_df["temp_key"] = right_df["doi"].fillna(right_df["title"]).str.lower()
     
     # Rename right_df's id column to id_{right_db}
     right_id_col = f"id_{right_db_name}"
@@ -227,6 +236,43 @@ def merge_papers(left_df: pd.DataFrame, right_df: pd.DataFrame, right_db_name: s
     return result_df
 
 
+def add_reference_papers(df: pd.DataFrame, reference_dois: List[str]) -> pd.DataFrame:
+    """Add reference papers to DataFrame if they don't already exist.
+    
+    For each DOI in reference_dois that's not in the DataFrame's doi column,
+    adds a new row with that DOI and None for all other columns.
+    
+    Args:
+        df: DataFrame with paper data (must have 'doi' column)
+        reference_dois: List of reference DOIs to ensure are present
+    
+    Returns:
+        DataFrame with reference papers added
+    """
+    # Find reference DOIs not already in the DataFrame
+    existing_dois = set(df["doi"].dropna().unique())
+    missing_dois = [doi for doi in reference_dois if doi not in existing_dois]
+    
+    if not missing_dois:
+        return df
+    
+    # Create new rows for missing reference papers
+    # Get the expected columns from the DataFrame
+    new_rows = []
+    for doi in missing_dois:
+        row = {"doi": doi}
+        # Set all other columns to None
+        for col in df.columns:
+            if col != "doi":
+                row[col] = None
+        new_rows.append(row)
+    
+    # Append new rows to DataFrame
+    new_df = pd.concat([df, pd.DataFrame(new_rows)], ignore_index=True)
+    new_df["is_reference"] = new_df["doi"].isin(REFERENCE_DOIS)
+    return new_df
+
+
 def show_merged_stats(merged_papers: pd.DataFrame, reference_dois: List[str], database_names: List[str]) -> None:
     """Print statistics about merged papers.
     
@@ -243,8 +289,11 @@ def show_merged_stats(merged_papers: pd.DataFrame, reference_dois: List[str], da
     
     # Calculate common papers (in all databases)
     common_papers = pd.concat([merged_papers[f"in_{db}"] for db in database_names], axis=1).all(axis=1).sum()
-    
-    print(f"Total number of papers: {total_papers}")
+    # Calculate papers appearing in at least one database
+
+    found_papers = pd.concat([merged_papers[f"in_{db}"] for db in database_names], axis=1).any(axis=1).sum()
+    print(f"Total number of papers: {found_papers}")
+    print(f"Reference papers missing: {total_papers-found_papers}")
     print(f"Number of common papers in all databases: {common_papers}")
     
     # Print stats for each database
@@ -253,11 +302,11 @@ def show_merged_stats(merged_papers: pd.DataFrame, reference_dois: List[str], da
         in_db = merged_papers[f"in_{db}"].sum()
         print(f"Number of papers in {db}: {in_db}")
         print(f"Number of reference papers in {db}: {ref_in_db}")
+    return merged_papers
 
 def plot_and_save_upset(df_input: pd.DataFrame, output_html : Path | str):
     upset_fig = plot_upset(df_input)
-    if check_overwrite(output_html, AUTOMATICALLY_OVERWRITE):
-        upset_fig.write_html(output_html)
+    upset_fig.write_html(output_html)
 
 def plot_upset(df_input: pd.DataFrame) -> plotly.graph_objs._figure.Figure:
     # set TRUE/FALSE if the paper exists or not for each database
@@ -370,7 +419,9 @@ def main():
             merged_papers = merge_papers(merged_papers, lens_df, "lens")
             database_names.append("lens")
     
-    show_merged_stats(merged_papers, REFERENCE_DOIS, database_names)
+    merged_papers = add_reference_papers(merged_papers,REFERENCE_DOIS)
+    merged_papers = show_merged_stats(merged_papers, REFERENCE_DOIS, database_names)
+
     # Step 4: User interaction
     while True:
         action = prompt_user_for_action()
@@ -380,16 +431,14 @@ def main():
             for idx, (doi, paper) in enumerate(
                 zip(merged_papers["doi"], merged_papers.to_dict("records")), 1
             ):
-                print(
-                    f"{idx}. {paper['title']} {'(Reference)' if doi in REFERENCE_DOIS else ''}"
-                )
-            continue
-        elif action == "s":
-            # Save merged papers as CSV instead of JSON
+                if paper['title'] is not None:
+                    print(f"{idx}. {paper['title']} {'(Reference)' if doi in REFERENCE_DOIS else ''}")
+        elif action == "s":# Save merged papers as CSV
             save_dataframe_to_csv(merged_papers, OUTPUT_DOI_RESULTS)
         elif action == "u":
-            plot_and_save_upset(merged_papers, OUTPUT_UPSET)
-            print(f"Upset plot saved to {OUTPUT_UPSET}")
+            if check_overwrite(OUTPUT_UPSET, AUTOMATICALLY_OVERWRITE):
+                plot_and_save_upset(merged_papers, OUTPUT_UPSET)
+                print(f"Upset plot saved to {OUTPUT_UPSET}")
         elif action == "c":  # continue
             os.makedirs(OUTPUT_CSV_PATH.parent, exist_ok=True)
             break
