@@ -87,7 +87,7 @@ PROMPT_MODEL = "Title: {title}\nAbstract: {abstract}\nQuestion: {question}\nOnly
 SCOPUS_IS_SUBSCRIBER = True
 THRESHOLD_BIG_COUNT_PAPER = 1
 DEFAULT_OPEN_ALEX_PAGING = 50
-
+LIST_NAME_DATABASE = ["scopus", "openalex"]
 DEFAULT_DF_COLUMNS = ["doi", "id", "title", "date", "abstract"]
 
 
