@@ -292,8 +292,8 @@ def show_merged_stats(merged_papers: pd.DataFrame, reference_dois: List[str], da
     # Calculate papers appearing in at least one database
 
     found_papers = pd.concat([merged_papers[f"in_{db}"] for db in database_names], axis=1).any(axis=1).sum()
-    print(f"Total number of papers: {found_papers}")
-    print(f"Reference papers missing: {total_papers-found_papers}")
+    print(f"Total number of papers found: {found_papers}")
+    print(f"Reference papers missing: {total_papers-found_papers} over {len(reference_dois)}")
     print(f"Number of common papers in all databases: {common_papers}")
     
     # Print stats for each database
