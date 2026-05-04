@@ -225,7 +225,7 @@ def plot_upset(df_input: pd.DataFrame) -> plotly.graph_objs._figure.Figure:
 
 # --- File I/O functions ---
 def check_overwrite(file_path: Path, automatically_overwrite: bool = AUTOMATICALLY_OVERWRITE) -> bool:
-    if file_path.exists() and not AUTOMATICALLY_OVERWRITE:
+    if file_path.exists() and not automatically_overwrite:
         user_input = input(f"File {file_path} already exists. Overwrite? (y/n): ").lower()
         if user_input != "y":
             print("Operation cancelled by user.")
