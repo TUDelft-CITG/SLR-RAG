@@ -6,3 +6,5 @@ results.json
 
 .zed
 __pycache__/
+output/
+*.html
