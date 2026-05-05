@@ -8,4 +8,5 @@ results.json
 __pycache__/
 output/
 outputs/
+data/export_databases/
 *.html
