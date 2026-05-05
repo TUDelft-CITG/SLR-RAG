@@ -35,7 +35,8 @@ This script allows you to make a query on Scopus, retrieve papers, and parse the
 
 - You need a Scopus API key. Get yours [here](http://dev.elsevier.com/myapikey.html).
 - When running the first time, pybliometrics will ask you your API key. If you have problems, you can check the [pybliometrics documentation](https://pybliometrics.readthedocs.io/en/stable/configuration.html).
-
+- If you work remotely, it is possible that you have the following error when fetching scopus "The requestor is not authorized to access the requested view or fields of the resource.
+Returning empty DataFrame". There is currently no way of solving this other then working on campus.
 ---
 
 ## 🏃‍♂️‍➡️ Running

@@ -11,7 +11,6 @@ import pybliometrics
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables.base import RunnableSequence
-from langchain_mistralai import ChatMistralAI
 from langchain_ollama import ChatOllama
 from pyalex import Works
 from pybliometrics.scopus import ScopusSearch
@@ -323,6 +322,8 @@ def check_overwrite(file_path: Path, automatically_overwrite: bool = AUTOMATICAL
         if user_input != "y":
             print("Operation cancelled by user.")
             return False
+    else: 
+        file_path.parent.mkdir(parents=True,exist_ok=True)
     return True
 def save_dataframe_to_csv(df: pd.DataFrame, file_path: Path) -> None:
     """Save DataFrame to CSV with overwrite protection."""
@@ -361,6 +362,7 @@ def setup_chat_agent() -> ChatOllama:
             return ChatOllama(model=OLLAMA_MODEL)
         elif user_out_agent == "m":
             print(f"Using Mistral 🥖🐈")
+            from langchain_mistralai import ChatMistralAI
             if "MISTRAL_API_KEY" not in os.environ:
                 os.environ["MISTRAL_API_KEY"] = getpass.getpass(
                     "Enter your Mistral API key: "
