@@ -396,13 +396,7 @@ def main():
         if action == "e":  # exit
             return
         elif action == "p":  # print names
-            for idx, (doi, paper) in enumerate(
-                zip(papers_df["doi"], papers_df.to_dict("records")), 1
-            ):
-                if paper["title"] is not None:
-                    print(
-                        f"{idx}. {paper['title']} {'(Reference)' if doi in REFERENCE_DOIS else ''}"
-                    )
+            print(papers_df[["title","doi","is_reference"]])
         elif action == "s":  # Save merged papers as CSV
             save_dataframe_to_csv(papers_df, OUTPUT_DOI_RESULTS)
         elif action == "u":
