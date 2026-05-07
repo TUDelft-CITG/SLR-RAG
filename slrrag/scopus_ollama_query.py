@@ -67,22 +67,80 @@ TITLE-ABS-KEY( {MAIN_QUERY})
 OPENALEX_QUERY = MAIN_QUERY
 
 
-REFERENCE_DOIS = [
-    "10.1007/s13437-018-0149-0",
-    "10.51400/2709-6998.2462",
-    "10.51400/2709-6998.2462",
-    "10.1016/j.oceaneng.2018.01.008",
-    "10.3390/jmse13040699",
-    "10.3390/su17188252",
-    "10.3390/jmse12122232",
-    "10.3390/jmse11071306",
-    "10.1016/j.oceaneng.2021.109396",
-    "10.2139/ssrn.5002935",
-    "10.1016/j.oceaneng.2021.10939610.1016/j.oceaneng.2021.109396",
+REFERENCE_PAPERS = [
+   (
+        "A dynamic risk assessment method to address safety of navigation concerns around offshore renewable energy installations",
+        "10.1177/1475090219837409",
+        True, True, True, True
+    ),
+    (
+        "A Marine GIS-based Alert System to Prevent Vessels Collision with Offshore Platforms",
+        "10.51400/2709-6998.2462",
+        True, True, True, True
+    ),
+    (
+        "A method for risk analysis of ship collisions with stationary infrastructure using AIS data and a ship manoeuvring simulator",
+        "10.1016/j.oceaneng.2021.109396",
+        True, True, True, True
+    ),
+    (
+        "A Novel Method for Navigational Risk Assessment in Wind Farm Waters Based on the Fuzzy Inference System",
+        "10.1155/2021/4588333",
+        True, True, False, False
+    ),
+    (
+        "A System-Theory and Complex Network-Fused Approach to Analyze Vessel–Wind Turbine Allisions in Offshore Wind Farm Waters",
+        "10.3390/jmse11071306",
+        True, True, True, True
+    ),
+    (
+        "Assessing the impacts to vessel traffic from offshore wind farms in the Thames Estuary",
+        "",
+        True, False, True, False
+    ),
+    (
+        "Evaluation of Ship Importance in Offshore Wind Farm Area Based on Fusion Gravity Model in Complex Network",
+        "10.3390/su17188252",
+        True, True, True, True
+    ),
+    (
+        "Improving the coexistence of offshore wind farms and shipping; an international comparison of navigational risk assessment processes",
+        "10.1007/s13437-018-0149-0",
+        True, True, True, True
+    ),
+    (
+        "Multi-Perspective Nautical Safety Risk Assessment of Allisions with Offshore Wind Parks",
+        "10.2139/ssrn.5002935",
+        True, False, False, False
+    ),
+    (
+        "Navigational Risk Assessment in Offshore Wind Farms Using Spatial Ship Domain Models",
+        "10.3390/app15126943",
+        True, True, False, False
+    ),
+    (
+        "Probabilistic approach for collision risk analysis of powered vessel with offshore platforms",
+        "10.1016/j.oceaneng.2018.01.008",
+        True, True, True, True
+    ),
+    (
+        "Research on the Impact of Deep Sea Offshore Wind Farms on Maritime Safety",
+        "10.3390/jmse13040699",
+        True, True, True, True
+    ),
+    (
+        "The Impact of Offshore Wind Farm Construction on Maritime Traffic Complexity; An Empirical Analysis of the Yangtze River Estuary",
+        "10.3390/jmse12122232",
+        True, True, True, True
+    )
 ]
+REFERENCE_DF = pd.DataFrame(REFERENCE_PAPERS, columns=["title", "doi", "present_openalex", "present_scopus", "present_lens", "present_dimensions"])
+
+REFERENCE_DOIS = REFERENCE_DF["doi"].to_list()
+
 
 QUESTIONS = [
-    "This paper discusses about risk assessment or risk analysis in the context of nautical safety for ships or Vessels.",
+    "This paper discusses about risk assessment or risk analysis in the context of nautical safety for ships or Vessels. OR"
     "This paper talks about nautical safety around offshore infrastructures, like offshore windfarms.",
     "This paper includes a quantitative model.",
 ]
@@ -112,6 +170,45 @@ DEFAULT_DF_COLUMNS_OPENALEX = DEFAULT_DF_COLUMNS + ["id_openalex"]
 DEFAULT_DF_COLUMNS_LENS = DEFAULT_DF_COLUMNS + ["id_lens"]
 DEFAULT_DF_COLUMNS_DIMENSIONS = DEFAULT_DF_COLUMNS + ["id_dimensions"]
 
+def check_doi_in_scopus(doi: str) -> bool:
+    """Check if a DOI exists in Scopus."""
+    try:
+        from pybliometrics.scopus import ScopusSearch
+        query = f'DOI("{doi}")'
+        search = ScopusSearch(query=query, download=False, subscriber=True)
+        return search.get_results_size() > 0
+    except Exception:
+        return False
+
+
+def check_doi_in_openalex(doi: str) -> bool:
+    """Check if a DOI exists in OpenAlex."""
+    try:
+        works = Works().filter_or(doi=doi)
+        return works.count() > 0
+    except Exception:
+        return False
+
+
+def check_dois_in_databases(dois: list[str]) -> pd.DataFrame:
+    """Check which DOIs exist in Scopus and OpenAlex.
+
+    Args:
+        dois: List of DOI strings to check
+
+    Returns:
+        DataFrame with columns: doi, in_db_scopus, in_db_openalex
+    """
+    results = []
+    for doi in dois:
+        in_scopus = check_doi_in_scopus(doi)
+        in_openalex = check_doi_in_openalex(doi)
+        results.append({
+            "doi": doi,
+            "in_db_scopus": in_scopus,
+            "in_db_openalex": in_openalex,
+        })
+    return pd.DataFrame(results)
 
 # --- Scopus functions ---
 def query_scopus(query: str) -> pd.DataFrame:
@@ -241,7 +338,7 @@ def add_lens_papers(
     PATH_LENS_EXPORT.parent.mkdir(exist_ok=True,parents=True)
     while True:
         user_choice = input(
-            f"\nOptions:\n1. Read {PATH_LENS_EXPORT} and merge papers? (y)\n2. Cancel Lens inclusion (n)"
+            f"Add Lens papers? (y/n):"
         ).strip()
         if user_choice == "y":
             if PATH_LENS_EXPORT.exists():
@@ -319,7 +416,7 @@ def add_dimensions_papers(
     PATH_DIMENSIONS_EXPORT.parent.mkdir(exist_ok=True, parents=True)
     while True:
         user_choice = input(
-            f"\nOptions:\n1. Read {PATH_DIMENSIONS_EXPORT} and merge papers? (y)\n2. Cancel Dimensions inclusion (n)"
+            f"Add Dimensions papers? (y/n):"
         ).strip()
         if user_choice == "y":
             if PATH_DIMENSIONS_EXPORT.exists():
@@ -609,12 +706,12 @@ def main():
     )
 
     # Step 3b: Ask if user wants to add lens.database
-    user_input = input("Add Lens papers? (y/n): ").lower()
+    user_input = input("Search for Lens papers? (y/n): ").lower()
     if user_input == "y":
         merged_papers, database_names = add_lens_papers(merged_papers, database_names)
 
     # Step 3c: Ask if user wants to add dimensions.ai papers
-    user_input = input("Add Dimensions.ai papers? (y/n): ").lower()
+    user_input = input("Search for Dimensions.ai papers? (y/n): ").lower()
     if user_input == "y":
         merged_papers, database_names = add_dimensions_papers(merged_papers, database_names)
 
