@@ -18,7 +18,7 @@ from pybliometrics.scopus import ScopusSearch
 from scopus_to_lens import convert_query_to_lens
 from tqdm import tqdm
 from upsetty import Upset
-
+from scopus_to_dimensions import query_to_dimensions_url
 pybliometrics.init()
 
 # --- User-defined variables ---
@@ -91,6 +91,7 @@ AUTOMATICALLY_OVERWRITE = False
 
 PATH_INPUT = Path("data/export_databases/")
 PATH_LENS_EXPORT = PATH_INPUT / "lens-export.csv"
+PATH_DIMENSIONS_EXPORT = PATH_INPUT / "dimensions-export.csv"
 
 OUTPUT_PATH = Path("outputs/")
 OUTPUT_CSV_PATH = OUTPUT_PATH / "paper_analysis.csv"
@@ -109,6 +110,7 @@ DEFAULT_DF_COLUMNS = ["doi", "title", "date", "abstract"]
 DEFAULT_DF_COLUMNS_SCOPUS = DEFAULT_DF_COLUMNS + ["id_scopus"]
 DEFAULT_DF_COLUMNS_OPENALEX = DEFAULT_DF_COLUMNS + ["id_openalex"]
 DEFAULT_DF_COLUMNS_LENS = DEFAULT_DF_COLUMNS + ["id_lens"]
+DEFAULT_DF_COLUMNS_DIMENSIONS = DEFAULT_DF_COLUMNS + ["id_dimensions"]
 
 
 # --- Scopus functions ---
@@ -236,11 +238,12 @@ def add_lens_papers(
     print(f"{PATH_LENS_EXPORT}")
 
     # Ask user what to do next
+    PATH_LENS_EXPORT.parent.mkdir(exist_ok=True,parents=True)
     while True:
         user_choice = input(
-            f"\nOptions:\n1. Read {PATH_LENS_EXPORT} and merge papers\n2. Cancel Lens inclusion\nChoose (1/2): "
+            f"\nOptions:\n1. Read {PATH_LENS_EXPORT} and merge papers? (y)\n2. Cancel Lens inclusion (n)"
         ).strip()
-        if user_choice == "1":
+        if user_choice == "y":
             if PATH_LENS_EXPORT.exists():
                 print("---- Reading Lens export ---")
                 lens_df = read_lens_export(PATH_LENS_EXPORT)
@@ -252,11 +255,89 @@ def add_lens_papers(
             else:
                 print(f"File {PATH_LENS_EXPORT} does not exist. Lens papers not added.")
                 continue
-        elif user_choice == "2":
+        elif user_choice == "n":
             print("Lens inclusion cancelled.")
             break
         else:
-            print("Invalid choice. Please enter 1 or 2.")
+            print("Invalid choice. Please enter y or n.")
+
+    return merged_papers, database_names
+
+
+# --- Dimensions functions ---
+def read_dimensions_export(csv_path: Path | str) -> pd.DataFrame:
+    """Read Dimensions export CSV and extract required columns: title, doi, abstract, date, id_dimensions."""
+    df = pd.read_csv(csv_path,skiprows=1)
+    # Map Dimensions column names to our standard format
+    column_mapping = {
+        "Title": "title",
+        "DOI": "doi",
+        "Abstract": "abstract",
+        "Publication date": "date",
+        "Publication ID": "id_dimensions",
+    }
+    # Rename columns that exist
+    df = df.rename(columns={k: v for k, v in column_mapping.items() if k in df.columns})
+
+    # Select only the columns we need, filling missing ones with None
+    result_cols = DEFAULT_DF_COLUMNS_DIMENSIONS
+    for col in result_cols:
+        if col not in df.columns:
+            df[col] = None
+
+    return df[result_cols].copy()
+
+
+def add_dimensions_papers(
+    merged_papers: pd.DataFrame, database_names: List[str]
+) -> tuple[pd.DataFrame, List[str]]:
+    """Add Dimensions.ai papers to the merged DataFrame.
+
+    This function guides the user through the process of adding Dimensions papers:
+    1. Converts MAIN_QUERY to Dimensions URL
+    2. Instructs user to execute the query on dimensions.ai and export results
+    3. Optionally reads the export and merges the papers
+
+    Args:
+        merged_papers: Current merged DataFrame of papers
+        database_names: List of database names already included
+
+    Returns:
+        Tuple of (updated merged_papers, updated database_names)
+    """
+    # Convert MAIN_QUERY to dimensions URL
+    dimensions_url = query_to_dimensions_url(MAIN_QUERY)
+    print("\nDimensions.ai URL:")
+    print(dimensions_url)
+
+    # Instruct user
+    print("\nPlease go to the URL above on Dimensions.ai")
+    print("Export the results as CSV and save to:")
+    print(f"{PATH_DIMENSIONS_EXPORT}")
+
+    # Ask user what to do next
+    PATH_DIMENSIONS_EXPORT.parent.mkdir(exist_ok=True, parents=True)
+    while True:
+        user_choice = input(
+            f"\nOptions:\n1. Read {PATH_DIMENSIONS_EXPORT} and merge papers? (y)\n2. Cancel Dimensions inclusion (n)"
+        ).strip()
+        if user_choice == "y":
+            if PATH_DIMENSIONS_EXPORT.exists():
+                print("---- Reading Dimensions export ---")
+                dimensions_df = read_dimensions_export(PATH_DIMENSIONS_EXPORT)
+                print(f"Found {len(dimensions_df)} papers in Dimensions export")
+                print("---- Merging with Dimensions ---")
+                merged_papers = merge_papers(merged_papers, dimensions_df, "dimensions")
+                database_names.append("dimensions")
+                break
+            else:
+                print(f"File {PATH_DIMENSIONS_EXPORT} does not exist. Dimensions papers not added.")
+                continue
+        elif user_choice == "n":
+            print("Dimensions inclusion cancelled.")
+            break
+        else:
+            print("Invalid choice. Please enter y or n.")
 
     return merged_papers, database_names
 
@@ -532,6 +613,12 @@ def main():
     if user_input == "y":
         merged_papers, database_names = add_lens_papers(merged_papers, database_names)
 
+    # Step 3c: Ask if user wants to add dimensions.ai papers
+    user_input = input("Add Dimensions.ai papers? (y/n): ").lower()
+    if user_input == "y":
+        merged_papers, database_names = add_dimensions_papers(merged_papers, database_names)
+
+    # Add reference papers in the final dataframe.
     merged_papers = add_reference_papers(merged_papers, REFERENCE_DOIS)
     merged_papers = show_merged_stats(merged_papers, REFERENCE_DOIS, database_names)
 
