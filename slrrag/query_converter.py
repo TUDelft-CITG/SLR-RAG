@@ -84,6 +84,8 @@ def convert_query_to_lens(query: str):
     # Join AND groups
     return f'({" AND ".join(lens_groups)})'
 
+
+
 if __name__ == "__main__":
     def test_1():
 
