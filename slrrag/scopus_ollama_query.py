@@ -10,13 +10,12 @@ import plotly
 import pybliometrics
 from pyalex import Works
 from pybliometrics.scopus import ScopusSearch
-from scopus_to_lens import convert_query_to_lens
+from query_converter import convert_query_to_lens
 from tqdm import tqdm
 from upsetty import Upset
-from scopus_to_dimensions import query_to_dimensions_url
+from query_converter import query_to_dimensions_url
 from ollama_analysis import (
     setup_chat_agent,
-    analyze_paper,
     analyze_papers_with_agent,
 )
 pybliometrics.init()
