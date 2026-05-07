@@ -12,9 +12,11 @@ def plot_upset(df_input: pd.DataFrame) -> plotly.graph_objs._figure.Figure:
     # Dynamically detect which id_{db} columns exist
     id_cols = [col for col in df_input.columns if col.startswith("id_")]
     database_names = [col.replace("id_", "") for col in id_cols]
-    df_input[database_names] = df_input[id_cols].notna()
+
+    df_fig = df_input[["is_reference"]].copy() # Copy to avoid writing on original df
+    df_fig[database_names] = df_input[id_cols].notna()
     return Upset.generate_plot(
-        df_input[database_names + ["is_reference"]].rename(
+        df_fig[database_names + ["is_reference"]].rename(
             columns={"is_reference": "reference"}
         )
     )

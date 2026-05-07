@@ -383,7 +383,6 @@ def main():
         papers_df, database_names = add_dimensions_papers(papers_df, database_names)
 
     # Add reference papers in the final dataframe.
-    papers_df = add_reference_papers(papers_df, REFERENCE_DOIS)
     papers_df = show_merged_stats(papers_df, REFERENCE_DOIS, database_names)
 
     # Step 4: User interaction
