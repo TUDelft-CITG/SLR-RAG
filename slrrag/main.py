@@ -21,7 +21,8 @@ from settings import AUTOMATICALLY_OVERWRITE, DEFAULT_DF_COLUMNS, MAIN_QUERY, OP
 from upset_plotter import plot_and_save_upset
 pybliometrics.init()
 
-
+def get_new_reference_df():
+    return pd.DataFrame(REFERENCE_PAPERS, columns=["title", "doi", "present_openalex", "present_scopus", "present_lens", "present_dimensions"])
 def check_dois_in_databases(dois: list[str]) -> pd.DataFrame:
     """Check which DOIs exist in Scopus and OpenAlex.
 
@@ -275,7 +276,7 @@ def add_reference_papers(df: pd.DataFrame, reference_dois: List[str]) -> pd.Data
 
 
 def show_merged_stats(
-    merged_papers: pd.DataFrame, reference_dois: List[str], database_names: List[str]
+    merged_papers: pd.DataFrame, database_names: List[str]
 ) -> None:
     """Print statistics about merged papers.
 
@@ -284,11 +285,10 @@ def show_merged_stats(
         reference_dois: List of reference DOIs
         database_names: List of database names (e.g., ['scopus', 'openalex'])
     """
-    total_papers = len(merged_papers)
-
-    # Create in_{db} columns for each database
     for db in database_names:
         merged_papers[f"in_{db}"] = merged_papers[f"id_{db}"].notna()
+
+    reference_df = merged_papers[merged_papers["is_reference"]]    
 
     # Calculate common papers (in all databases)
     common_papers = (
@@ -297,22 +297,27 @@ def show_merged_stats(
         .sum()
     )
     # Calculate papers appearing in at least one database
-
     found_papers = (
         pd.concat([merged_papers[f"in_{db}"] for db in database_names], axis=1)
         .any(axis=1)
         .sum()
     )
-    print(f"Total number of papers found: {found_papers}")
-    print(
-        f"Reference papers missing: {total_papers - found_papers} over {len(reference_dois)}"
+    reference_found = (
+        pd.concat([reference_df[f"in_{db}"] for db in database_names], axis=1)
+        .any(axis=1)
+        .sum()
     )
+    total_reference = len(reference_df)
+
+
+    print(f"Total number of papers found: {found_papers}")
+    print(f"Reference papers found: {reference_found} over {total_reference}")
     print(f"Number of common papers in all databases: {common_papers}")
 
     # Print stats for each database
     for db in database_names:
         ref_in_db = (
-            merged_papers[f"in_{db}"] & merged_papers["doi"].isin(reference_dois)
+            merged_papers[f"in_{db}"] & merged_papers["is_reference"]
         ).sum()
         in_db = merged_papers[f"in_{db}"].sum()
         print(f"Number of papers in {db}: {in_db}")
@@ -358,7 +363,7 @@ def prompt_user_for_action() -> str:
 
 # --- Main workflow ---
 def main():
-    papers_df = pd.DataFrame(REFERENCE_PAPERS, columns=["title", "doi", "present_openalex", "present_scopus", "present_lens", "present_dimensions"])
+    papers_df = get_new_reference_df()
     database_names = []
     # Step 1: Query Scopus
     
@@ -383,7 +388,7 @@ def main():
         papers_df, database_names = add_dimensions_papers(papers_df, database_names)
 
     # Add reference papers in the final dataframe.
-    papers_df = show_merged_stats(papers_df, REFERENCE_DOIS, database_names)
+    papers_df = show_merged_stats(papers_df, database_names)
 
     # Step 4: User interaction
     while True:
