@@ -17,7 +17,7 @@ from ollama_analysis import (
 )
 from querier_dimensions import read_dimensions_export
 from querier_lens import read_lens_export
-from settings import AUTOMATICALLY_OVERWRITE, DEFAULT_DF_COLUMNS, MAIN_QUERY, OPENALEX_QUERY, OUTPUT_CSV_PATH, OUTPUT_DOI_RESULTS, OUTPUT_PATH, OUTPUT_UPSET, PATH_DIMENSIONS_EXPORT, PATH_LENS_EXPORT, QUESTIONS, REFERENCE_DOIS, SCOPUS_QUERY
+from settings import AUTOMATICALLY_OVERWRITE, DEFAULT_DF_COLUMNS, MAIN_QUERY, OPENALEX_QUERY, OUTPUT_CSV_PATH, OUTPUT_DOI_RESULTS, OUTPUT_PATH, OUTPUT_UPSET, PATH_DIMENSIONS_EXPORT, PATH_LENS_EXPORT, QUESTIONS, REFERENCE_DOIS, REFERENCE_PAPERS, SCOPUS_QUERY
 from upset_plotter import plot_and_save_upset
 pybliometrics.init()
 
@@ -41,6 +41,25 @@ def check_dois_in_databases(dois: list[str]) -> pd.DataFrame:
             "in_db_openalex": in_openalex,
         })
     return pd.DataFrame(results)
+
+
+def add_scopus_papers(input_papers: pd.DataFrame, database_names: List[str]) -> tuple[pd.DataFrame, List[str]]:
+    print("---- Getting query on Scopus ---")
+    print("Query :", SCOPUS_QUERY)
+    results_scopus = query_scopus(SCOPUS_QUERY)
+    if results_scopus is not None:
+        input_papers: pd.DataFrame = merge_papers(input_papers,results_scopus, "scopus")
+        database_names += ["scopus"]
+    return input_papers,database_names
+
+def add_openalex_papers(input_papers: pd.DataFrame, database_names: List[str]) -> tuple[pd.DataFrame, List[str]]:
+    print("Query :", OPENALEX_QUERY)
+    results_openalex = query_openalex(OPENALEX_QUERY)
+    if results_openalex is not None:
+        input_papers: pd.DataFrame = merge_papers(input_papers,results_openalex, "openalex")
+        database_names += ["openalex"]
+    return input_papers,database_names
+
 
 def add_dimensions_papers(
     merged_papers: pd.DataFrame, database_names: List[str]
@@ -302,8 +321,6 @@ def show_merged_stats(
 
 
 
-
-
 # --- File I/O functions ---
 def check_overwrite(
     file_path: Path, automatically_overwrite: bool = AUTOMATICALLY_OVERWRITE
@@ -341,35 +358,33 @@ def prompt_user_for_action() -> str:
 
 # --- Main workflow ---
 def main():
+    papers_df = pd.DataFrame(REFERENCE_PAPERS, columns=["title", "doi", "present_openalex", "present_scopus", "present_lens", "present_dimensions"])
+    database_names = []
     # Step 1: Query Scopus
-    print("---- Getting query on Scopus ---")
-    print("Query :", SCOPUS_QUERY)
+    
     # assert SCOPUS_QUERY == OLD_SCOPUS_QUERY
-    results_scopus = query_scopus(SCOPUS_QUERY)
+    papers_df, database_names = add_scopus_papers(papers_df, database_names)
+    
     # Step 2: Query OpenAlex
-    print("---- Getting query on OpenAlex ---")
-    results_openalex = query_openalex(OPENALEX_QUERY)
+    papers_df, database_names = add_openalex_papers(papers_df, database_names)
 
     # Step 3: Merge papers from Scopus and OpenAlex
     print("---- Merging papers ---")
-    database_names = ["scopus", "openalex"]
-    merged_papers: pd.DataFrame = merge_papers(
-        results_scopus, results_openalex, "openalex"
-    )
-
+    
+    
     # Step 3b: Ask if user wants to add lens.database
     user_input = input("Search for Lens papers? (y/n): ").lower()
     if user_input == "y":
-        merged_papers, database_names = add_lens_papers(merged_papers, database_names)
+        papers_df, database_names = add_lens_papers(papers_df, database_names)
 
     # Step 3c: Ask if user wants to add dimensions.ai papers
     user_input = input("Search for Dimensions.ai papers? (y/n): ").lower()
     if user_input == "y":
-        merged_papers, database_names = add_dimensions_papers(merged_papers, database_names)
+        papers_df, database_names = add_dimensions_papers(papers_df, database_names)
 
     # Add reference papers in the final dataframe.
-    merged_papers = add_reference_papers(merged_papers, REFERENCE_DOIS)
-    merged_papers = show_merged_stats(merged_papers, REFERENCE_DOIS, database_names)
+    papers_df = add_reference_papers(papers_df, REFERENCE_DOIS)
+    papers_df = show_merged_stats(papers_df, REFERENCE_DOIS, database_names)
 
     # Step 4: User interaction
     while True:
@@ -378,17 +393,17 @@ def main():
             return
         elif action == "p":  # print names
             for idx, (doi, paper) in enumerate(
-                zip(merged_papers["doi"], merged_papers.to_dict("records")), 1
+                zip(papers_df["doi"], papers_df.to_dict("records")), 1
             ):
                 if paper["title"] is not None:
                     print(
                         f"{idx}. {paper['title']} {'(Reference)' if doi in REFERENCE_DOIS else ''}"
                     )
         elif action == "s":  # Save merged papers as CSV
-            save_dataframe_to_csv(merged_papers, OUTPUT_DOI_RESULTS)
+            save_dataframe_to_csv(papers_df, OUTPUT_DOI_RESULTS)
         elif action == "u":
             if check_overwrite(OUTPUT_UPSET, AUTOMATICALLY_OVERWRITE):
-                plot_and_save_upset(merged_papers, OUTPUT_UPSET)
+                plot_and_save_upset(papers_df, OUTPUT_UPSET)
                 print(f"Upset plot saved to {OUTPUT_UPSET}")
         elif action == "c":  # continue
             os.makedirs(OUTPUT_CSV_PATH.parent, exist_ok=True)
@@ -407,7 +422,7 @@ def main():
     agent = setup_chat_agent()
 
     print("Analyzing papers with agent")
-    results_df = analyze_papers_with_agent(agent, merged_papers, QUESTIONS)
+    results_df = analyze_papers_with_agent(agent, papers_df, QUESTIONS)
 
     print(f"Saving results to {OUTPUT_CSV_PATH}")
     save_dataframe_to_csv(results_df, OUTPUT_CSV_PATH)

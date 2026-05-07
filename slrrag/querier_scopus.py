@@ -1,7 +1,9 @@
+from typing import List
+
 import pandas as pd
 from pybliometrics.scopus import ScopusSearch
 
-from settings import DEFAULT_DF_COLUMNS_SCOPUS, SCOPUS_IS_SUBSCRIBER, THRESHOLD_BIG_COUNT_PAPER
+from settings import SCOPUS_IS_SUBSCRIBER, THRESHOLD_BIG_COUNT_PAPER
 
 
 def check_doi_in_scopus(doi: str) -> bool:
@@ -16,7 +18,7 @@ def check_doi_in_scopus(doi: str) -> bool:
 
 
 # --- Scopus functions ---
-def query_scopus(query: str) -> pd.DataFrame:
+def query_scopus(query: str) -> pd.DataFrame | None:
     """Query Scopus and return results."""
     try:
         nb_paper = ScopusSearch(query=query, download=False).get_results_size()
@@ -27,10 +29,10 @@ def query_scopus(query: str) -> pd.DataFrame:
                 )
                 return scopus_to_dict_list(scopus_search)
             else:
-                return pd.DataFrame(columns=DEFAULT_DF_COLUMNS_SCOPUS)
+                return None
     except Exception as e:
-        print(e, "\nReturning empty DataFrame")
-        return pd.DataFrame(columns=DEFAULT_DF_COLUMNS_SCOPUS)
+        print(e, "\nReturning None")
+        return None
 
 
 def scopus_to_dict_list(results: ScopusSearch) -> pd.DataFrame:

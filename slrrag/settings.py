@@ -114,9 +114,9 @@ REFERENCE_PAPERS = [
         True, True, True, True
     )
 ]
-REFERENCE_DF = pd.DataFrame(REFERENCE_PAPERS, columns=["title", "doi", "present_openalex", "present_scopus", "present_lens", "present_dimensions"])
 
-REFERENCE_DOIS = REFERENCE_DF["doi"].to_list()
+
+REFERENCE_DOIS = [paper[1] for paper in REFERENCE_PAPERS]
 
 
 QUESTIONS = [
@@ -142,7 +142,5 @@ THRESHOLD_BIG_COUNT_PAPER = 1
 DEFAULT_OPEN_ALEX_PAGING = 50
 LIST_NAME_DATABASE = ["scopus", "openalex"]
 DEFAULT_DF_COLUMNS = ["doi", "title", "date", "abstract"]
-DEFAULT_DF_COLUMNS_SCOPUS = DEFAULT_DF_COLUMNS + ["id_scopus"]
-DEFAULT_DF_COLUMNS_OPENALEX = DEFAULT_DF_COLUMNS + ["id_openalex"]
 DEFAULT_DF_COLUMNS_LENS = DEFAULT_DF_COLUMNS + ["id_lens"]
 DEFAULT_DF_COLUMNS_DIMENSIONS = DEFAULT_DF_COLUMNS + ["id_dimensions"]
