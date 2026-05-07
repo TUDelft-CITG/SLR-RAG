@@ -1,5 +1,4 @@
 import csv
-import getpass
 import json
 import os
 from pathlib import Path
@@ -9,16 +8,17 @@ from typing import Dict, List, Optional
 import pandas as pd
 import plotly
 import pybliometrics
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.runnables.base import RunnableSequence
-from langchain_ollama import ChatOllama
 from pyalex import Works
 from pybliometrics.scopus import ScopusSearch
 from scopus_to_lens import convert_query_to_lens
 from tqdm import tqdm
 from upsetty import Upset
 from scopus_to_dimensions import query_to_dimensions_url
+from ollama_analysis import (
+    setup_chat_agent,
+    analyze_paper,
+    analyze_papers_with_agent,
+)
 pybliometrics.init()
 
 # --- User-defined variables ---
@@ -157,9 +157,6 @@ OUTPUT_DOI_RESULTS = OUTPUT_PATH / "papers_selected.csv"
 OUTPUT_UPSET = OUTPUT_PATH / "upset.html"
 
 
-OLLAMA_MODEL = "llama3.1"
-MISTRAL_MODEL = "ministral-3b-2512"
-PROMPT_MODEL = "Title: {title}\nAbstract: {abstract}\nQuestion: {question}\nOnly answer with 'True' or 'False', without a dot, nothing else."
 SCOPUS_IS_SUBSCRIBER = True
 THRESHOLD_BIG_COUNT_PAPER = 1
 DEFAULT_OPEN_ALEX_PAGING = 50
@@ -620,60 +617,6 @@ def save_dataframe_to_csv(df: pd.DataFrame, file_path: Path) -> None:
     if check_overwrite(file_path, AUTOMATICALLY_OVERWRITE):
         df.to_csv(file_path, index=False)
         print(f"Results saved in {file_path}")
-
-
-def analyze_papers_with_agent(
-    agent, papers_df: pd.DataFrame, questions: List[str]
-) -> pd.DataFrame:
-    """Analyze papers using agent and return DataFrame with answers."""
-    results = []
-
-    for paper in tqdm(papers_df.to_dict("records")):
-        answers = analyze_paper(
-            agent, paper["title"], paper.get("abstract", ""), questions
-        )
-        paper_with_answers = {
-            "doi": paper["doi"],
-            "title": paper["title"],
-            "date": paper["date"],
-            **answers,
-        }
-        results.append(paper_with_answers)
-        sleep(1)  # To avoid rate limit
-
-    return pd.DataFrame(results)
-
-
-# --- LangChain agent ---
-def setup_chat_agent() -> ChatOllama:
-    """Initialize Chat agent."""
-    user_out_agent = input(f"Use ollama:{OLLAMA_MODEL} ('o') , or Mistral ('m')?\n>")
-    while True:
-        if user_out_agent == "o":
-            print(f"using ollama:{OLLAMA_MODEL}")
-            return ChatOllama(model=OLLAMA_MODEL)
-        elif user_out_agent == "m":
-            print(f"Using Mistral 🥖🐈")
-            from langchain_mistralai import ChatMistralAI
-
-            if "MISTRAL_API_KEY" not in os.environ:
-                os.environ["MISTRAL_API_KEY"] = getpass.getpass(
-                    "Enter your Mistral API key: "
-                )
-            return ChatMistralAI(model="ministral-3b-2512")
-        else:
-            print(f"Wrong output. {user_out_agent}")
-
-
-def analyze_paper(agent, title: str, abstract: str, questions: List[str]) -> Dict:
-    """Use the agent to answer questions about a paper."""
-    prompt = ChatPromptTemplate.from_template(PROMPT_MODEL)
-    chain: RunnableSequence = prompt | agent | StrOutputParser()
-    answers = {}
-    for q in questions:
-        response = chain.invoke({"title": title, "abstract": abstract, "question": q})
-        answers[q] = response.strip()
-    return answers
 
 
 def prompt_user_for_action() -> str:
