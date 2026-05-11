@@ -34,21 +34,43 @@ import pandas as pd
 # """
 ### THIRD QUERY
 
-MAIN_QUERY = """
-("risk assessment" OR "risk analysis") AND
-("Offshore windfarm" OR "Offshore windmill" OR "Offshore wind turbine" OR "Offshore wind park" OR "OWF") AND
-("maritime" OR "navigational" OR "nautical")
-"""
+# MAIN_QUERY = """
+# ("risk assessment" OR "risk analysis") AND
+# ("Offshore windfarm" OR "Offshore windmill" OR "Offshore wind turbine" OR "Offshore wind park" OR "OWF") AND
+# ("maritime" OR "navigational" OR "nautical")
+# """
 
+### FOURTH QUERY
+
+# MAIN_QUERY = """
+# ("ship collision" OR "ship-object collision" OR "allision" OR "maritime accident" OR "ship encounter" OR "safety" OR "risk assessments" OR "risk analysis" OR "risk model" OR "hazards") AND
+# ("Offshore windfarms" OR "Offshore wind farms" OR "Offshore windmill" OR "Offshore wind turbine" OR "Offshore wind park" OR "OWF") AND
+# ("maritime" OR  "navigational" OR "nautical" OR "marine" OR "shipping")
+# """
+
+
+### FIFTH QUERY
+
+
+MAIN_QUERY = """
+("ship collision" OR "ship-object collision" OR "allision" OR "maritime accident" OR "ship encounter" OR "safety" OR "risk assessments" OR "risk analysis" OR "risk model" OR "hazards") AND
+("Offshore windfarms" OR "Offshore wind farms" OR "Offshore windmill" OR "Offshore wind turbine" OR "Offshore wind park" OR "OWF" OR "Offshore wind energy" OR "Offshore infrastructure" OR "Offshore construction" OR "Offshore installation" OR "offshore marine platforms") AND
+("maritime" OR  "navigational" OR "nautical" OR "marine" OR "shipping")
+"""
 SCOPUS_QUERY = f"""
 TITLE-ABS-KEY( {MAIN_QUERY})
 """
 
 OPENALEX_QUERY = MAIN_QUERY
 
-
+# TITLE, DOI, IN_SCOPUS, IN_OPENALEX, IN_LENS,
 REFERENCE_PAPERS = [
-   (
+    (
+        "A critique of the use of domain analysis for spatial collision risk assessment",
+        "10.1016/j.oceaneng.2020.108259",
+        True, True, True, True
+    ),
+    (
         "A dynamic risk assessment method to address safety of navigation concerns around offshore renewable energy installations",
         "10.1177/1475090219837409",
         True, True, True, True
@@ -66,7 +88,12 @@ REFERENCE_PAPERS = [
     (
         "A Novel Method for Navigational Risk Assessment in Wind Farm Waters Based on the Fuzzy Inference System",
         "10.1155/2021/4588333",
-        True, True, False, False
+        True, True, False, True
+    ),
+    (
+        "A study on influence of Putian Port offshore wind farm construction on navigation safety",
+        "",
+        False, True, False, False
     ),
     (
         "A System-Theory and Complex Network-Fused Approach to Analyze Vessel–Wind Turbine Allisions in Offshore Wind Farm Waters",
@@ -74,9 +101,19 @@ REFERENCE_PAPERS = [
         True, True, True, True
     ),
     (
+        "Allision risk analysis of offshore petroleum installations on the Norwegian Continental Shelf—an empirical study of vessel traffic patterns",
+        "10.1007/s13437-016-0123-7",
+        True, True, True, True
+    ),
+    (
         "Assessing the impacts to vessel traffic from offshore wind farms in the Thames Estuary",
         "",
-        True, False, True, False
+        False, True, True, False
+    ),
+    (
+        "Assessing the validity of navigation risk assessments; A study of offshore wind farms in the UK",
+        "10.1016/j.ocecoaman.2022.106078",
+        True, True, False, True
     ),
     (
         "Evaluation of Ship Importance in Offshore Wind Farm Area Based on Fusion Gravity Model in Complex Network",
@@ -89,9 +126,14 @@ REFERENCE_PAPERS = [
         True, True, True, True
     ),
     (
+        "Likelihood of a marine vessel accident from wind energy development in the Atlantic",
+        "10.1002/we.1935",
+        True, True, True, True
+    ),
+    (
         "Multi-Perspective Nautical Safety Risk Assessment of Allisions with Offshore Wind Parks",
         "10.2139/ssrn.5002935",
-        True, False, False, False
+        True, True, False, False
     ),
     (
         "Navigational Risk Assessment in Offshore Wind Farms Using Spatial Ship Domain Models",
@@ -99,13 +141,28 @@ REFERENCE_PAPERS = [
         True, True, False, False
     ),
     (
+        "Navigational Safety Hazards Posed by Offshore Wind Farms: A Comprehensive Literature Review and Bibliometric Analysis.",
+        "10.3390/jmse13071330",
+        True, True, True, True
+    ),
+    (
         "Probabilistic approach for collision risk analysis of powered vessel with offshore platforms",
         "10.1016/j.oceaneng.2018.01.008",
         True, True, True, True
     ),
     (
+        "Realising advanced risk assessment of vessel traffic flows near offshore wind farms",
+        "10.1016/j.ress.2020.107086",
+        True, True, True, True
+    ),
+    (
         "Research on the Impact of Deep Sea Offshore Wind Farms on Maritime Safety",
         "10.3390/jmse13040699",
+        True, True, True, True
+    ),
+    (
+        "Review of Probabilistic Risk Assessment Models for Ship Collisions with Structures",
+        "10.3390/app12073441",
         True, True, True, True
     ),
     (

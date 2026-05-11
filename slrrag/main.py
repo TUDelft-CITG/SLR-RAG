@@ -19,30 +19,9 @@ from querier_dimensions import read_dimensions_export
 from querier_lens import read_lens_export
 from settings import AUTOMATICALLY_OVERWRITE, DEFAULT_DF_COLUMNS, MAIN_QUERY, OPENALEX_QUERY, OUTPUT_CSV_PATH, OUTPUT_DOI_RESULTS, OUTPUT_PATH, OUTPUT_UPSET, PATH_DIMENSIONS_EXPORT, PATH_LENS_EXPORT, QUESTIONS, REFERENCE_DOIS, REFERENCE_PAPERS, SCOPUS_QUERY
 from upset_plotter import plot_and_save_upset
-pybliometrics.init()
 
 def get_new_reference_df():
     return pd.DataFrame(REFERENCE_PAPERS, columns=["title", "doi", "present_openalex", "present_scopus", "present_lens", "present_dimensions"])
-def check_dois_in_databases(dois: list[str]) -> pd.DataFrame:
-    """Check which DOIs exist in Scopus and OpenAlex.
-
-    Args:
-        dois: List of DOI strings to check
-
-    Returns:
-        DataFrame with columns: doi, in_db_scopus, in_db_openalex
-    """
-    results = []
-    for doi in dois:
-        in_scopus = check_doi_in_scopus(doi)
-        in_openalex = check_doi_in_openalex(doi)
-        results.append({
-            "doi": doi,
-            "in_db_scopus": in_scopus,
-            "in_db_openalex": in_openalex,
-        })
-    return pd.DataFrame(results)
-
 
 def add_scopus_papers(input_papers: pd.DataFrame, database_names: List[str]) -> tuple[pd.DataFrame, List[str]]:
     print("---- Getting query on Scopus ---")
@@ -296,11 +275,10 @@ def show_merged_stats(
         .all(axis=1)
         .sum()
     )
+    merged_papers["is_found"] =  pd.concat([merged_papers[f"in_{db}"] for db in database_names], axis=1).any(axis=1)
     # Calculate papers appearing in at least one database
     found_papers = (
-        pd.concat([merged_papers[f"in_{db}"] for db in database_names], axis=1)
-        .any(axis=1)
-        .sum()
+       merged_papers["is_found"].sum()
     )
     reference_found = (
         pd.concat([reference_df[f"in_{db}"] for db in database_names], axis=1)
@@ -354,15 +332,16 @@ def prompt_user_for_action() -> str:
     """Prompt the user for action: continue, print papers, or exit."""
     while True:
         user_input = input(
-            f"Choose an option:\n  'c' to continue with the agents\n  'p' to print papers' names\n  'e' to exit\n  's' to save to '{OUTPUT_DOI_RESULTS}'\n  'u' to plot upset plot at '{OUTPUT_UPSET}'\n> "
+            f"Choose an option:\n  'c' to continue with the agents\n  'p' to print papers' names\n 'r' to see references papers \n 'e' to exit\n  's' to save to '{OUTPUT_DOI_RESULTS}'\n  'u' to plot upset plot at '{OUTPUT_UPSET}'\n> "
         ).lower()
-        if user_input in ["c", "p", "e", "s", "u"]:
+        if user_input in ["c", "p", "e", "s", "u", "r"]:
             return user_input
         print("Invalid option. Please try again.")
 
 
 # --- Main workflow ---
 def main():
+    pybliometrics.init() # Init for scopus
     papers_df = get_new_reference_df()
     database_names = []
     # Step 1: Query Scopus
@@ -396,7 +375,7 @@ def main():
         if action == "e":  # exit
             return
         elif action == "p":  # print names
-            print(papers_df[["title","doi","is_reference"]])
+            print(papers_df[["title","doi","is_reference", "is_found"]])
         elif action == "s":  # Save merged papers as CSV
             save_dataframe_to_csv(papers_df, OUTPUT_DOI_RESULTS)
         elif action == "u":
@@ -406,6 +385,8 @@ def main():
         elif action == "c":  # continue
             os.makedirs(OUTPUT_CSV_PATH.parent, exist_ok=True)
             break
+        elif action == "r":
+            print(papers_df.query("is_reference")[["title","doi","is_reference", "is_found"]])
 
     # Check if file exists and prompt user for overwrite
     if OUTPUT_CSV_PATH.exists() and not AUTOMATICALLY_OVERWRITE:

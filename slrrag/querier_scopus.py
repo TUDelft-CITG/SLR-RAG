@@ -11,9 +11,10 @@ def check_doi_in_scopus(doi: str) -> bool:
     try:
         from pybliometrics.scopus import ScopusSearch
         query = f'DOI("{doi}")'
-        search = ScopusSearch(query=query, download=False, subscriber=True)
+        search = ScopusSearch(query=query, verbose=True, download=False, subscriber=SCOPUS_IS_SUBSCRIBER)
         return search.get_results_size() > 0
-    except Exception:
+    except Exception as e:
+        print(e)
         return False
 
 
@@ -21,7 +22,7 @@ def check_doi_in_scopus(doi: str) -> bool:
 def query_scopus(query: str) -> pd.DataFrame | None:
     """Query Scopus and return results."""
     try:
-        nb_paper = ScopusSearch(query=query, download=False).get_results_size()
+        nb_paper = ScopusSearch(query=query, download=False,subscriber=SCOPUS_IS_SUBSCRIBER).get_results_size()
         if nb_paper > THRESHOLD_BIG_COUNT_PAPER:
             if input(f"{nb_paper} found in Scopus. Continue? (y/n)").lower() == "y":
                 scopus_search = ScopusSearch(
