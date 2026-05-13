@@ -57,6 +57,17 @@ MAIN_QUERY = """
 ("Offshore windfarms" OR "Offshore wind farms" OR "Offshore windmill" OR "Offshore wind turbine" OR "Offshore wind park" OR "OWF" OR "Offshore wind energy" OR "Offshore infrastructure" OR "Offshore construction" OR "Offshore installation" OR "offshore marine platforms") AND
 ("maritime" OR  "navigational" OR "nautical" OR "marine" OR "shipping")
 """
+
+
+### SIXTH QUERY
+
+
+MAIN_QUERY = """
+("collision" OR "allision") AND
+("Offshore infrastructure" OR "Offshore construction" OR "Offshore installation" OR "Offshore windfarm" OR "Offshore windfarms" OR "Offshore wind farm" OR "Offshore wind farms" OR "Offshore windmill" OR "Offshore wind turbine" OR "Offshore wind park" OR "OWF" OR "Offshore platform" OR "Oil platform" OR "Hydrogen platforms" OR "Bridge" OR "offshore marine platform") AND
+("maritime" OR "navigational" OR "nautical" OR "marine" OR "shipping" OR "vessel" OR "ship")
+"""
+
 SCOPUS_QUERY = f"""
 TITLE-ABS-KEY( {MAIN_QUERY})
 """
@@ -65,11 +76,6 @@ OPENALEX_QUERY = MAIN_QUERY
 
 # TITLE, DOI, IN_SCOPUS, IN_OPENALEX, IN_LENS,
 REFERENCE_PAPERS = [
-    (
-        "A critique of the use of domain analysis for spatial collision risk assessment",
-        "10.1016/j.oceaneng.2020.108259",
-        True, True, True, True
-    ),
     (
         "A dynamic risk assessment method to address safety of navigation concerns around offshore renewable energy installations",
         "10.1177/1475090219837409",
