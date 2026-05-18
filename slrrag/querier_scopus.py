@@ -3,7 +3,7 @@ from typing import List
 import pandas as pd
 from pybliometrics.scopus import ScopusSearch
 
-from settings import SCOPUS_IS_SUBSCRIBER, THRESHOLD_BIG_COUNT_PAPER
+from settings import DEFAULT_DF_COLUMNS, SCOPUS_IS_SUBSCRIBER, THRESHOLD_BIG_COUNT_PAPER
 
 
 def check_doi_in_scopus(doi: str) -> bool:
@@ -39,15 +39,18 @@ def query_scopus(query: str) -> pd.DataFrame | None:
 def scopus_to_dict_list(results: ScopusSearch) -> pd.DataFrame:
     """Convert Scopus results to a pandas DataFrame."""
     if results.results is None:
-        return pd.DataFrame(columns=DEFAULT_DF_COLUMNS_SCOPUS)
-    data = [
-        {
-            "doi": paper.doi,
-            "title": paper.title,
-            "date": paper.coverDate,
-            "abstract": paper.description,
-            "id_scopus": paper.eid,
-        }
-        for paper in results.results
-    ]
-    return pd.DataFrame(data)
+        return pd.DataFrame(columns=DEFAULT_DF_COLUMNS + ["id_scopus"])
+    else:
+        data = [
+            {
+                "doi": paper.doi,
+                "title": paper.title,
+                "date": paper.coverDate,
+                "abstract": paper.description,
+                "id_scopus": paper.eid,
+            }
+            for paper in results.results
+        ]
+    return_df= pd.DataFrame(data)
+    return_df["date"] = pd.to_datetime(return_df["date"],format="mixed")
+    return return_df

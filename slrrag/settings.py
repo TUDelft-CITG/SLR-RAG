@@ -62,11 +62,11 @@ MAIN_QUERY = """
 ### SIXTH QUERY
 
 
-MAIN_QUERY = """
-("collision" OR "allision") AND
-("Offshore infrastructure" OR "Offshore construction" OR "Offshore installation" OR "Offshore windfarm" OR "Offshore windfarms" OR "Offshore wind farm" OR "Offshore wind farms" OR "Offshore windmill" OR "Offshore wind turbine" OR "Offshore wind park" OR "OWF" OR "Offshore platform" OR "Oil platform" OR "Hydrogen platforms" OR "Bridge" OR "offshore marine platform") AND
-("maritime" OR "navigational" OR "nautical" OR "marine" OR "shipping" OR "vessel" OR "ship")
-"""
+# MAIN_QUERY = """
+# ("collision" OR "allision") AND
+# ("Offshore infrastructure" OR "Offshore construction" OR "Offshore installation" OR "Offshore windfarm" OR "Offshore windfarms" OR "Offshore wind farm" OR "Offshore wind farms" OR "Offshore windmill" OR "Offshore wind turbine" OR "Offshore wind park" OR "OWF" OR "Offshore platform" OR "Oil platform" OR "Hydrogen platforms" OR "Bridge" OR "offshore marine platform") AND
+# ("maritime" OR "navigational" OR "nautical" OR "marine" OR "shipping" OR "vessel" OR "ship")
+# """
 
 SCOPUS_QUERY = f"""
 TITLE-ABS-KEY( {MAIN_QUERY})
@@ -174,6 +174,11 @@ REFERENCE_PAPERS = [
     (
         "The Impact of Offshore Wind Farm Construction on Maritime Traffic Complexity; An Empirical Analysis of the Yangtze River Estuary",
         "10.3390/jmse12122232",
+        True, True, True, True
+    ),
+        (
+        "Risk Assessment of Collision Between Out of Control Vessels and Offshore Platforms",
+        "10.1109/ICTIS68762.2025.11214868",
         True, True, True, True
     )
 ]

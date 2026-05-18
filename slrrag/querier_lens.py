@@ -26,5 +26,5 @@ def read_lens_export(csv_path: Path | str) -> pd.DataFrame:
     for col in result_cols:
         if col not in df.columns:
             df[col] = None
-
+    df["date"] = pd.to_datetime(df["date"],format="mixed")
     return df[result_cols].copy()

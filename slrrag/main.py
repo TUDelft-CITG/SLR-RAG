@@ -21,7 +21,9 @@ from settings import AUTOMATICALLY_OVERWRITE, DEFAULT_DF_COLUMNS, MAIN_QUERY, OP
 from upset_plotter import plot_and_save_upset
 
 def get_new_reference_df():
-    return pd.DataFrame(REFERENCE_PAPERS, columns=["title", "doi", "present_openalex", "present_scopus", "present_lens", "present_dimensions"])
+    df_ret= pd.DataFrame(REFERENCE_PAPERS, columns=["title", "doi", "present_openalex", "present_scopus", "present_lens", "present_dimensions"])
+    df_ret["date"] = pd.NaT
+    return df_ret
 
 def add_scopus_papers(input_papers: pd.DataFrame, database_names: List[str]) -> tuple[pd.DataFrame, List[str]]:
     print("---- Getting query on Scopus ---")
@@ -204,6 +206,7 @@ def merge_papers(
     merged_df["date"] = merged_df[f"date"].fillna(
         merged_df.get(f"date_{right_db_name}", None)
     )
+
     merged_df["abstract"] = merged_df[f"abstract"].fillna(
         merged_df.get(f"abstract_{right_db_name}", None)
     )
@@ -253,7 +256,13 @@ def add_reference_papers(df: pd.DataFrame, reference_dois: List[str]) -> pd.Data
     new_df["is_reference"] = new_df["doi"].isin(REFERENCE_DOIS)
     return new_df
 
-
+def clean_merged_df(merged_papers: pd.DataFrame, database_names: List[str]):
+    for db in database_names:
+        merged_papers[f"in_{db}"] = merged_papers[f"id_{db}"].notna()
+    merged_papers["is_found"] =  pd.concat([merged_papers[f"in_{db}"] for db in database_names], axis=1).any(axis=1)
+    merged_papers["year"] = pd.to_datetime(merged_papers["date"],format="mixed").dt.year
+    merged_papers["year"] = merged_papers["year"].astype("Int64") # To avoid having floats
+    return merged_papers
 def show_merged_stats(
     merged_papers: pd.DataFrame, database_names: List[str]
 ) -> None:
@@ -264,9 +273,6 @@ def show_merged_stats(
         reference_dois: List of reference DOIs
         database_names: List of database names (e.g., ['scopus', 'openalex'])
     """
-    for db in database_names:
-        merged_papers[f"in_{db}"] = merged_papers[f"id_{db}"].notna()
-
     reference_df = merged_papers[merged_papers["is_reference"]]    
 
     # Calculate common papers (in all databases)
@@ -275,7 +281,6 @@ def show_merged_stats(
         .all(axis=1)
         .sum()
     )
-    merged_papers["is_found"] =  pd.concat([merged_papers[f"in_{db}"] for db in database_names], axis=1).any(axis=1)
     # Calculate papers appearing in at least one database
     found_papers = (
        merged_papers["is_found"].sum()
@@ -324,7 +329,7 @@ def save_dataframe_to_csv(df: pd.DataFrame, file_path: Path) -> None:
     """Save DataFrame to CSV with overwrite protection."""
     os.makedirs(file_path.parent, exist_ok=True)
     if check_overwrite(file_path, AUTOMATICALLY_OVERWRITE):
-        df.to_csv(file_path, index=False)
+        df.to_csv(file_path, index=False,date_format="%Y-%m-%d")
         print(f"Results saved in {file_path}")
 
 
@@ -332,7 +337,7 @@ def prompt_user_for_action() -> str:
     """Prompt the user for action: continue, print papers, or exit."""
     while True:
         user_input = input(
-            f"Choose an option:\n  'c' to continue with the agents\n  'p' to print papers' names\n 'r' to see references papers \n 'e' to exit\n  's' to save to '{OUTPUT_DOI_RESULTS}'\n  'u' to plot upset plot at '{OUTPUT_UPSET}'\n> "
+            f"Choose an option:\n  'c' to continue with the agents\n  'p' to print papers' names\n  'r' to see references papers \n  'e' to exit\n  's' to save to '{OUTPUT_DOI_RESULTS}'\n  'u' to plot upset plot at '{OUTPUT_UPSET}'\n> "
         ).lower()
         if user_input in ["c", "p", "e", "s", "u", "r"]:
             return user_input
@@ -367,6 +372,7 @@ def main():
         papers_df, database_names = add_dimensions_papers(papers_df, database_names)
 
     # Add reference papers in the final dataframe.
+    papers_df = clean_merged_df(papers_df,database_names)
     papers_df = show_merged_stats(papers_df, database_names)
 
     # Step 4: User interaction

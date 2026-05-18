@@ -38,5 +38,6 @@ def query_openalex(query: str) -> pd.DataFrame:
         columns={"publication_date": "date", "id": "id_openalex"}
     )
     return_df["doi"] = return_df["doi"].str.removeprefix("https://doi.org/")
+    return_df["date"] = pd.to_datetime(return_df["date"], format="mixed")
     return return_df
 
