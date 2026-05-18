@@ -34,11 +34,11 @@ import pandas as pd
 # """
 ### THIRD QUERY
 
-MAIN_QUERY = """
-("risk assessment" OR "risk analysis") AND
-("Offshore windfarm" OR "Offshore windmill" OR "Offshore wind turbine" OR "Offshore wind park" OR "OWF") AND
-("maritime" OR "navigational" OR "nautical")
-"""
+# MAIN_QUERY = """
+# ("risk assessment" OR "risk analysis") AND
+# ("Offshore windfarm" OR "Offshore windmill" OR "Offshore wind turbine" OR "Offshore wind park" OR "OWF") AND
+# ("maritime" OR "navigational" OR "nautical")
+# """
 
 ### FOURTH QUERY
 
@@ -70,9 +70,17 @@ MAIN_QUERY = """
 
 ### 7th QUERY
 
-# MAIN_QUERY = """
-# Navigational Risk Assessment
-# """
+MAIN_QUERY = """
+("collision" OR "allision" OR "accident" OR "ship encounter" OR "safety" OR "hazards" OR "risk") AND
+("Offshore infrastructure" OR "Offshore construction" OR "Offshore installation" OR "Offshore windfarm" OR "Offshore windfarms" OR "Offshore wind farm" OR "Offshore wind farms" OR "Offshore windmill" OR "Offshore wind turbine" OR "Offshore wind park" OR "OWF" OR "Offshore platform" OR "Oil platform" OR "Hydrogen platforms" OR "Bridge" OR "offshore marine platform") AND
+("maritime" OR "navigational" OR "nautical" OR "marine" OR "shipping" OR "vessel" OR "ship")
+"""
+
+### 8th QUERY
+
+MAIN_QUERY = """
+("offshore wind farms") AND ("navigational risks")
+"""
 
 SCOPUS_QUERY = f"""
 TITLE-ABS-KEY( {MAIN_QUERY})
@@ -83,7 +91,7 @@ MINIMUM_YEAR_NAME = "minimum_year"
 ADDITIONAL_PARAMETERS = {
     MINIMUM_YEAR_NAME : 2010 # Comment this line if no date filtering
 }
-# TITLE, DOI, IN_SCOPUS, IN_OPENALEX, IN_LENS,
+# TITLE, DOI, IN_SCOPUS, IN_OPENALEX, IN_LENS, IN_DIMENSIONS
 REFERENCE_PAPERS = [
     (
         "A dynamic risk assessment method to address safety of navigation concerns around offshore renewable energy installations",
@@ -107,7 +115,7 @@ REFERENCE_PAPERS = [
     ),
     (
         "A study on influence of Putian Port offshore wind farm construction on navigation safety",
-        "",
+        None,
         False, True, False, False
     ),
     (
@@ -122,7 +130,7 @@ REFERENCE_PAPERS = [
     ),
     (
         "Assessing the impacts to vessel traffic from offshore wind farms in the Thames Estuary",
-        "",
+        None,
         False, True, True, False
     ),
     (

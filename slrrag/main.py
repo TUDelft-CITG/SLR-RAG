@@ -216,7 +216,10 @@ def merge_papers(
         col for col in all_id_cols if col in merged_df.columns
     ]
     result_df = merged_df[result_cols].copy()
-    result_df["is_reference"] = result_df["doi"].isin(REFERENCE_DOIS)
+    # Check if papers are reference or not
+    reference_paper = get_new_reference_df()
+    # DOI Matches or title matches
+    result_df["is_reference"] = (result_df["doi"].notna() & result_df["doi"].isin(reference_paper["doi"])) | result_df["title"].isin(reference_paper["title"])
     return result_df
 
 
