@@ -15,7 +15,7 @@ def read_lens_export(csv_path: Path | str) -> pd.DataFrame:
         "Title": "title",
         "DOI": "doi",
         "Abstract": "abstract",
-        "Publication Year": "date",
+        "Date Published": "date",
         "Lens ID": "id_lens",
     }
     # Rename columns that exist

@@ -17,7 +17,7 @@ from ollama_analysis import (
 )
 from querier_dimensions import read_dimensions_export
 from querier_lens import read_lens_export
-from settings import AUTOMATICALLY_OVERWRITE, DEFAULT_DF_COLUMNS, MAIN_QUERY, OPENALEX_QUERY, OUTPUT_CSV_PATH, OUTPUT_DOI_RESULTS, OUTPUT_PATH, OUTPUT_UPSET, PATH_DIMENSIONS_EXPORT, PATH_LENS_EXPORT, QUESTIONS, REFERENCE_DOIS, REFERENCE_PAPERS, SCOPUS_QUERY
+from settings import ADDITIONAL_PARAMETERS, AUTOMATICALLY_OVERWRITE, DEFAULT_DF_COLUMNS, MAIN_QUERY, MINIMUM_YEAR_NAME, OPENALEX_QUERY, OUTPUT_CSV_PATH, OUTPUT_DOI_RESULTS, OUTPUT_PATH, OUTPUT_UPSET, PATH_DIMENSIONS_EXPORT, PATH_LENS_EXPORT, QUESTIONS, REFERENCE_DOIS, REFERENCE_PAPERS, SCOPUS_QUERY
 from upset_plotter import plot_and_save_upset
 
 def get_new_reference_df():
@@ -257,11 +257,21 @@ def add_reference_papers(df: pd.DataFrame, reference_dois: List[str]) -> pd.Data
     return new_df
 
 def clean_merged_df(merged_papers: pd.DataFrame, database_names: List[str]):
+    """
+    Make the clean of the datafram before further processing, and apply filters 
+    setup in ADDITIONAL_PARAMETERS
+    """
+    print("---------CLEANING------------")
     for db in database_names:
         merged_papers[f"in_{db}"] = merged_papers[f"id_{db}"].notna()
     merged_papers["is_found"] =  pd.concat([merged_papers[f"in_{db}"] for db in database_names], axis=1).any(axis=1)
     merged_papers["year"] = pd.to_datetime(merged_papers["date"],format="mixed").dt.year
     merged_papers["year"] = merged_papers["year"].astype("Int64") # To avoid having floats
+    if MINIMUM_YEAR_NAME in ADDITIONAL_PARAMETERS:
+        df_after = merged_papers[merged_papers['year'].isna() | (merged_papers['year'] >= ADDITIONAL_PARAMETERS[MINIMUM_YEAR_NAME])]
+        assert df_after["is_reference"].sum() == merged_papers["is_reference"].sum()
+        print(f"Filtering {len(merged_papers) - len(df_after)} papers that are before year {ADDITIONAL_PARAMETERS[MINIMUM_YEAR_NAME]}")
+        merged_papers = df_after
     return merged_papers
 def show_merged_stats(
     merged_papers: pd.DataFrame, database_names: List[str]
@@ -272,7 +282,9 @@ def show_merged_stats(
         merged_papers: DataFrame with merged paper data
         reference_dois: List of reference DOIs
         database_names: List of database names (e.g., ['scopus', 'openalex'])
-    """
+    """    
+    print("---------SUMMARIZING------------")
+
     reference_df = merged_papers[merged_papers["is_reference"]]    
 
     # Calculate common papers (in all databases)

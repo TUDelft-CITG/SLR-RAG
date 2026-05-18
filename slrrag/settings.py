@@ -34,11 +34,11 @@ import pandas as pd
 # """
 ### THIRD QUERY
 
-# MAIN_QUERY = """
-# ("risk assessment" OR "risk analysis") AND
-# ("Offshore windfarm" OR "Offshore windmill" OR "Offshore wind turbine" OR "Offshore wind park" OR "OWF") AND
-# ("maritime" OR "navigational" OR "nautical")
-# """
+MAIN_QUERY = """
+("risk assessment" OR "risk analysis") AND
+("Offshore windfarm" OR "Offshore windmill" OR "Offshore wind turbine" OR "Offshore wind park" OR "OWF") AND
+("maritime" OR "navigational" OR "nautical")
+"""
 
 ### FOURTH QUERY
 
@@ -52,11 +52,11 @@ import pandas as pd
 ### FIFTH QUERY
 
 
-MAIN_QUERY = """
-("ship collision" OR "ship-object collision" OR "allision" OR "maritime accident" OR "ship encounter" OR "safety" OR "risk assessments" OR "risk analysis" OR "risk model" OR "hazards") AND
-("Offshore windfarms" OR "Offshore wind farms" OR "Offshore windmill" OR "Offshore wind turbine" OR "Offshore wind park" OR "OWF" OR "Offshore wind energy" OR "Offshore infrastructure" OR "Offshore construction" OR "Offshore installation" OR "offshore marine platforms") AND
-("maritime" OR  "navigational" OR "nautical" OR "marine" OR "shipping")
-"""
+# MAIN_QUERY = """
+# ("ship collision" OR "ship-object collision" OR "allision" OR "maritime accident" OR "ship encounter" OR "safety" OR "risk assessments" OR "risk analysis" OR "risk model" OR "hazards") AND
+# ("Offshore windfarms" OR "Offshore wind farms" OR "Offshore windmill" OR "Offshore wind turbine" OR "Offshore wind park" OR "OWF" OR "Offshore wind energy" OR "Offshore infrastructure" OR "Offshore construction" OR "Offshore installation" OR "offshore marine platforms") AND
+# ("maritime" OR  "navigational" OR "nautical" OR "marine" OR "shipping")
+# """
 
 
 ### SIXTH QUERY
@@ -68,12 +68,21 @@ MAIN_QUERY = """
 # ("maritime" OR "navigational" OR "nautical" OR "marine" OR "shipping" OR "vessel" OR "ship")
 # """
 
+### 7th QUERY
+
+# MAIN_QUERY = """
+# Navigational Risk Assessment
+# """
+
 SCOPUS_QUERY = f"""
 TITLE-ABS-KEY( {MAIN_QUERY})
 """
 
 OPENALEX_QUERY = MAIN_QUERY
-
+MINIMUM_YEAR_NAME = "minimum_year"
+ADDITIONAL_PARAMETERS = {
+    MINIMUM_YEAR_NAME : 2010 # Comment this line if no date filtering
+}
 # TITLE, DOI, IN_SCOPUS, IN_OPENALEX, IN_LENS,
 REFERENCE_PAPERS = [
     (
