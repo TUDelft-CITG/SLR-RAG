@@ -17,7 +17,7 @@ from ollama_analysis import (
 )
 from querier_dimensions import read_dimensions_export
 from querier_lens import read_lens_export
-from settings import ADDITIONAL_PARAMETERS, AUTOMATICALLY_OVERWRITE, DEFAULT_DF_COLUMNS, MAIN_QUERY, MINIMUM_YEAR_NAME, OPENALEX_QUERY, OUTPUT_CSV_PATH, OUTPUT_DOI_RESULTS, OUTPUT_PATH, OUTPUT_UPSET, PATH_DIMENSIONS_EXPORT, PATH_LENS_EXPORT, QUESTIONS, REFERENCE_DOIS, REFERENCE_PAPERS, SCOPUS_QUERY
+from settings import ADDITIONAL_PARAMETERS, AUTOMATICALLY_OVERWRITE, DEFAULT_DF_COLUMNS, MAIN_QUERY, MINIMUM_YEAR_NAME, OPENALEX_QUERY, OUTPUT_CSV_AGENTS_PATH, OUTPUT_CSV_QUERY_RESULTS, OUTPUT_PATH, OUTPUT_UPSET, PATH_DIMENSIONS_EXPORT, PATH_LENS_EXPORT, QUESTIONS, REFERENCE_DOIS, REFERENCE_PAPERS, SCOPUS_QUERY
 from upset_plotter import plot_and_save_upset
 
 def get_new_reference_df():
@@ -347,20 +347,26 @@ def save_dataframe_to_csv(df: pd.DataFrame, file_path: Path) -> None:
         df.to_csv(file_path, index=False,date_format="%Y-%m-%d")
         print(f"Results saved in {file_path}")
 
-
-def prompt_user_for_action() -> str:
+def prompt_user_for_action_before_querying() -> str:
     """Prompt the user for action: continue, print papers, or exit."""
     while True:
         user_input = input(
-            f"Choose an option:\n  'c' to continue with the agents\n  'p' to print papers' names\n  'r' to see references papers \n  'e' to exit\n  's' to save to '{OUTPUT_DOI_RESULTS}'\n  'u' to plot upset plot at '{OUTPUT_UPSET}'\n> "
+            f"Choose an option:\n  's' to query the databases\n  'i' to import fron {OUTPUT_CSV_AGENTS_PATH}\n> "
+        ).lower()
+        if user_input in ["s", "i"]:
+            return user_input
+        print("Invalid option. Please try again.")
+def prompt_user_for_action_after_querying() -> str:
+    """Prompt the user for action: continue, print papers, or exit."""
+    while True:
+        user_input = input(
+            f"Choose an option:\n  'c' to continue with the agents\n  'p' to print papers' names\n  'r' to see references papers \n  'e' to exit\n  's' to save to '{OUTPUT_CSV_QUERY_RESULTS}'\n  'u' to plot upset plot at '{OUTPUT_UPSET}'\n> "
         ).lower()
         if user_input in ["c", "p", "e", "s", "u", "r"]:
             return user_input
         print("Invalid option. Please try again.")
 
-
-# --- Main workflow ---
-def main():
+def get_all_papers_from_databases(): 
     pybliometrics.init() # Init for scopus
     papers_df = get_new_reference_df()
     database_names = []
@@ -388,31 +394,38 @@ def main():
 
     # Add reference papers in the final dataframe.
     papers_df = clean_merged_df(papers_df,database_names)
+    return papers_df,database_names
+# --- Main workflow ---
+def main():
+    if prompt_user_for_action_before_querying() == "s": 
+        papers_df, database_names= get_all_papers_from_databases()
+    else: 
+        papers_df = pd.read_csv(OUTPUT_CSV_QUERY_RESULTS)
+        database_names = [c.removeprefix("id_") for c in papers_df.columns if c.startswith("id_")]
     papers_df = show_merged_stats(papers_df, database_names)
-
     # Step 4: User interaction
     while True:
-        action = prompt_user_for_action()
+        action = prompt_user_for_action_after_querying()
         if action == "e":  # exit
             return
         elif action == "p":  # print names
             print(papers_df[["title","doi","is_reference", "is_found"]])
         elif action == "s":  # Save merged papers as CSV
-            save_dataframe_to_csv(papers_df, OUTPUT_DOI_RESULTS)
+            save_dataframe_to_csv(papers_df, OUTPUT_CSV_QUERY_RESULTS)
         elif action == "u":
             if check_overwrite(OUTPUT_UPSET, AUTOMATICALLY_OVERWRITE):
                 plot_and_save_upset(papers_df, OUTPUT_UPSET)
                 print(f"Upset plot saved to {OUTPUT_UPSET}")
         elif action == "c":  # continue
-            os.makedirs(OUTPUT_CSV_PATH.parent, exist_ok=True)
+            os.makedirs(OUTPUT_CSV_AGENTS_PATH.parent, exist_ok=True)
             break
         elif action == "r":
             print(papers_df.query("is_reference")[["title","doi","is_reference", "is_found"]])
 
     # Check if file exists and prompt user for overwrite
-    if OUTPUT_CSV_PATH.exists() and not AUTOMATICALLY_OVERWRITE:
+    if OUTPUT_CSV_AGENTS_PATH.exists() and not AUTOMATICALLY_OVERWRITE:
         user_input = input(
-            f"File {OUTPUT_CSV_PATH} already exists. Overwrite? (y/n): "
+            f"File {OUTPUT_CSV_AGENTS_PATH} already exists. Overwrite? (y/n): "
         ).lower()
         if user_input != "y":
             print("Operation cancelled by user.")
@@ -424,10 +437,10 @@ def main():
     print("Analyzing papers with agent")
     results_df = analyze_papers_with_agent(agent, papers_df, QUESTIONS)
 
-    print(f"Saving results to {OUTPUT_CSV_PATH}")
-    save_dataframe_to_csv(results_df, OUTPUT_CSV_PATH)
+    print(f"Saving results to {OUTPUT_CSV_AGENTS_PATH}")
+    save_dataframe_to_csv(results_df, OUTPUT_CSV_AGENTS_PATH)
 
-    print(f"Analysis complete. Results saved to {OUTPUT_CSV_PATH}")
+    print(f"Analysis complete. Results saved to {OUTPUT_CSV_AGENTS_PATH}")
 
 
 if __name__ == "__main__":

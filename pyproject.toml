@@ -1,5 +1,5 @@
 [project]
-name = "slr-rag"
+name = "slrrag"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -12,4 +12,9 @@ dependencies = [
     "pyalex>=0.21",
     "pybliometrics>=4.4.1",
     "upsetty>=0.1.3",
+]
+
+[tool.pytest.ini_options]
+pythonpath = [
+  "slrrag"
 ]
