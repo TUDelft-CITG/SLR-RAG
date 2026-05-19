@@ -3,7 +3,7 @@ from typing import List
 import pandas as pd
 from pybliometrics.scopus import ScopusSearch
 
-from settings import DEFAULT_DF_COLUMNS, SCOPUS_IS_SUBSCRIBER, THRESHOLD_BIG_COUNT_PAPER
+from settings import DEFAULT_DF_COLUMNS, MAIN_QUERY, SCOPUS_IS_SUBSCRIBER, THRESHOLD_BIG_COUNT_PAPER
 
 
 def check_doi_in_scopus(doi: str) -> bool:
@@ -21,12 +21,16 @@ def check_doi_in_scopus(doi: str) -> bool:
 # --- Scopus functions ---
 def query_scopus(query: str) -> pd.DataFrame | None:
     """Query Scopus and return results."""
+    scopus_query = f"""
+TITLE-ABS-KEY( {query})
+"""
+    print("Query :", scopus_query)
     try:
-        nb_paper = ScopusSearch(query=query, download=False,subscriber=SCOPUS_IS_SUBSCRIBER).get_results_size()
+        nb_paper = ScopusSearch(query=scopus_query, download=False,subscriber=SCOPUS_IS_SUBSCRIBER).get_results_size()
         if nb_paper > THRESHOLD_BIG_COUNT_PAPER:
             if input(f"{nb_paper} found in Scopus. Continue? (y/n)").lower() == "y":
                 scopus_search = ScopusSearch(
-                    query=query, verbose=True, subscriber=SCOPUS_IS_SUBSCRIBER
+                    query=scopus_query, verbose=True, subscriber=SCOPUS_IS_SUBSCRIBER
                 )
                 return scopus_to_dict_list(scopus_search)
             else:

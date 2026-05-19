@@ -84,18 +84,41 @@ import pandas as pd
 
 ### 9th QUERY
 
+# MAIN_QUERY = """
+# ("offshore") AND ("infrastructure" OR "construction" OR "installation" OR "windfarm" OR "windfarms" OR "wind farm" OR "wind farms" OR "windmill" OR "wind turbine" OR "wind park" OR "wind energy") AND
+# (("Navigation risk assessment" OR "Navigational risk assessment") OR 
+# (("collision" OR "allision") AND ("ship" OR "vessel") AND ("Probabily" OR "likelihood" OR "model")) OR
+# ("risk" AND ("assess" OR "model" OR "predict") AND ("ship" OR "vessel" OR "maritime traffic")))
+# """
+
+### 10th QUERY
+
+# MAIN_QUERY = """
+# ("offshore") AND ("infrastructure*" OR "construction*" OR "installation*" OR "windfarm*" OR "wind farm*" OR "windmill*" OR "wind turbine*" OR "wind park*" OR "wind energy") AND
+# (("Navigation risk assessment*" OR "Navigational risk assessment*") OR
+# (("collision*" OR "allision*") AND ("ship*" OR "vessel*") AND ("probabi*" OR "likelihood*" OR "model*")) OR
+# ("risk*" AND ("assess*" OR "model*" OR "predict*" OR "analy*") AND ("ship*" OR "vessel*" OR "maritime traffic*" OR "navigation*")))
+# """
+
+
+### 11th QUERY
+
+# MAIN_QUERY = """
+# ("offshore") AND ("infrastructure*" OR "construction*" OR "installation*" OR "windfarm*" OR "wind farm*" OR "windmill*" OR "wind turbine*" OR "wind park*" OR "wind energy") AND
+# (("Navigation risk assessment*" OR "Navigational risk assessment*") OR
+# (("collision*" OR "allision*") AND ("ship*" OR "vessel*") AND ("probabi*" OR "likelihood*" OR "model*")) OR
+# (("risk*" OR "safety") AND ("assess*" OR "model*" OR "predict*" OR "analy*" OR "study" OR "studies") AND ("ship*" OR "vessel*" OR "maritime traffic*" OR "navigation*")))
+# """
+
+### 12th QUERY
+
 MAIN_QUERY = """
-("offshore") AND ("infrastructure" OR "construction" OR "installation" OR "windfarm" OR "windfarms" OR "wind farm" OR "wind farms" OR "windmill" OR "wind turbine" OR "wind park" OR "wind energy") AND
-(("Navigation risk assessment" OR "Navigational risk assessment") OR 
-(("collision" OR "allision") AND ("ship" OR "vessel") AND ("Probabily" OR "likelihood" OR "model")) OR
-("risk" AND ("assess" OR "model" OR "predict") AND ("ship" OR "vessel" OR "maritime traffic")))
+((("offshore") AND ("infrastructure" OR "construction" OR "installation" OR "windfarm" OR "wind farm" OR "windmill" OR "wind turbine" OR "wind park" OR "wind energy" OR "platform" OR "quay" OR "wharf" OR "lidar")) OR ("bridge" OR "flotel" OR "Aquaculture farm" OR "Artificial Island" OR "Synthetic Island")) AND
+(("Navigation risk assessment" OR "Navigational risk assessment" OR "Navigation risk assessments" OR "Navigational risk assessments") OR
+(("collision" OR "allision") AND ("ship" OR "vessel") AND ("probability" OR "probabilistic" OR "likelihood" OR "chance")) OR
+(("risk" OR "safe" OR "safety") AND ("assess" OR "assessing" OR "assessment" OR "model" OR "modeling" OR "modelisation" OR "predict" OR "predicting" OR "prediction" OR "analyse" OR "analysing" OR "analyze" OR "analyzing" OR "study" OR "studies" OR "studying") AND ("ship" OR "vessel" OR "maritime traffic" OR "navigation" OR "navigational" OR "nautical")))
 """
 
-SCOPUS_QUERY = f"""
-TITLE-ABS-KEY( {MAIN_QUERY})
-"""
-
-OPENALEX_QUERY = MAIN_QUERY
 MINIMUM_YEAR_NAME = "minimum_year"
 ADDITIONAL_PARAMETERS = {
     # MINIMUM_YEAR_NAME : 2010 # Comment this line if no date filtering

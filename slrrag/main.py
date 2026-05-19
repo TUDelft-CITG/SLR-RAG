@@ -17,7 +17,7 @@ from ollama_analysis import (
 )
 from querier_dimensions import read_dimensions_export
 from querier_lens import read_lens_export
-from settings import ADDITIONAL_PARAMETERS, AUTOMATICALLY_OVERWRITE, DEFAULT_DF_COLUMNS, MAIN_QUERY, MINIMUM_YEAR_NAME, OPENALEX_QUERY, OUTPUT_CSV_AGENTS_PATH, OUTPUT_CSV_QUERY_RESULTS, OUTPUT_PATH, OUTPUT_UPSET, PATH_DIMENSIONS_EXPORT, PATH_LENS_EXPORT, QUESTIONS, REFERENCE_DOIS, REFERENCE_PAPERS, SCOPUS_QUERY
+from settings import ADDITIONAL_PARAMETERS, AUTOMATICALLY_OVERWRITE, DEFAULT_DF_COLUMNS, MAIN_QUERY, MINIMUM_YEAR_NAME, OUTPUT_CSV_AGENTS_PATH, OUTPUT_CSV_QUERY_RESULTS, OUTPUT_PATH, OUTPUT_UPSET, PATH_DIMENSIONS_EXPORT, PATH_LENS_EXPORT, QUESTIONS, REFERENCE_DOIS, REFERENCE_PAPERS
 from upset_plotter import plot_and_save_upset
 
 def get_new_reference_df():
@@ -27,16 +27,14 @@ def get_new_reference_df():
 
 def add_scopus_papers(input_papers: pd.DataFrame, database_names: List[str]) -> tuple[pd.DataFrame, List[str]]:
     print("---- Getting query on Scopus ---")
-    print("Query :", SCOPUS_QUERY)
-    results_scopus = query_scopus(SCOPUS_QUERY)
+    results_scopus = query_scopus(MAIN_QUERY)
     if results_scopus is not None:
         input_papers: pd.DataFrame = merge_papers(input_papers,results_scopus, "scopus")
         database_names += ["scopus"]
     return input_papers,database_names
 
 def add_openalex_papers(input_papers: pd.DataFrame, database_names: List[str]) -> tuple[pd.DataFrame, List[str]]:
-    print("Query :", OPENALEX_QUERY)
-    results_openalex = query_openalex(OPENALEX_QUERY)
+    results_openalex = query_openalex(MAIN_QUERY)
     if results_openalex is not None:
         input_papers: pd.DataFrame = merge_papers(input_papers,results_openalex, "openalex")
         database_names += ["openalex"]
@@ -372,7 +370,6 @@ def get_all_papers_from_databases():
     database_names = []
     # Step 1: Query Scopus
     
-    # assert SCOPUS_QUERY == OLD_SCOPUS_QUERY
     papers_df, database_names = add_scopus_papers(papers_df, database_names)
     
     # Step 2: Query OpenAlex
