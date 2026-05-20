@@ -121,7 +121,7 @@ MAIN_QUERY = """
 
 MINIMUM_YEAR_NAME = "minimum_year"
 ADDITIONAL_PARAMETERS = {
-    # MINIMUM_YEAR_NAME : 2010 # Comment this line if no date filtering
+    MINIMUM_YEAR_NAME : 2010 # Comment this line if no date filtering
 }
 # TITLE, DOI, IN_SCOPUS, IN_OPENALEX, IN_LENS, IN_DIMENSIONS
 REFERENCE_PAPERS = [

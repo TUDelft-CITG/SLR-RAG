@@ -16,9 +16,8 @@ def check_doi_in_openalex(doi: str) -> bool:
 # --- OpenAlex functions ---
 def query_openalex(query: str) -> pd.DataFrame:
     """Query OpenAlex and return results as a pandas DataFrame."""
-    fixed_query = fix_quotes(query)
-    print("Query :", fixed_query)
-    works = Works().search_filter(title_and_abstract=fixed_query)
+    print("Query :", query)
+    works = Works().search_filter(title_and_abstract=query)
     nb_paper = works.count()
     if nb_paper > THRESHOLD_BIG_COUNT_PAPER:
         user_input = input(f"{nb_paper} found in OpenAlex. Continue? (y/n)").lower()
@@ -41,13 +40,4 @@ def query_openalex(query: str) -> pd.DataFrame:
     return_df["doi"] = return_df["doi"].str.removeprefix("https://doi.org/")
     return_df["date"] = pd.to_datetime(return_df["date"], format="mixed")
     return return_df
-
-
-def fix_quotes(text: str) -> str:
-    """
-    Remove all stars
-    This is because with OpenAlex, the * inside the quote is broken : https://github.com/ropensci/openalexR/issues/180
-    Note : this can 
-    """
-    return text.replace('"', '')
 

@@ -398,7 +398,9 @@ def main():
         papers_df, database_names= get_all_papers_from_databases()
     else: 
         papers_df = pd.read_csv(OUTPUT_CSV_QUERY_RESULTS)
+        
         database_names = [c.removeprefix("id_") for c in papers_df.columns if c.startswith("id_")]
+        papers_df = clean_merged_df(papers_df,database_names)
     papers_df = show_merged_stats(papers_df, database_names)
     # Step 4: User interaction
     while True:
