@@ -236,11 +236,38 @@ REFERENCE_PAPERS = [
 REFERENCE_DOIS = [paper[1] for paper in REFERENCE_PAPERS]
 
 
-QUESTIONS = [
-    "This paper discusses about risk assessment or risk analysis in the context of nautical safety for ships or Vessels. OR"
+FIRST_ROUND_QUESTIONS = [
+    "This paper discusses about risk assessment or risk analysis in the context of nautical safety for ships or vessels."
     "This paper talks about nautical safety around offshore infrastructures, like offshore windfarms.",
+    "This paper talks about a method to estimate the probability or risk of collision or allision of ships."
     "This paper includes a quantitative model.",
 ]
+
+
+# TODO : make global name (ASK an LLM)
+SECOND_ROUND_QUESTIONS = {
+    "strategic" : {
+        "frequency" : "This paper estimates the frequency / return periods of collisions of ships with another object in a certain area.",
+        "long-term": "This paper assesses the risk in a long-term context with static data."   
+    },
+    "tactical" : {
+        "traffic-accidents" : "This paper study the traffic in general, in order to minimize the risks of a accidents, such as by reducing the complexity or congestion of the traffic.",
+        "traffic-dynamic" : "This paper studies the entire traffic by using dynamic data."
+    },
+    "operational" : {
+        "short-term" :"This paper present a methodology to assess the risk of a accidents that can come in short-term (usually in terms of hours).",
+        "limited-number-agents" :"The paper uses only a limited amount of agents (ships) to estimate the risks of accidents."
+    },
+    "quantitative" : {
+        "quantitative-model" :"This paper includes a quantitative model to calculate the likehood of the risks in a mathematical way. (such as probability, risk index, frequency, or return period.",
+        "empirical-data" :"This paper relies on empirical data to estimate the risks"
+    },
+    "qualitative" : {
+        "expert-judgment" :"This paper makes use of experts judgements to estimate the risks.",
+        "visualisation" :"This paper only makes conclusion of the risks by visualizing the traffic, without calculating the risk in a mathematical way (like probability or frequency)."
+    }
+    
+}
 
 AUTOMATICALLY_OVERWRITE = False
 

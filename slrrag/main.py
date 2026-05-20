@@ -17,7 +17,7 @@ from ollama_analysis import (
 )
 from querier_dimensions import read_dimensions_export
 from querier_lens import read_lens_export
-from settings import ADDITIONAL_PARAMETERS, AUTOMATICALLY_OVERWRITE, DEFAULT_DF_COLUMNS, MAIN_QUERY, MINIMUM_YEAR_NAME, OUTPUT_CSV_AGENTS_PATH, OUTPUT_CSV_QUERY_RESULTS, OUTPUT_PATH, OUTPUT_UPSET, PATH_DIMENSIONS_EXPORT, PATH_LENS_EXPORT, QUESTIONS, REFERENCE_DOIS, REFERENCE_PAPERS
+from settings import ADDITIONAL_PARAMETERS, AUTOMATICALLY_OVERWRITE, DEFAULT_DF_COLUMNS, MAIN_QUERY, MINIMUM_YEAR_NAME, OUTPUT_CSV_AGENTS_PATH, OUTPUT_CSV_QUERY_RESULTS, OUTPUT_PATH, OUTPUT_UPSET, PATH_DIMENSIONS_EXPORT, PATH_LENS_EXPORT, FIRST_ROUND_QUESTIONS, REFERENCE_DOIS, REFERENCE_PAPERS
 from upset_plotter import plot_and_save_upset
 
 def get_new_reference_df():
@@ -434,7 +434,7 @@ def main():
     agent = setup_chat_agent()
 
     print("Analyzing papers with agent")
-    results_df = analyze_papers_with_agent(agent, papers_df, QUESTIONS)
+    results_df = analyze_papers_with_agent(agent, papers_df, FIRST_ROUND_QUESTIONS)
 
     print(f"Saving results to {OUTPUT_CSV_AGENTS_PATH}")
     save_dataframe_to_csv(results_df, OUTPUT_CSV_AGENTS_PATH)
