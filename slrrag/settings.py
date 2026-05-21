@@ -78,9 +78,9 @@ import pandas as pd
 
 ### 8th QUERY
 
-MAIN_QUERY = """
-("Navigational Risk assessment" OR "Navigation Risk assessment")
-"""
+# MAIN_QUERY = """
+# ("Navigational Risk assessment" OR "Navigation Risk assessment")
+# """
 
 ### 9th QUERY
 
@@ -112,12 +112,12 @@ MAIN_QUERY = """
 
 ### 12th QUERY
 
-# MAIN_QUERY = """
-# ((("offshore") AND ("infrastructure" OR "construction" OR "installation" OR "windfarm" OR "wind farm" OR "windmill" OR "wind turbine" OR "wind park" OR "wind energy" OR "platform" OR "quay" OR "wharf" OR "lidar")) OR ("bridge" OR "flotel" OR "Aquaculture farm" OR "Artificial Island" OR "Synthetic Island")) AND
-# (("Navigation risk assessment" OR "Navigational risk assessment" OR "Navigation risk assessments" OR "Navigational risk assessments") OR
-# (("collision" OR "allision") AND ("ship" OR "vessel") AND ("probability" OR "probabilistic" OR "likelihood" OR "chance")) OR
-# (("risk" OR "safe" OR "safety") AND ("assess" OR "assessing" OR "assessment" OR "model" OR "modeling" OR "modelisation" OR "predict" OR "predicting" OR "prediction" OR "analyse" OR "analysing" OR "analyze" OR "analyzing" OR "study" OR "studies" OR "studying") AND ("ship" OR "vessel" OR "maritime traffic" OR "navigation" OR "navigational" OR "nautical")))
-# """
+MAIN_QUERY = """
+((("offshore") AND ("infrastructure" OR "construction" OR "installation" OR "windfarm" OR "wind farm" OR "windmill" OR "wind turbine" OR "wind park" OR "wind energy" OR "platform" OR "quay" OR "wharf" OR "lidar")) OR ("bridge" OR "flotel" OR "Aquaculture farm" OR "Artificial Island" OR "Synthetic Island")) AND
+(("Navigation risk assessment" OR "Navigational risk assessment" OR "Navigation risk assessments" OR "Navigational risk assessments") OR
+(("collision" OR "allision") AND ("ship" OR "vessel") AND ("probability" OR "probabilistic" OR "likelihood" OR "chance")) OR
+(("risk" OR "safe" OR "safety") AND ("assess" OR "assessing" OR "assessment" OR "model" OR "modeling" OR "modelisation" OR "predict" OR "predicting" OR "prediction" OR "analyse" OR "analysing" OR "analyze" OR "analyzing" OR "study" OR "studies" OR "studying") AND ("ship" OR "vessel" OR "maritime traffic" OR "navigation" OR "navigational" OR "nautical")))
+"""
 
 MINIMUM_YEAR_NAME = "minimum_year"
 ADDITIONAL_PARAMETERS = {
@@ -305,13 +305,15 @@ DEFAULT_DF_COLUMNS_DIMENSIONS = DEFAULT_DF_COLUMNS + ["id_dimensions"]
 
 
 NAME_ARTICLE_TYPE_ARTICLE = "article"
-NAME_ARTICLE_TYPE_CONFERENCE_PAPER = "conference-paper"
 NAME_ARTICLE_TYPE_BOOK_CHAPTER = "book-chapter"
 NAME_ARTICLE_TYPE_DISSERTATION = "dissertation"
 NAME_ARTICLE_TYPE_PREPRINT = "preprint"
 NAME_ARTICLE_TYPE_BOOK = "book"
 NAME_ARTICLE_TYPE_REPORT = "report"
 NAME_ARTICLE_TYPE_OTHER = "other"
+
+LIST_TYPE_DOCUMENTS = [NAME_ARTICLE_TYPE_ARTICLE, NAME_ARTICLE_TYPE_BOOK_CHAPTER, NAME_ARTICLE_TYPE_DISSERTATION, 
+                       NAME_ARTICLE_TYPE_PREPRINT, NAME_ARTICLE_TYPE_BOOK, NAME_ARTICLE_TYPE_REPORT]
 
 CONVERSION_DICT_ARTICLE_TYPE_OPENALEX = {
     "article": NAME_ARTICLE_TYPE_ARTICLE,
