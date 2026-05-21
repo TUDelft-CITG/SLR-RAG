@@ -78,9 +78,9 @@ import pandas as pd
 
 ### 8th QUERY
 
-# MAIN_QUERY = """
-# ("Navigational Risk assessment" OR "Navigation Risk assessment")
-# """
+MAIN_QUERY = """
+("Navigational Risk assessment" OR "Navigation Risk assessment")
+"""
 
 ### 9th QUERY
 
@@ -112,12 +112,12 @@ import pandas as pd
 
 ### 12th QUERY
 
-MAIN_QUERY = """
-((("offshore") AND ("infrastructure" OR "construction" OR "installation" OR "windfarm" OR "wind farm" OR "windmill" OR "wind turbine" OR "wind park" OR "wind energy" OR "platform" OR "quay" OR "wharf" OR "lidar")) OR ("bridge" OR "flotel" OR "Aquaculture farm" OR "Artificial Island" OR "Synthetic Island")) AND
-(("Navigation risk assessment" OR "Navigational risk assessment" OR "Navigation risk assessments" OR "Navigational risk assessments") OR
-(("collision" OR "allision") AND ("ship" OR "vessel") AND ("probability" OR "probabilistic" OR "likelihood" OR "chance")) OR
-(("risk" OR "safe" OR "safety") AND ("assess" OR "assessing" OR "assessment" OR "model" OR "modeling" OR "modelisation" OR "predict" OR "predicting" OR "prediction" OR "analyse" OR "analysing" OR "analyze" OR "analyzing" OR "study" OR "studies" OR "studying") AND ("ship" OR "vessel" OR "maritime traffic" OR "navigation" OR "navigational" OR "nautical")))
-"""
+# MAIN_QUERY = """
+# ((("offshore") AND ("infrastructure" OR "construction" OR "installation" OR "windfarm" OR "wind farm" OR "windmill" OR "wind turbine" OR "wind park" OR "wind energy" OR "platform" OR "quay" OR "wharf" OR "lidar")) OR ("bridge" OR "flotel" OR "Aquaculture farm" OR "Artificial Island" OR "Synthetic Island")) AND
+# (("Navigation risk assessment" OR "Navigational risk assessment" OR "Navigation risk assessments" OR "Navigational risk assessments") OR
+# (("collision" OR "allision") AND ("ship" OR "vessel") AND ("probability" OR "probabilistic" OR "likelihood" OR "chance")) OR
+# (("risk" OR "safe" OR "safety") AND ("assess" OR "assessing" OR "assessment" OR "model" OR "modeling" OR "modelisation" OR "predict" OR "predicting" OR "prediction" OR "analyse" OR "analysing" OR "analyze" OR "analyzing" OR "study" OR "studies" OR "studying") AND ("ship" OR "vessel" OR "maritime traffic" OR "navigation" OR "navigational" OR "nautical")))
+# """
 
 MINIMUM_YEAR_NAME = "minimum_year"
 ADDITIONAL_PARAMETERS = {
@@ -265,6 +265,10 @@ SECOND_ROUND_QUESTIONS = {
     "qualitative" : {
         "expert-judgment" :"This paper makes use of experts judgements to estimate the risks.",
         "visualisation" :"This paper only makes conclusion of the risks by visualizing the traffic, without calculating the risk in a mathematical way (like probability or frequency)."
+    },
+    "" :
+    {
+
     }
     
 }
@@ -284,7 +288,46 @@ OUTPUT_UPSET = OUTPUT_PATH / "upset.html"
 SCOPUS_IS_SUBSCRIBER = True
 THRESHOLD_BIG_COUNT_PAPER = 1
 DEFAULT_OPEN_ALEX_PAGING = 50
+
+NAME_COL_DOI = "doi"
+NAME_COL_TITLE = "title"
+NAME_COL_DATE = "date"
+NAME_COL_ABSTRACT = "abstract"
+NAME_COL_TYPE = "type"
+NAME_COL_PDF = "pdf"
+NAME_COL_IS_REFERENCE = "is_reference"
+
 LIST_NAME_DATABASE = ["scopus", "openalex"]
-DEFAULT_DF_COLUMNS = ["doi", "title", "date", "abstract"]
+DEFAULT_DF_COLUMNS = [NAME_COL_DOI, NAME_COL_TITLE, NAME_COL_DATE, NAME_COL_ABSTRACT, NAME_COL_TYPE]
 DEFAULT_DF_COLUMNS_LENS = DEFAULT_DF_COLUMNS + ["id_lens"]
 DEFAULT_DF_COLUMNS_DIMENSIONS = DEFAULT_DF_COLUMNS + ["id_dimensions"]
+
+
+
+NAME_ARTICLE_TYPE_ARTICLE = "article"
+NAME_ARTICLE_TYPE_CONFERENCE_PAPER = "conference-paper"
+NAME_ARTICLE_TYPE_BOOK_CHAPTER = "book-chapter"
+NAME_ARTICLE_TYPE_DISSERTATION = "dissertation"
+NAME_ARTICLE_TYPE_PREPRINT = "preprint"
+NAME_ARTICLE_TYPE_BOOK = "book"
+NAME_ARTICLE_TYPE_REPORT = "report"
+NAME_ARTICLE_TYPE_OTHER = "other"
+
+CONVERSION_DICT_ARTICLE_TYPE_OPENALEX = {
+    "article": NAME_ARTICLE_TYPE_ARTICLE,
+    "other": NAME_ARTICLE_TYPE_OTHER,
+    "book-chapter": NAME_ARTICLE_TYPE_BOOK_CHAPTER,
+    "book": NAME_ARTICLE_TYPE_BOOK,
+    "report": NAME_ARTICLE_TYPE_REPORT,
+    "dissertation": NAME_ARTICLE_TYPE_DISSERTATION,
+    "preprint": NAME_ARTICLE_TYPE_PREPRINT
+}
+
+CONVERSION_DICT_LENS = {
+    "book chapter": NAME_ARTICLE_TYPE_BOOK_CHAPTER,
+    "journal article": NAME_ARTICLE_TYPE_ARTICLE,
+    "preprint": NAME_ARTICLE_TYPE_PREPRINT,
+    "book": NAME_ARTICLE_TYPE_BOOK,
+    "dissertation": NAME_ARTICLE_TYPE_DISSERTATION,
+    "report": NAME_ARTICLE_TYPE_REPORT
+}

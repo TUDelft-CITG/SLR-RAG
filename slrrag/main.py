@@ -18,11 +18,13 @@ from ollama_analysis import (
 from querier_dimensions import read_dimensions_export
 from querier_lens import read_lens_export
 from settings import ADDITIONAL_PARAMETERS, AUTOMATICALLY_OVERWRITE, DEFAULT_DF_COLUMNS, MAIN_QUERY, MINIMUM_YEAR_NAME, OUTPUT_CSV_AGENTS_PATH, OUTPUT_CSV_QUERY_RESULTS, OUTPUT_PATH, OUTPUT_UPSET, PATH_DIMENSIONS_EXPORT, PATH_LENS_EXPORT, FIRST_ROUND_QUESTIONS, REFERENCE_DOIS, REFERENCE_PAPERS
+from settings import NAME_ARTICLE_TYPE_ARTICLE, NAME_ARTICLE_TYPE_BOOK, NAME_ARTICLE_TYPE_BOOK_CHAPTER, NAME_ARTICLE_TYPE_DISSERTATION, NAME_ARTICLE_TYPE_PREPRINT, NAME_ARTICLE_TYPE_REPORT, NAME_COL_ABSTRACT, NAME_COL_DATE, NAME_COL_DOI, NAME_COL_TITLE, NAME_COL_TYPE, NAME_COL_IS_REFERENCE
+
 from upset_plotter import plot_and_save_upset
 
 def get_new_reference_df():
-    df_ret= pd.DataFrame(REFERENCE_PAPERS, columns=["title", "doi", "present_openalex", "present_scopus", "present_lens", "present_dimensions"])
-    df_ret["date"] = pd.NaT
+    df_ret= pd.DataFrame(REFERENCE_PAPERS, columns=[NAME_COL_TITLE, NAME_COL_DOI, "present_openalex", "present_scopus", "present_lens", "present_dimensions"])
+    df_ret[NAME_COL_DATE] = pd.NaT
     return df_ret
 
 def add_scopus_papers(input_papers: pd.DataFrame, database_names: List[str]) -> tuple[pd.DataFrame, List[str]]:
@@ -175,8 +177,8 @@ def merge_papers(
         Merged DataFrame with columns: doi, title, date, abstract, plus all id_{db} columns
     """
     # Sometimes, doi / title do not have same uppercase : 10.1017/S0373463319000444 == 10.1017/s0373463319000444.
-    left_df["temp_key"] = left_df["doi"].fillna(left_df["title"]).str.lower()
-    right_df["temp_key"] = right_df["doi"].fillna(right_df["title"]).str.lower()
+    left_df["temp_key"] = left_df[NAME_COL_DOI].fillna(left_df[NAME_COL_TITLE]).str.lower()
+    right_df["temp_key"] = right_df[NAME_COL_DOI].fillna(right_df[NAME_COL_TITLE]).str.lower()
 
     # Rename right_df's id column to id_{right_db}
     right_id_col = f"id_{right_db_name}"
@@ -195,18 +197,21 @@ def merge_papers(
     # BUG: Will have duplicata if one has doi and not the other
 
     # Combine fields - prefer left database
-    merged_df["doi"] = merged_df[f"doi"].fillna(
-        merged_df.get(f"doi_{right_db_name}", None)
+    merged_df[NAME_COL_DOI] = merged_df[NAME_COL_DOI].fillna(
+        merged_df.get(f"{NAME_COL_DOI}_{right_db_name}", None)
     )
-    merged_df["title"] = merged_df[f"title"].fillna(
-        merged_df.get(f"title_{right_db_name}", None)
+    merged_df[NAME_COL_TITLE] = merged_df[NAME_COL_TITLE].fillna(
+        merged_df.get(f"{NAME_COL_TITLE}_{right_db_name}", None)
     )
-    merged_df["date"] = merged_df[f"date"].fillna(
-        merged_df.get(f"date_{right_db_name}", None)
+    merged_df[NAME_COL_DATE] = merged_df[NAME_COL_DATE].fillna(
+        merged_df.get(f"{NAME_COL_DATE}_{right_db_name}", None)
     )
 
-    merged_df["abstract"] = merged_df[f"abstract"].fillna(
-        merged_df.get(f"abstract_{right_db_name}", None)
+    merged_df[NAME_COL_ABSTRACT] = merged_df[NAME_COL_ABSTRACT].fillna(
+        merged_df.get(f"{NAME_COL_ABSTRACT}_{right_db_name}", None)
+    )
+    merged_df[NAME_COL_TYPE] = merged_df[NAME_COL_TYPE].fillna(
+        merged_df.get(f"{NAME_COL_TYPE}_{right_db_name}", None)
     )
 
     # Select columns to keep: core fields + all id columns that exist
@@ -217,7 +222,7 @@ def merge_papers(
     # Check if papers are reference or not
     reference_paper = get_new_reference_df()
     # DOI Matches or title matches
-    result_df["is_reference"] = (result_df["doi"].notna() & result_df["doi"].isin(reference_paper["doi"])) | result_df["title"].isin(reference_paper["title"])
+    result_df[NAME_COL_IS_REFERENCE] = (result_df[NAME_COL_DOI].notna() & result_df[NAME_COL_DOI].isin(reference_paper[NAME_COL_DOI])) | result_df[NAME_COL_TITLE].isin(reference_paper[NAME_COL_TITLE])
     return result_df
 
 
@@ -235,7 +240,7 @@ def add_reference_papers(df: pd.DataFrame, reference_dois: List[str]) -> pd.Data
         DataFrame with reference papers added
     """
     # Find reference DOIs not already in the DataFrame
-    existing_dois = set(df["doi"].dropna().unique())
+    existing_dois = set(df[NAME_COL_DOI].dropna().unique())
     missing_dois = [doi for doi in reference_dois if doi not in existing_dois]
 
     if not missing_dois:
@@ -245,16 +250,16 @@ def add_reference_papers(df: pd.DataFrame, reference_dois: List[str]) -> pd.Data
     # Get the expected columns from the DataFrame
     new_rows = []
     for doi in missing_dois:
-        row = {"doi": doi}
+        row = {NAME_COL_DOI: doi}
         # Set all other columns to None
         for col in df.columns:
-            if col != "doi":
+            if col != NAME_COL_DOI:
                 row[col] = None
         new_rows.append(row)
 
     # Append new rows to DataFrame
     new_df = pd.concat([df, pd.DataFrame(new_rows)], ignore_index=True)
-    new_df["is_reference"] = new_df["doi"].isin(REFERENCE_DOIS)
+    new_df[NAME_COL_IS_REFERENCE] = new_df[NAME_COL_DOI].isin(REFERENCE_DOIS)
     return new_df
 
 def clean_merged_df(merged_papers: pd.DataFrame, database_names: List[str]):
@@ -266,11 +271,11 @@ def clean_merged_df(merged_papers: pd.DataFrame, database_names: List[str]):
     for db in database_names:
         merged_papers[f"in_{db}"] = merged_papers[f"id_{db}"].notna()
     merged_papers["is_found"] =  pd.concat([merged_papers[f"in_{db}"] for db in database_names], axis=1).any(axis=1)
-    merged_papers["year"] = pd.to_datetime(merged_papers["date"],format="mixed").dt.year
+    merged_papers["year"] = pd.to_datetime(merged_papers[NAME_COL_DATE],format="mixed").dt.year
     merged_papers["year"] = merged_papers["year"].astype("Int64") # To avoid having floats
     if MINIMUM_YEAR_NAME in ADDITIONAL_PARAMETERS:
         df_after = merged_papers[merged_papers['year'].isna() | (merged_papers['year'] >= ADDITIONAL_PARAMETERS[MINIMUM_YEAR_NAME])]
-        assert df_after["is_reference"].sum() == merged_papers["is_reference"].sum()
+        assert df_after[NAME_COL_IS_REFERENCE].sum() == merged_papers[NAME_COL_IS_REFERENCE].sum()
         print(f"Filtering {len(merged_papers) - len(df_after)} papers that are before year {ADDITIONAL_PARAMETERS[MINIMUM_YEAR_NAME]}")
         merged_papers = df_after
     return merged_papers
@@ -286,7 +291,7 @@ def show_merged_stats(
     """    
     print("---------SUMMARIZING------------")
 
-    reference_df = merged_papers[merged_papers["is_reference"]]    
+    reference_df = merged_papers[merged_papers[NAME_COL_IS_REFERENCE]]    
 
     # Calculate common papers (in all databases)
     common_papers = (
@@ -313,7 +318,7 @@ def show_merged_stats(
     # Print stats for each database
     for db in database_names:
         ref_in_db = (
-            merged_papers[f"in_{db}"] & merged_papers["is_reference"]
+            merged_papers[f"in_{db}"] & merged_papers[NAME_COL_IS_REFERENCE]
         ).sum()
         in_db = merged_papers[f"in_{db}"].sum()
         print(f"Number of papers in {db}: {in_db}")
@@ -408,7 +413,7 @@ def main():
         if action == "e":  # exit
             return
         elif action == "p":  # print names
-            print(papers_df[["title","doi","is_reference", "is_found"]])
+            print(papers_df[[NAME_COL_TITLE,NAME_COL_DOI,NAME_COL_IS_REFERENCE, "is_found"]])
         elif action == "s":  # Save merged papers as CSV
             save_dataframe_to_csv(papers_df, OUTPUT_CSV_QUERY_RESULTS)
         elif action == "u":
@@ -419,7 +424,7 @@ def main():
             os.makedirs(OUTPUT_CSV_AGENTS_PATH.parent, exist_ok=True)
             break
         elif action == "r":
-            print(papers_df.query("is_reference")[["title","doi","is_reference", "is_found"]])
+            print(papers_df.query(NAME_COL_IS_REFERENCE)[[NAME_COL_TITLE,NAME_COL_DOI,NAME_COL_IS_REFERENCE, "is_found"]])
 
     # Check if file exists and prompt user for overwrite
     if OUTPUT_CSV_AGENTS_PATH.exists() and not AUTOMATICALLY_OVERWRITE:
