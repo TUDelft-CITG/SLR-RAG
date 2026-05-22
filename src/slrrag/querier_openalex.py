@@ -1,16 +1,14 @@
 import pandas as pd
+from pandera.typing import DataFrame
 from pyalex import Works
 
-from slrrag.settings import DEFAULT_OPEN_ALEX_PAGING, THRESHOLD_BIG_COUNT_PAPER
 from slrrag.settings import (
-    NAME_ARTICLE_TYPE_ARTICLE,
-    NAME_ARTICLE_TYPE_BOOK,
-    NAME_ARTICLE_TYPE_BOOK_CHAPTER,
-    NAME_ARTICLE_TYPE_DISSERTATION,
-    NAME_ARTICLE_TYPE_PREPRINT,
-    NAME_ARTICLE_TYPE_REPORT,
+    DEFAULT_OPEN_ALEX_PAGING,
+    THRESHOLD_BIG_COUNT_PAPER,
+    SchemaPapers,
+)
+from slrrag.settings import (
     NAME_COL_DATE,
-    NAME_COL_TYPE,
 )
 
 
@@ -24,7 +22,7 @@ def check_doi_in_openalex(doi: str) -> bool:
 
 
 # --- OpenAlex functions ---
-def query_openalex(query: str) -> pd.DataFrame:
+def query_openalex(query: str) -> DataFrame[SchemaPapers]:
     """Query OpenAlex and return results as a pandas DataFrame."""
     print("Query :", query)
     works = Works().search_filter(title_and_abstract=query)
@@ -59,14 +57,4 @@ def query_openalex(query: str) -> pd.DataFrame:
         columns={"publication_date": NAME_COL_DATE, "id": "id_openalex"}
     )
     return_df["doi"] = return_df["doi"].str.removeprefix("https://doi.org/")
-    return_df["date"] = pd.to_datetime(return_df["date"], format="mixed")
-    conversion_type_article_openalex = {
-        "book-chapter": NAME_ARTICLE_TYPE_BOOK_CHAPTER,
-        "journal-article": NAME_ARTICLE_TYPE_ARTICLE,
-        "preprint": NAME_ARTICLE_TYPE_PREPRINT,
-        "book": NAME_ARTICLE_TYPE_BOOK,
-        "dissertation": NAME_ARTICLE_TYPE_DISSERTATION,
-        "report": NAME_ARTICLE_TYPE_REPORT,
-    }
-    return_df = return_df.replace({NAME_COL_TYPE: conversion_type_article_openalex})
-    return return_df
+    return SchemaPapers.validate(return_df)

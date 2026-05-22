@@ -2,7 +2,7 @@
 from pathlib import Path
 
 import pandas as pd
-
+from pandera.typing import DataFrame
 from slrrag.settings import (
     DEFAULT_DF_COLUMNS_LENS,
     NAME_ARTICLE_TYPE_ARTICLE,
@@ -16,10 +16,11 @@ from slrrag.settings import (
     NAME_COL_DOI,
     NAME_COL_TITLE,
     NAME_COL_TYPE,
+    SchemaPapers,
 )
 
 
-def read_lens_export(csv_path: Path | str) -> pd.DataFrame:
+def read_lens_export(csv_path: Path | str) -> DataFrame[SchemaPapers]:
     """Read Lens export CSV and extract required columns: doi, id, title, date, abstract."""
     df = pd.read_csv(csv_path)
     # Map common Lens column names to our standard format
@@ -50,4 +51,4 @@ def read_lens_export(csv_path: Path | str) -> pd.DataFrame:
         "report": NAME_ARTICLE_TYPE_REPORT,
     }
     df = df.replace({NAME_COL_TYPE: conversion_type_article_lens})
-    return df[result_cols].copy()
+    return SchemaPapers.validate(df[result_cols].copy())

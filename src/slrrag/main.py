@@ -29,7 +29,6 @@ from slrrag.settings import (
     NAME_COL_PRESENT_LENS,
     NAME_COL_PRESENT_OPENALEX,
     NAME_COL_PRESENT_SCOPUS,
-    NAME_COL_YEAR,
     OUTPUT_CSV_AGENTS_PATH,
     OUTPUT_CSV_QUERY_RESULTS,
     OUTPUT_PATH,
@@ -51,6 +50,7 @@ from slrrag.settings import SchemaPapers
 
 from slrrag.upset_plotter import plot_and_save_upset
 
+
 def get_new_reference_df() -> DataFrame[SchemaPapers]:
     df_ret = pd.DataFrame(
         REFERENCE_PAPERS,
@@ -61,11 +61,11 @@ def get_new_reference_df() -> DataFrame[SchemaPapers]:
             NAME_COL_PRESENT_OPENALEX,
             NAME_COL_PRESENT_LENS,
             NAME_COL_PRESENT_DIMENSIONS,
-        ]
+        ],
     )
     df_ret[NAME_COL_IS_REFERENCE] = True
     df_ret[NAME_COL_IS_FOUND] = False
-    #df_ret[[NAME_COL_DATE,NAME_COL_TYPE,NAME_COL_YEAR,NAME_COL_ABSTRACT]] = pd.NA
+    # df_ret[[NAME_COL_DATE,NAME_COL_TYPE,NAME_COL_YEAR,NAME_COL_ABSTRACT]] = pd.NA
     return SchemaPapers.validate(df_ret)
 
 
@@ -76,7 +76,7 @@ def add_scopus_papers(
     print("---- Getting query on Scopus ---")
     results_scopus = query_scopus(MAIN_QUERY)
     if results_scopus is not None:
-        results_scopus=  SchemaPapers.validate(results_scopus)
+        results_scopus = SchemaPapers.validate(results_scopus)
         input_papers: DataFrame[SchemaPapers] = merge_papers(
             input_papers, results_scopus, "scopus"
         )
@@ -90,7 +90,7 @@ def add_openalex_papers(
 ) -> tuple[DataFrame[SchemaPapers], List[str]]:
     results_openalex = query_openalex(MAIN_QUERY)
     if results_openalex is not None:
-        results_openalex=  SchemaPapers.validate(results_openalex)
+        results_openalex = SchemaPapers.validate(results_openalex)
         input_papers: DataFrame[SchemaPapers] = merge_papers(
             input_papers, results_openalex, "openalex"
         )
@@ -133,7 +133,9 @@ def add_dimensions_papers(
         if user_choice == "y":
             if PATH_DIMENSIONS_EXPORT.exists():
                 print("---- Reading Dimensions export ---")
-                dimensions_df = SchemaPapers.validate(read_dimensions_export(PATH_DIMENSIONS_EXPORT))
+                dimensions_df = SchemaPapers.validate(
+                    read_dimensions_export(PATH_DIMENSIONS_EXPORT)
+                )
                 print(f"Found {len(dimensions_df)} papers in Dimensions export")
                 print("---- Merging with Dimensions ---")
                 merged_papers = merge_papers(merged_papers, dimensions_df, "dimensions")
@@ -337,7 +339,9 @@ def clean_merged_df(merged_papers: DataFrame[SchemaPapers], database_names: List
     setup in ADDITIONAL_PARAMETERS
     """
     print("---------CLEANING------------")
-    assert len(database_names) > 0, "List of database is empty. Please use at least one Database."
+    assert len(database_names) > 0, (
+        "List of database is empty. Please use at least one Database."
+    )
     for db in database_names:
         merged_papers[f"in_{db}"] = merged_papers[f"id_{db}"].notna()
     merged_papers["is_found"] = pd.concat(

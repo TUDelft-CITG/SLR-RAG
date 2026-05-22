@@ -1,4 +1,5 @@
 import pandas as pd
+from pandera.typing import DataFrame
 from pybliometrics.scopus import ScopusSearch
 
 from slrrag.settings import (
@@ -6,14 +7,7 @@ from slrrag.settings import (
     SCOPUS_IS_SUBSCRIBER,
     THRESHOLD_BIG_COUNT_PAPER,
     LIST_TYPE_DOCUMENTS,
-)
-from slrrag.settings import (
-    NAME_ARTICLE_TYPE_ARTICLE,
-    NAME_ARTICLE_TYPE_BOOK,
-    NAME_ARTICLE_TYPE_BOOK_CHAPTER,
-    NAME_ARTICLE_TYPE_PREPRINT,
-    NAME_ARTICLE_TYPE_REPORT,
-    NAME_COL_TYPE,
+    SchemaPapers,
 )
 
 
@@ -34,7 +28,8 @@ def check_doi_in_scopus(doi: str) -> bool:
 
 # --- Scopus functions ---
 
-def query_scopus(query: str) -> pd.DataFrame | None:
+
+def query_scopus(query: str) -> DataFrame[SchemaPapers] | None:
     """Query Scopus and return results."""
     scopus_query = f"""
 TITLE-ABS-KEY( {query})
@@ -59,7 +54,7 @@ TITLE-ABS-KEY( {query})
         return None
 
 
-def scopus_to_dict_list(results: ScopusSearch) -> pd.DataFrame:
+def scopus_to_dict_list(results: ScopusSearch) -> DataFrame[SchemaPapers]:
     """Convert Scopus results to a pandas DataFrame."""
     if results.results is None:
         return pd.DataFrame(columns=DEFAULT_DF_COLUMNS + ["id_scopus"])
@@ -76,17 +71,4 @@ def scopus_to_dict_list(results: ScopusSearch) -> pd.DataFrame:
     ]
 
     return_df = pd.DataFrame(data)
-    conversion_type_article_scopus = {
-        "Book Chapter": NAME_ARTICLE_TYPE_BOOK_CHAPTER,
-        "Article": NAME_ARTICLE_TYPE_ARTICLE,
-        "Preprint": NAME_ARTICLE_TYPE_PREPRINT,
-        "Book": NAME_ARTICLE_TYPE_BOOK,
-        "Report": NAME_ARTICLE_TYPE_REPORT,
-        "Conference Paper": NAME_ARTICLE_TYPE_ARTICLE,
-        "Short Survey": NAME_ARTICLE_TYPE_ARTICLE,
-        "Review": NAME_ARTICLE_TYPE_ARTICLE,
-        "Conference Review": NAME_ARTICLE_TYPE_ARTICLE,
-    }
-    return_df["date"] = pd.to_datetime(return_df["date"], format="mixed")
-    return_df = return_df.replace({NAME_COL_TYPE: conversion_type_article_scopus})
-    return return_df
+    return SchemaPapers.validate(return_df)

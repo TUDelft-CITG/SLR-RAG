@@ -95,68 +95,99 @@ CONVERSION_DICT_LENS = {
 NAME_ARTICLE_TYPE_ARTICLE = "article"
 NAME_ARTICLE_TYPE_BOOK_CHAPTER = "book-chapter"
 NAME_ARTICLE_TYPE_DISSERTATION = "dissertation"
+NAME_ARTICLE_CONFERENCE_PAPER = "conference-paper"
+NAME_ARTICLE_TYPE_CONFERENCE_PROCEEDING = "conference-proceeding"
+NAME_ARTICLE_TYPE_SEMINAR = "seminar"
 NAME_ARTICLE_TYPE_PREPRINT = "preprint"
 NAME_ARTICLE_TYPE_BOOK = "book"
 NAME_ARTICLE_TYPE_REPORT = "report"
+NAME_ARTICLE_TYPE_SOFTWARE = "software"
 NAME_ARTICLE_TYPE_OTHER = "other"
+
+
 ARTICLE_TYPES = [
     NAME_ARTICLE_TYPE_ARTICLE,
     NAME_ARTICLE_TYPE_BOOK_CHAPTER,
     NAME_ARTICLE_TYPE_DISSERTATION,
+    NAME_ARTICLE_CONFERENCE_PAPER,
     NAME_ARTICLE_TYPE_PREPRINT,
     NAME_ARTICLE_TYPE_BOOK,
     NAME_ARTICLE_TYPE_REPORT,
     NAME_ARTICLE_TYPE_OTHER,
+    NAME_ARTICLE_TYPE_CONFERENCE_PROCEEDING,
+    NAME_ARTICLE_TYPE_SEMINAR,
+    NAME_ARTICLE_TYPE_SOFTWARE,
 ]
 # Mapping from possible input values to canonical categories
 
 
 ARTICLE_TYPE_MAPPING = {
-    # NAME_ARTICLE_TYPE_BOOK_CHAPTER
-    "book chapter": NAME_ARTICLE_TYPE_BOOK_CHAPTER,
-    "chapter": NAME_ARTICLE_TYPE_BOOK_CHAPTER,
-    
     # NAME_ARTICLE_TYPE_ARTICLE
     "article": NAME_ARTICLE_TYPE_ARTICLE,
     "journal article": NAME_ARTICLE_TYPE_ARTICLE,
     "short survey": NAME_ARTICLE_TYPE_ARTICLE,
     "review": NAME_ARTICLE_TYPE_ARTICLE,
-    "conference review": NAME_ARTICLE_TYPE_ARTICLE,
-
+    # NAME_ARTICLE_TYPE_BOOK_CHAPTER
+    "book chapter": NAME_ARTICLE_TYPE_BOOK_CHAPTER,
+    "chapter": NAME_ARTICLE_TYPE_BOOK_CHAPTER,
+    "book-chapter": NAME_ARTICLE_TYPE_BOOK_CHAPTER,
     # NAME_ARTICLE_TYPE_PREPRINT
     "preprint": NAME_ARTICLE_TYPE_PREPRINT,
-    "proceesing" : NAME_ARTICLE_TYPE_PREPRINT,
-
     # NAME_ARTICLE_TYPE_BOOK
     "book": NAME_ARTICLE_TYPE_BOOK,
     "edited book": NAME_ARTICLE_TYPE_BOOK,
     "monograph": NAME_ARTICLE_TYPE_BOOK,
-
     # NAME_ARTICLE_TYPE_REPORT
     "report": NAME_ARTICLE_TYPE_REPORT,
-    
+    # NAME_ARTICLE_CONFERENCE_PAPER
+    "conference paper": NAME_ARTICLE_CONFERENCE_PAPER,
+    "conference review": NAME_ARTICLE_CONFERENCE_PAPER,
+    # NAME_ARTICLE_CONFERENCE_PROCEEDING
+    "proceeding": NAME_ARTICLE_TYPE_CONFERENCE_PROCEEDING,
+    "conference proceedings": NAME_ARTICLE_TYPE_CONFERENCE_PROCEEDING,
+    "conference proceedings article": NAME_ARTICLE_TYPE_CONFERENCE_PROCEEDING,
     # NAME_ARTICLE_TYPE_DISSERTATION
     "dissertation": NAME_ARTICLE_TYPE_DISSERTATION,
-
+    # NAME_ARTICLE_SEMINAR
+    "seminar": NAME_ARTICLE_TYPE_SEMINAR,
+    # NAME_ARTICLE_TYPE_SOFTWARE
+    "software": NAME_ARTICLE_TYPE_SOFTWARE,
     # Other
     "other": NAME_ARTICLE_TYPE_OTHER,
+    "news": NAME_ARTICLE_TYPE_OTHER,
+    "dataset": NAME_ARTICLE_TYPE_OTHER,
+    "letter": NAME_ARTICLE_TYPE_OTHER,
+    "editorial": NAME_ARTICLE_TYPE_OTHER,
+    "journal volume": NAME_ARTICLE_TYPE_OTHER,
+    "component": NAME_ARTICLE_TYPE_OTHER,
+    "journal": NAME_ARTICLE_TYPE_OTHER,
+    "clinical trial": NAME_ARTICLE_TYPE_OTHER,
+    "journal issue": NAME_ARTICLE_TYPE_OTHER,
+    "erratum": NAME_ARTICLE_TYPE_OTHER,
+    "note": NAME_ARTICLE_TYPE_OTHER,
+    "retracted": NAME_ARTICLE_TYPE_OTHER,
+    "paratext": NAME_ARTICLE_TYPE_OTHER,
+    "peer-review": NAME_ARTICLE_TYPE_OTHER,
 }
 
 
 class SchemaPapers(pa.DataFrameModel):
-    
     doi: Series[str] = pa.Field(nullable=True, alias=NAME_COL_DOI)
     title: Series[String] = pa.Field(nullable=True, alias=NAME_COL_TITLE)
-    
-    type: Series[String] = pa.Field(nullable=True, alias=NAME_COL_TYPE, isin=ARTICLE_TYPES)
-    year: Series[Int64] = pa.Field(nullable=True, alias=NAME_COL_YEAR,coerce=True)
+
+    type: Series[String] = pa.Field(
+        nullable=True, alias=NAME_COL_TYPE, isin=ARTICLE_TYPES
+    )
+    year: Series[Int64] = pa.Field(nullable=True, alias=NAME_COL_YEAR, coerce=True)
     date: Series[datetime] = pa.Field(nullable=True, alias=NAME_COL_DATE)
     abstract: Series[String] = pa.Field(nullable=True, alias=NAME_COL_ABSTRACT)
     is_reference: Series[bool] = pa.Field(nullable=True, alias=NAME_COL_IS_REFERENCE)
     is_found: Series[bool] = pa.Field(nullable=True, alias=NAME_COL_IS_FOUND)
 
     # Optional fields
-    id_scopus: Optional[Series[String]] = pa.Field(nullable=True, alias=NAME_COL_ID_SCOPUS)
+    id_scopus: Optional[Series[String]] = pa.Field(
+        nullable=True, alias=NAME_COL_ID_SCOPUS
+    )
     id_openalex: Optional[Series[String]] = pa.Field(
         nullable=True, alias=NAME_COL_ID_DIMENSIONS
     )
@@ -176,11 +207,15 @@ class SchemaPapers(pa.DataFrameModel):
         nullable=True, alias=NAME_COL_IN_DIMENSIONS
     )
 
-    present_scopus: Optional[Series[bool]] = pa.Field(nullable=True, alias=NAME_COL_PRESENT_SCOPUS)
+    present_scopus: Optional[Series[bool]] = pa.Field(
+        nullable=True, alias=NAME_COL_PRESENT_SCOPUS
+    )
     present_openalex: Optional[Series[bool]] = pa.Field(
         nullable=True, alias=NAME_COL_PRESENT_OPENALEX
     )
-    present_lens: Optional[Series[bool]] = pa.Field(nullable=True, alias=NAME_COL_PRESENT_LENS)
+    present_lens: Optional[Series[bool]] = pa.Field(
+        nullable=True, alias=NAME_COL_PRESENT_LENS
+    )
     present_dimensions: Optional[Series[bool]] = pa.Field(
         nullable=True, alias=NAME_COL_PRESENT_DIMENSIONS
     )
@@ -192,7 +227,7 @@ class SchemaPapers(pa.DataFrameModel):
 
         if non_null_mask.any():
             processed = series[non_null_mask].astype(str).str.lower().str.strip()
-            processed = processed.map(ARTICLE_TYPE_MAPPING).fillna("other")
+            processed = processed.replace(ARTICLE_TYPE_MAPPING)
             result.loc[non_null_mask] = processed
 
         return result
@@ -208,8 +243,10 @@ class SchemaPapers(pa.DataFrameModel):
         if series.dtype == "float":
             return series.round().astype("Int64")
         return series
+
     class Config:
         add_missing_columns = True
+
 
 DEFAULT_DF_COLUMNS = [
     NAME_COL_DOI,
