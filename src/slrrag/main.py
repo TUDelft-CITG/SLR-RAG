@@ -471,6 +471,7 @@ def main():
         ]
         papers_df = clean_merged_df(papers_df, database_names)
     papers_df = show_merged_stats(papers_df, database_names)
+
     # Step 4: User interaction
     while True:
         action = prompt_user_for_action_after_querying()

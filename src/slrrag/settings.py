@@ -1,5 +1,8 @@
 from pathlib import Path
-
+import pandera.pandas as pa
+from datetime import datetime
+from typing import Optional
+from pandera.typing import Series, Int64
 from slrrag.input import REFERENCE_PAPERS
 
 # --- User-defined variables ---
@@ -22,25 +25,7 @@ SCOPUS_IS_SUBSCRIBER = True
 THRESHOLD_BIG_COUNT_PAPER = 1
 DEFAULT_OPEN_ALEX_PAGING = 50
 
-NAME_COL_DOI = "doi"
-NAME_COL_TITLE = "title"
-NAME_COL_DATE = "date"
-NAME_COL_ABSTRACT = "abstract"
-NAME_COL_TYPE = "type"
-NAME_COL_PDF = "pdf"
-NAME_COL_IS_REFERENCE = "is_reference"
-
 LIST_NAME_DATABASE = ["scopus", "openalex"]
-DEFAULT_DF_COLUMNS = [
-    NAME_COL_DOI,
-    NAME_COL_TITLE,
-    NAME_COL_DATE,
-    NAME_COL_ABSTRACT,
-    NAME_COL_TYPE,
-]
-DEFAULT_DF_COLUMNS_LENS = DEFAULT_DF_COLUMNS + ["id_lens"]
-DEFAULT_DF_COLUMNS_DIMENSIONS = DEFAULT_DF_COLUMNS + ["id_dimensions"]
-
 
 NAME_ARTICLE_TYPE_ARTICLE = "article"
 NAME_ARTICLE_TYPE_BOOK_CHAPTER = "book-chapter"
@@ -77,3 +62,65 @@ CONVERSION_DICT_LENS = {
     "dissertation": NAME_ARTICLE_TYPE_DISSERTATION,
     "report": NAME_ARTICLE_TYPE_REPORT,
 }
+
+
+NAME_COL_DOI = "doi"
+NAME_COL_TITLE = "title"
+NAME_COL_DATE = "date"
+NAME_COL_ABSTRACT = "abstract"
+NAME_COL_TYPE = "type"
+NAME_COL_PDF = "pdf"
+NAME_COL_IS_REFERENCE = "is_reference"
+
+# New global variables for missing columns
+NAME_COL_IS_FOUND = "is_found"
+NAME_COL_YEAR = "year"
+NAME_COL_ID_SCOPUS = "id_scopus"
+NAME_COL_ID_OPENALEX = "id_openalex"
+NAME_COL_ID_LENS = "id_lens"
+NAME_COL_ID_DIMENSIONS = "id_dimensions"
+NAME_COL_IN_SCOPUS = "in_scopus"
+NAME_COL_IN_OPENALEX = "in_openalex"
+NAME_COL_IN_LENS = "in_lens"
+NAME_COL_IN_DIMENSIONS = "in_dimensions"
+
+
+class SchemaPapers(pa.DataFrameModel):
+    doi: Series[str] = pa.Field(nullable=True, alias=NAME_COL_DOI)
+    title: Series[str] = pa.Field(nullable=True, alias=NAME_COL_TITLE)
+    date: Series[datetime] = pa.Field(nullable=True, alias=NAME_COL_DATE)
+    abstract: Series[str] = pa.Field(nullable=True, alias=NAME_COL_ABSTRACT)
+    is_reference: Series[bool] = pa.Field(nullable=True, alias=NAME_COL_IS_REFERENCE)
+    is_found: Series[bool] = pa.Field(nullable=True, alias=NAME_COL_IS_FOUND)
+    year: Series[Int64] = pa.Field(nullable=True, alias=NAME_COL_YEAR)
+
+    # Optional fields
+    id_scopus: Optional[Series[str]] = pa.Field(nullable=True, alias=NAME_COL_ID_SCOPUS)
+    id_openalex: Optional[Series[str]] = pa.Field(
+        nullable=True, alias=NAME_COL_ID_OPENALEX
+    )
+    id_lens: Optional[Series[str]] = pa.Field(nullable=True, alias=NAME_COL_ID_LENS)
+    id_dimensions: Optional[Series[str]] = pa.Field(
+        nullable=True, alias=NAME_COL_ID_DIMENSIONS
+    )
+    in_scopus: Optional[Series[bool]] = pa.Field(
+        nullable=True, alias=NAME_COL_IN_SCOPUS
+    )
+    in_openalex: Optional[Series[bool]] = pa.Field(
+        nullable=True, alias=NAME_COL_IN_OPENALEX
+    )
+    in_lens: Optional[Series[bool]] = pa.Field(nullable=True, alias=NAME_COL_IN_LENS)
+    in_dimensions: Optional[Series[bool]] = pa.Field(
+        nullable=True, alias=NAME_COL_IN_DIMENSIONS
+    )
+
+
+DEFAULT_DF_COLUMNS = [
+    NAME_COL_DOI,
+    NAME_COL_TITLE,
+    NAME_COL_DATE,
+    NAME_COL_ABSTRACT,
+    NAME_COL_TYPE,
+]
+DEFAULT_DF_COLUMNS_LENS = DEFAULT_DF_COLUMNS + ["id_lens"]
+DEFAULT_DF_COLUMNS_DIMENSIONS = DEFAULT_DF_COLUMNS + ["id_dimensions"]

@@ -1,5 +1,6 @@
 from pathlib import Path
 import shutil
+from typing import Literal
 import os
 from collections import defaultdict
 import pandas as pd
@@ -125,7 +126,7 @@ print("Vectorstore ready with:", len(vectorstore.get()["documents"]), "documents
 # ----------------- 2. RETRIEVE, AUGMENT, GENERATE ----------------
 
 # create the RAG prompt and structure
-from typing import Literal
+
 
 
 class AnswerWithSources(BaseModel):
