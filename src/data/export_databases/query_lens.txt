@@ -1,0 +1,6 @@
+
+((title:("risk assessment") OR abstract:("risk assessment")) OR (title:("risk analysis") OR abstract:("risk analysis"))) AND
+((title:("Offshore windfarm") OR abstract:("Offshore windfarm")) OR (title:("Offshore windmill") OR abstract:("Offshore windmill")) OR (title:("Offshore wind turbine") OR abstract:("Offshore wind turbine")) OR (title:("Offshore wind park") OR abstract:("Offshore wind park")) OR (title:("OWF") OR abstract:("OWF"))) AND
+((title:("Strategic") OR abstract:("Strategic")) OR (title:("Static") OR abstract:("Static")) OR (title:("Long-term") OR abstract:("Long-term")) OR (title:("Marine spatial planning") OR abstract:("Marine spatial planning")) OR (title:("Large scale") OR abstract:("Large scale"))) AND
+((title:("maritime") OR abstract:("maritime")) OR  (title:("navigational") OR abstract:("navigational")) OR (title:("nautical") OR abstract:("nautical")))
+

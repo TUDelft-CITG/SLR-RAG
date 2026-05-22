@@ -4,23 +4,23 @@ from typing import List
 
 import pandas as pd
 import pybliometrics
-from querier_openalex import query_openalex
-from querier_scopus import query_scopus
-from query_converter import convert_query_to_lens
-from query_converter import query_to_dimensions_url
-from ollama_analysis import (
+from slrrag.querier_openalex import query_openalex
+from slrrag.querier_scopus import query_scopus
+from slrrag.query_converter import convert_query_to_lens
+from slrrag.query_converter import query_to_dimensions_url
+from slrrag.ollama_analysis import (
     setup_chat_agent,
     analyze_papers_with_agent,
 )
-from querier_dimensions import read_dimensions_export
-from querier_lens import read_lens_export
-from input import (
+from slrrag.querier_dimensions import read_dimensions_export
+from slrrag.querier_lens import read_lens_export
+from slrrag.input import (
     ADDITIONAL_PARAMETERS,
     MAIN_QUERY,
     MINIMUM_YEAR_NAME,
     FIRST_ROUND_QUESTIONS,
 )
-from settings import (
+from slrrag.settings import (
     AUTOMATICALLY_OVERWRITE,
     DEFAULT_DF_COLUMNS,
     OUTPUT_CSV_AGENTS_PATH,
@@ -32,7 +32,7 @@ from settings import (
     REFERENCE_DOIS,
     REFERENCE_PAPERS,
 )
-from settings import (
+from slrrag.settings import (
     NAME_COL_ABSTRACT,
     NAME_COL_DATE,
     NAME_COL_DOI,
@@ -41,7 +41,7 @@ from settings import (
     NAME_COL_IS_REFERENCE,
 )
 
-from upset_plotter import plot_and_save_upset
+from slrrag.upset_plotter import plot_and_save_upset
 
 
 def get_new_reference_df():

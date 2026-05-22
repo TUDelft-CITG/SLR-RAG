@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from settings import (
+from slrrag.settings import (
     DEFAULT_DF_COLUMNS_LENS,
     NAME_ARTICLE_TYPE_ARTICLE,
     NAME_ARTICLE_TYPE_BOOK,

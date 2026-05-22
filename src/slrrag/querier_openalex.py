@@ -1,8 +1,8 @@
 import pandas as pd
 from pyalex import Works
 
-from settings import DEFAULT_OPEN_ALEX_PAGING, THRESHOLD_BIG_COUNT_PAPER
-from settings import (
+from slrrag.settings import DEFAULT_OPEN_ALEX_PAGING, THRESHOLD_BIG_COUNT_PAPER
+from slrrag.settings import (
     NAME_ARTICLE_TYPE_ARTICLE,
     NAME_ARTICLE_TYPE_BOOK,
     NAME_ARTICLE_TYPE_BOOK_CHAPTER,

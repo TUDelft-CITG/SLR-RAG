@@ -1,13 +1,13 @@
 import pandas as pd
 from pybliometrics.scopus import ScopusSearch
 
-from settings import (
+from slrrag.settings import (
     DEFAULT_DF_COLUMNS,
     SCOPUS_IS_SUBSCRIBER,
     THRESHOLD_BIG_COUNT_PAPER,
     LIST_TYPE_DOCUMENTS,
 )
-from settings import (
+from slrrag.settings import (
     NAME_ARTICLE_TYPE_ARTICLE,
     NAME_ARTICLE_TYPE_BOOK,
     NAME_ARTICLE_TYPE_BOOK_CHAPTER,

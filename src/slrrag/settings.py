@@ -1,15 +1,14 @@
 from pathlib import Path
 
-from input import REFERENCE_PAPERS
+from slrrag.input import REFERENCE_PAPERS
 
 # --- User-defined variables ---
-
 REFERENCE_DOIS = [paper[1] for paper in REFERENCE_PAPERS]
-
 
 AUTOMATICALLY_OVERWRITE = False
 
-PATH_INPUT = Path("data/export_databases/")
+PROJECT_ROOT = Path(__file__).parent.parent.parent
+PATH_INPUT = PROJECT_ROOT / Path("data/export_databases/")
 PATH_LENS_EXPORT = PATH_INPUT / "lens-export.csv"
 PATH_DIMENSIONS_EXPORT = PATH_INPUT / "dimensions-export.csv"
 
