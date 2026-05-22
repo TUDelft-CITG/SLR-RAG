@@ -4,6 +4,7 @@ import getpass
 import os
 from time import sleep
 from typing import Dict, List
+from pandera.typing.pandas import DataFrame
 
 import pandas as pd
 from langchain_core.output_parsers import StrOutputParser
@@ -11,6 +12,8 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables.base import RunnableSequence
 from langchain_ollama import ChatOllama
 from tqdm import tqdm
+
+from slrrag.settings import SchemaPapers
 
 # Model configuration
 OLLAMA_MODEL = "llama3.1"
@@ -50,7 +53,7 @@ def analyze_paper(agent, title: str, abstract: str, questions: List[str]) -> Dic
 
 
 def analyze_papers_with_agent(
-    agent, papers_df: pd.DataFrame, questions: List[str]
+    agent, papers_df: DataFrame[SchemaPapers], questions: List[str]
 ) -> pd.DataFrame:
     """Analyze papers using agent and return DataFrame with answers."""
     results = []

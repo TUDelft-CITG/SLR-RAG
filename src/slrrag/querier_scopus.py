@@ -33,6 +33,7 @@ def check_doi_in_scopus(doi: str) -> bool:
 
 
 # --- Scopus functions ---
+
 def query_scopus(query: str) -> pd.DataFrame | None:
     """Query Scopus and return results."""
     scopus_query = f"""

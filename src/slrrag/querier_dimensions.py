@@ -26,7 +26,7 @@ def read_dimensions_export(csv_path: Path | str) -> pd.DataFrame:
         "DOI": NAME_COL_DOI,
         "Abstract": NAME_COL_ABSTRACT,
         "Publication date": NAME_COL_DATE,
-        "Publication type": NAME_COL_TYPE,
+        "Publication Type": NAME_COL_TYPE,
         "Dimensions URL": "id_dimensions",
     }
     # Rename columns that exist

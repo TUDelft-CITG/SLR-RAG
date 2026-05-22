@@ -1,15 +1,17 @@
 from upsetty import Upset
-import pandas as pd
 from pathlib import Path
 import plotly
+from pandera.typing.pandas import DataFrame
+
+from slrrag.settings import SchemaPapers
 
 
-def plot_and_save_upset(df_input: pd.DataFrame, output_html: Path | str):
+def plot_and_save_upset(df_input: DataFrame[SchemaPapers], output_html: Path | str):  # noqa: F821
     upset_fig = plot_upset(df_input)
     upset_fig.write_html(output_html)
 
 
-def plot_upset(df_input: pd.DataFrame) -> plotly.graph_objs._figure.Figure:
+def plot_upset(df_input: DataFrame[SchemaPapers]) -> plotly.graph_objs._figure.Figure:  # noqa: F821
     # set TRUE/FALSE if the paper exists or not for each database
     # Dynamically detect which id_{db} columns exist
     id_cols = [col for col in df_input.columns if col.startswith("id_")]

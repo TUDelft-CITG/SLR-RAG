@@ -128,7 +128,6 @@ print("Vectorstore ready with:", len(vectorstore.get()["documents"]), "documents
 # create the RAG prompt and structure
 
 
-
 class AnswerWithSources(BaseModel):
     answer: Literal[0, 1]
     sources: str

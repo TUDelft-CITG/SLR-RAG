@@ -1,7 +1,8 @@
 import os
 from pathlib import Path
 from typing import List
-
+from pandera.typing.pandas import DataFrame
+import pandera.pandas as pa
 import pandas as pd
 import pybliometrics
 from slrrag.querier_openalex import query_openalex
@@ -23,6 +24,12 @@ from slrrag.input import (
 from slrrag.settings import (
     AUTOMATICALLY_OVERWRITE,
     DEFAULT_DF_COLUMNS,
+    NAME_COL_IS_FOUND,
+    NAME_COL_PRESENT_DIMENSIONS,
+    NAME_COL_PRESENT_LENS,
+    NAME_COL_PRESENT_OPENALEX,
+    NAME_COL_PRESENT_SCOPUS,
+    NAME_COL_YEAR,
     OUTPUT_CSV_AGENTS_PATH,
     OUTPUT_CSV_QUERY_RESULTS,
     OUTPUT_PATH,
@@ -40,54 +47,59 @@ from slrrag.settings import (
     NAME_COL_TYPE,
     NAME_COL_IS_REFERENCE,
 )
+from slrrag.settings import SchemaPapers
 
 from slrrag.upset_plotter import plot_and_save_upset
 
-
-def get_new_reference_df():
+def get_new_reference_df() -> DataFrame[SchemaPapers]:
     df_ret = pd.DataFrame(
         REFERENCE_PAPERS,
         columns=[
             NAME_COL_TITLE,
             NAME_COL_DOI,
-            "present_openalex",
-            "present_scopus",
-            "present_lens",
-            "present_dimensions",
-        ],
+            NAME_COL_PRESENT_SCOPUS,
+            NAME_COL_PRESENT_OPENALEX,
+            NAME_COL_PRESENT_LENS,
+            NAME_COL_PRESENT_DIMENSIONS,
+        ]
     )
-    df_ret[NAME_COL_DATE] = pd.NaT
-    return df_ret
+    df_ret[NAME_COL_IS_REFERENCE] = True
+    df_ret[NAME_COL_IS_FOUND] = False
+    #df_ret[[NAME_COL_DATE,NAME_COL_TYPE,NAME_COL_YEAR,NAME_COL_ABSTRACT]] = pd.NA
+    return SchemaPapers.validate(df_ret)
 
 
+@pa.check_types
 def add_scopus_papers(
-    input_papers: pd.DataFrame, database_names: List[str]
-) -> tuple[pd.DataFrame, List[str]]:
+    input_papers: DataFrame[SchemaPapers], database_names: List[str]
+) -> tuple[DataFrame[SchemaPapers], List[str]]:
     print("---- Getting query on Scopus ---")
-    results_scopus = query_scopus(MAIN_QUERY)
+    results_scopus = SchemaPapers.validate(query_scopus(MAIN_QUERY))
     if results_scopus is not None:
-        input_papers: pd.DataFrame = merge_papers(
+        input_papers: DataFrame[SchemaPapers] = merge_papers(
             input_papers, results_scopus, "scopus"
         )
         database_names += ["scopus"]
     return input_papers, database_names
 
 
+@pa.check_types
 def add_openalex_papers(
-    input_papers: pd.DataFrame, database_names: List[str]
-) -> tuple[pd.DataFrame, List[str]]:
-    results_openalex = query_openalex(MAIN_QUERY)
+    input_papers: DataFrame[SchemaPapers], database_names: List[str]
+) -> tuple[DataFrame[SchemaPapers], List[str]]:
+    results_openalex = SchemaPapers.validate(query_openalex(MAIN_QUERY))
     if results_openalex is not None:
-        input_papers: pd.DataFrame = merge_papers(
+        input_papers: DataFrame[SchemaPapers] = merge_papers(
             input_papers, results_openalex, "openalex"
         )
         database_names += ["openalex"]
     return input_papers, database_names
 
 
+@pa.check_types
 def add_dimensions_papers(
-    merged_papers: pd.DataFrame, database_names: List[str]
-) -> tuple[pd.DataFrame, List[str]]:
+    merged_papers: DataFrame[SchemaPapers], database_names: List[str]
+) -> tuple[DataFrame[SchemaPapers], List[str]]:
     """Add Dimensions.ai papers to the merged DataFrame.
 
     This function guides the user through the process of adding Dimensions papers:
@@ -119,7 +131,7 @@ def add_dimensions_papers(
         if user_choice == "y":
             if PATH_DIMENSIONS_EXPORT.exists():
                 print("---- Reading Dimensions export ---")
-                dimensions_df = read_dimensions_export(PATH_DIMENSIONS_EXPORT)
+                dimensions_df = SchemaPapers.validate(read_dimensions_export(PATH_DIMENSIONS_EXPORT))
                 print(f"Found {len(dimensions_df)} papers in Dimensions export")
                 print("---- Merging with Dimensions ---")
                 merged_papers = merge_papers(merged_papers, dimensions_df, "dimensions")
@@ -139,9 +151,10 @@ def add_dimensions_papers(
     return merged_papers, database_names
 
 
+@pa.check_types
 def add_lens_papers(
-    merged_papers: pd.DataFrame, database_names: List[str]
-) -> tuple[pd.DataFrame, List[str]]:
+    merged_papers: DataFrame[SchemaPapers], database_names: List[str]
+) -> tuple[DataFrame[SchemaPapers], List[str]]:
     """Add Lens papers to the merged DataFrame.
 
     This function guides the user through the process of adding Lens papers:
@@ -182,7 +195,7 @@ def add_lens_papers(
         if user_choice == "y":
             if PATH_LENS_EXPORT.exists():
                 print("---- Reading Lens export ---")
-                lens_df = read_lens_export(PATH_LENS_EXPORT)
+                lens_df = SchemaPapers.validate(read_lens_export(PATH_LENS_EXPORT))
                 print(f"Found {len(lens_df)} papers in Lens export")
                 print("---- Merging with Lens ---")
                 merged_papers = merge_papers(merged_papers, lens_df, "lens")
@@ -201,9 +214,12 @@ def add_lens_papers(
 
 
 # --- Merge and stats functions ---
+@pa.check_types
 def merge_papers(
-    left_df: pd.DataFrame, right_df: pd.DataFrame, right_db_name: str
-) -> pd.DataFrame:
+    left_df: DataFrame[SchemaPapers],
+    right_df: DataFrame[SchemaPapers],
+    right_db_name: str,
+) -> DataFrame[SchemaPapers]:
     """Merge two paper DataFrames by DOI/title, keeping only specified fields.
 
     Args:
@@ -272,7 +288,10 @@ def merge_papers(
     return result_df
 
 
-def add_reference_papers(df: pd.DataFrame, reference_dois: List[str]) -> pd.DataFrame:
+@pa.check_types
+def add_reference_papers(
+    df: DataFrame[SchemaPapers], reference_dois: List[str]
+) -> DataFrame[SchemaPapers]:
     """Add reference papers to DataFrame if they don't already exist.
 
     For each DOI in reference_dois that's not in the DataFrame's doi column,
@@ -309,7 +328,8 @@ def add_reference_papers(df: pd.DataFrame, reference_dois: List[str]) -> pd.Data
     return new_df
 
 
-def clean_merged_df(merged_papers: pd.DataFrame, database_names: List[str]):
+@pa.check_types
+def clean_merged_df(merged_papers: DataFrame[SchemaPapers], database_names: List[str]):
     """
     Make the clean of the datafram before further processing, and apply filters
     setup in ADDITIONAL_PARAMETERS
@@ -342,7 +362,10 @@ def clean_merged_df(merged_papers: pd.DataFrame, database_names: List[str]):
     return merged_papers
 
 
-def show_merged_stats(merged_papers: pd.DataFrame, database_names: List[str]) -> None:
+@pa.check_types
+def show_merged_stats(
+    merged_papers: DataFrame[SchemaPapers], database_names: List[str]
+) -> None:
     """Print statistics about merged papers.
 
     Args:
@@ -400,7 +423,8 @@ def check_overwrite(
     return True
 
 
-def save_dataframe_to_csv(df: pd.DataFrame, file_path: Path) -> None:
+@pa.check_types
+def save_dataframe_to_csv(df: DataFrame[SchemaPapers], file_path: Path) -> None:
     """Save DataFrame to CSV with overwrite protection."""
     os.makedirs(file_path.parent, exist_ok=True)
     if check_overwrite(file_path, AUTOMATICALLY_OVERWRITE):
@@ -430,7 +454,8 @@ def prompt_user_for_action_after_querying() -> str:
         print("Invalid option. Please try again.")
 
 
-def get_all_papers_from_databases():
+@pa.check_types
+def get_all_papers_from_databases() -> tuple[DataFrame[SchemaPapers], List[str]]:
     pybliometrics.init()  # Init for scopus
     papers_df = get_new_reference_df()
     database_names = []
@@ -464,7 +489,7 @@ def main():
     if prompt_user_for_action_before_querying() == "s":
         papers_df, database_names = get_all_papers_from_databases()
     else:
-        papers_df = pd.read_csv(OUTPUT_CSV_QUERY_RESULTS)
+        papers_df = SchemaPapers(pd.read_csv(OUTPUT_CSV_QUERY_RESULTS))
 
         database_names = [
             c.removeprefix("id_") for c in papers_df.columns if c.startswith("id_")
