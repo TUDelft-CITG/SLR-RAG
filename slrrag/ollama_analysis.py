@@ -1,4 +1,5 @@
 """Ollama and LangChain agent functions for paper analysis."""
+
 import getpass
 import os
 from time import sleep
@@ -25,7 +26,7 @@ def setup_chat_agent() -> ChatOllama:
             print(f"using ollama:{OLLAMA_MODEL}")
             return ChatOllama(model=OLLAMA_MODEL)
         elif user_out_agent == "m":
-            print(f"Using Mistral")
+            print("Using Mistral")
             from langchain_mistralai import ChatMistralAI
 
             if "MISTRAL_API_KEY" not in os.environ:

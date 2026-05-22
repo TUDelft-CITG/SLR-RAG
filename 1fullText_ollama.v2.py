@@ -1,20 +1,18 @@
 from pathlib import Path
 import shutil
 import os
-import uuid
 from collections import defaultdict
 import pandas as pd
 from dotenv import load_dotenv
-from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
-from langchain_core.runnables import RunnablePassthrough
 from langchain_core.prompts import ChatPromptTemplate
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from langchain_ollama import ChatOllama, OllamaEmbeddings
 
 # functions
+
 
 def format_docs_with_metadata(docs):
     out = []
@@ -28,18 +26,22 @@ def format_docs_with_metadata(docs):
         out.append(f"{header}\n{d.page_content}")
 
     return "\n\n---\n\n".join(out)
+
+
 def get_retriever_for_doc(doc_name):
     # vectorstore.as_retriever() is a LangChain method to convert a vector db into a generic Retriever obejct,allowing for semantic searches
     return vectorstore.as_retriever(
         search_type="mmr",  # better diversity
         search_kwargs={
-            "k": 8,                 # fewer but higher precision
-            "fetch_k": 20,          # initial candidate pool
-            "lambda_mult": 0.7,     # balance relevance/diversity
-            "filter": {"source": doc_name}
-        }
-    )    
-# Retrieve chunks using metadata filtering inside the vectorstore    
+            "k": 8,  # fewer but higher precision
+            "fetch_k": 20,  # initial candidate pool
+            "lambda_mult": 0.7,  # balance relevance/diversity
+            "filter": {"source": doc_name},
+        },
+    )
+
+
+# Retrieve chunks using metadata filtering inside the vectorstore
 def retrieve_chunks_for_document(question, doc_name):
     doc_retriever = get_retriever_for_doc(doc_name)
     retrieved_docs = doc_retriever.invoke(question)
@@ -49,15 +51,19 @@ def retrieve_chunks_for_document(question, doc_name):
 
     return format_docs_with_metadata(retrieved_docs)
 
+
 def build_rag_chain():
     return (
         {
-            "context": lambda x: retrieve_chunks_for_document(x["question"], x["document"]),
-            "question": lambda x: x["question"]
+            "context": lambda x: retrieve_chunks_for_document(
+                x["question"], x["document"]
+            ),
+            "question": lambda x: x["question"],
         }
         | prompt_template
         | llm.with_structured_output(AnswerWithSources, strict=True)
     )
+
 
 # --------------- 1. Preparation stage ---------------
 
@@ -67,24 +73,21 @@ load_dotenv()
 EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL", "mxbai-embed-large")
 CHAT_MODEL = os.environ.get("CHAT_MODEL", "qwen3:8b")
 # CHAT_MODEL = os.environ.get("CHAT_MODEL", "llama3.2:3b")
-    
+
 embedding_function = OllamaEmbeddings(model=EMBEDDING_MODEL)
 
-llm = ChatOllama(
-    model=CHAT_MODEL,
-    temperature=0
-)
+llm = ChatOllama(model=CHAT_MODEL, temperature=0)
 
-# clean vectorstore directory to avoid issues 
+# clean vectorstore directory to avoid issues
 GLOBAL_DB_PATH = "vectorstore_chroma"
-shutil.rmtree(GLOBAL_DB_PATH, ignore_errors=True)   # removes the entire directory, incl all files/subfolders.
-os.makedirs(GLOBAL_DB_PATH, exist_ok=True) # creates the directory again
+shutil.rmtree(
+    GLOBAL_DB_PATH, ignore_errors=True
+)  # removes the entire directory, incl all files/subfolders.
+os.makedirs(GLOBAL_DB_PATH, exist_ok=True)  # creates the directory again
 
 # load and split the pdfs (create chunks)
 text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=1000,
-    chunk_overlap=300,
-    separators=["\n\n", "\n", ".", " ", ""]
+    chunk_size=1000, chunk_overlap=300, separators=["\n\n", "\n", ".", " ", ""]
 )
 
 main_path = Path(".")
@@ -112,25 +115,24 @@ for filename in os.listdir(pdf_dir):
 
 print(f"Loaded total chunks: {len(all_chunks)}")
 
-# build a vectorstore 
+# build a vectorstore
 vectorstore = Chroma.from_documents(
-    documents=all_chunks,
-    embedding=embedding_function,
-    persist_directory=GLOBAL_DB_PATH
+    documents=all_chunks, embedding=embedding_function, persist_directory=GLOBAL_DB_PATH
 )
 
-print("Vectorstore ready with:",
-      len(vectorstore.get()['documents']), "documents")
+print("Vectorstore ready with:", len(vectorstore.get()["documents"]), "documents")
 
 # ----------------- 2. RETRIEVE, AUGMENT, GENERATE ----------------
 
-# create the RAG prompt and structure 
+# create the RAG prompt and structure
 from typing import Literal
+
 
 class AnswerWithSources(BaseModel):
     answer: Literal[0, 1]
     sources: str
     reasoning: str
+
 
 PROMPT_TEMPLATE = """
 You are a systematic review assistant.
@@ -171,12 +173,11 @@ rag_chain = build_rag_chain()
 
 # define the criterion, guided by the conceptual model
 criteria = [
-    "Does the paper demonstrate an application related to any of the port call steps (vessel's pre-arrival, arrival, port visit, departure, or post-departure)?", #either this or the next one to give 1
-    "Does the paper mention any port call–related processes, like vessel manevuering or trajectory analysis, route prediction, ETA prediction, movement planning within port area, port traffic management, vessel traffic coordination, arrival/departure scheduling and handling, berth allocation/operations, anchorage management?", # or this one
-
-    "Does the paper focus on seaside, nautical, or vessel traffic-related aspects of a port call?", 
+    "Does the paper demonstrate an application related to any of the port call steps (vessel's pre-arrival, arrival, port visit, departure, or post-departure)?",  # either this or the next one to give 1
+    "Does the paper mention any port call–related processes, like vessel manevuering or trajectory analysis, route prediction, ETA prediction, movement planning within port area, port traffic management, vessel traffic coordination, arrival/departure scheduling and handling, berth allocation/operations, anchorage management?",  # or this one
+    "Does the paper focus on seaside, nautical, or vessel traffic-related aspects of a port call?",
     "Is the primary focus of the paper on operations conducted within or around port boundaries and infrastructure?",
-    "Does the paper demonstrate an application of machine learning or artificial intelligence (e.g., supervised learning, unsupervised learning, deep learning, reinforcement learning)?"
+    "Does the paper demonstrate an application of machine learning or artificial intelligence (e.g., supervised learning, unsupervised learning, deep learning, reinforcement learning)?",
 ]
 
 # run the pipeline
@@ -201,7 +202,7 @@ for doc_name in chunks_by_doc.keys():
 
     rows.append(row)
 
-# create a final table and csv file 
+# create a final table and csv file
 df = pd.DataFrame(rows).set_index("document")
 print(df)
 

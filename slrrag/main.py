@@ -1,15 +1,12 @@
 import os
 from pathlib import Path
-from time import sleep
-from typing import Dict, List, Optional
+from typing import List
 
 import pandas as pd
 import pybliometrics
-from pyalex import Works
-from querier_openalex import check_doi_in_openalex, query_openalex
-from querier_scopus import check_doi_in_scopus, query_scopus
+from querier_openalex import query_openalex
+from querier_scopus import query_scopus
 from query_converter import convert_query_to_lens
-from tqdm import tqdm
 from query_converter import query_to_dimensions_url
 from ollama_analysis import (
     setup_chat_agent,
@@ -17,30 +14,75 @@ from ollama_analysis import (
 )
 from querier_dimensions import read_dimensions_export
 from querier_lens import read_lens_export
-from settings import ADDITIONAL_PARAMETERS, AUTOMATICALLY_OVERWRITE, DEFAULT_DF_COLUMNS, MAIN_QUERY, MINIMUM_YEAR_NAME, OUTPUT_CSV_AGENTS_PATH, OUTPUT_CSV_QUERY_RESULTS, OUTPUT_PATH, OUTPUT_UPSET, PATH_DIMENSIONS_EXPORT, PATH_LENS_EXPORT, FIRST_ROUND_QUESTIONS, REFERENCE_DOIS, REFERENCE_PAPERS
-from settings import NAME_ARTICLE_TYPE_ARTICLE, NAME_ARTICLE_TYPE_BOOK, NAME_ARTICLE_TYPE_BOOK_CHAPTER, NAME_ARTICLE_TYPE_DISSERTATION, NAME_ARTICLE_TYPE_PREPRINT, NAME_ARTICLE_TYPE_REPORT, NAME_COL_ABSTRACT, NAME_COL_DATE, NAME_COL_DOI, NAME_COL_TITLE, NAME_COL_TYPE, NAME_COL_IS_REFERENCE
+from input import (
+    ADDITIONAL_PARAMETERS,
+    MAIN_QUERY,
+    MINIMUM_YEAR_NAME,
+    FIRST_ROUND_QUESTIONS,
+)
+from settings import (
+    AUTOMATICALLY_OVERWRITE,
+    DEFAULT_DF_COLUMNS,
+    OUTPUT_CSV_AGENTS_PATH,
+    OUTPUT_CSV_QUERY_RESULTS,
+    OUTPUT_PATH,
+    OUTPUT_UPSET,
+    PATH_DIMENSIONS_EXPORT,
+    PATH_LENS_EXPORT,
+    REFERENCE_DOIS,
+    REFERENCE_PAPERS,
+)
+from settings import (
+    NAME_COL_ABSTRACT,
+    NAME_COL_DATE,
+    NAME_COL_DOI,
+    NAME_COL_TITLE,
+    NAME_COL_TYPE,
+    NAME_COL_IS_REFERENCE,
+)
 
 from upset_plotter import plot_and_save_upset
 
+
 def get_new_reference_df():
-    df_ret= pd.DataFrame(REFERENCE_PAPERS, columns=[NAME_COL_TITLE, NAME_COL_DOI, "present_openalex", "present_scopus", "present_lens", "present_dimensions"])
+    df_ret = pd.DataFrame(
+        REFERENCE_PAPERS,
+        columns=[
+            NAME_COL_TITLE,
+            NAME_COL_DOI,
+            "present_openalex",
+            "present_scopus",
+            "present_lens",
+            "present_dimensions",
+        ],
+    )
     df_ret[NAME_COL_DATE] = pd.NaT
     return df_ret
 
-def add_scopus_papers(input_papers: pd.DataFrame, database_names: List[str]) -> tuple[pd.DataFrame, List[str]]:
+
+def add_scopus_papers(
+    input_papers: pd.DataFrame, database_names: List[str]
+) -> tuple[pd.DataFrame, List[str]]:
     print("---- Getting query on Scopus ---")
     results_scopus = query_scopus(MAIN_QUERY)
     if results_scopus is not None:
-        input_papers: pd.DataFrame = merge_papers(input_papers,results_scopus, "scopus")
+        input_papers: pd.DataFrame = merge_papers(
+            input_papers, results_scopus, "scopus"
+        )
         database_names += ["scopus"]
-    return input_papers,database_names
+    return input_papers, database_names
 
-def add_openalex_papers(input_papers: pd.DataFrame, database_names: List[str]) -> tuple[pd.DataFrame, List[str]]:
+
+def add_openalex_papers(
+    input_papers: pd.DataFrame, database_names: List[str]
+) -> tuple[pd.DataFrame, List[str]]:
     results_openalex = query_openalex(MAIN_QUERY)
     if results_openalex is not None:
-        input_papers: pd.DataFrame = merge_papers(input_papers,results_openalex, "openalex")
+        input_papers: pd.DataFrame = merge_papers(
+            input_papers, results_openalex, "openalex"
+        )
         database_names += ["openalex"]
-    return input_papers,database_names
+    return input_papers, database_names
 
 
 def add_dimensions_papers(
@@ -73,9 +115,7 @@ def add_dimensions_papers(
     # Ask user what to do next
     PATH_DIMENSIONS_EXPORT.parent.mkdir(exist_ok=True, parents=True)
     while True:
-        user_choice = input(
-            f"Add Dimensions papers? (y/n):"
-        ).strip()
+        user_choice = input("Add Dimensions papers? (y/n):").strip()
         if user_choice == "y":
             if PATH_DIMENSIONS_EXPORT.exists():
                 print("---- Reading Dimensions export ---")
@@ -86,7 +126,9 @@ def add_dimensions_papers(
                 database_names.append("dimensions")
                 break
             else:
-                print(f"File {PATH_DIMENSIONS_EXPORT} does not exist. Dimensions papers not added.")
+                print(
+                    f"File {PATH_DIMENSIONS_EXPORT} does not exist. Dimensions papers not added."
+                )
                 continue
         elif user_choice == "n":
             print("Dimensions inclusion cancelled.")
@@ -95,7 +137,6 @@ def add_dimensions_papers(
             print("Invalid choice. Please enter y or n.")
 
     return merged_papers, database_names
-
 
 
 def add_lens_papers(
@@ -135,11 +176,9 @@ def add_lens_papers(
     print(f"{PATH_LENS_EXPORT}")
 
     # Ask user what to do next
-    PATH_LENS_EXPORT.parent.mkdir(exist_ok=True,parents=True)
+    PATH_LENS_EXPORT.parent.mkdir(exist_ok=True, parents=True)
     while True:
-        user_choice = input(
-            f"Add Lens papers? (y/n):"
-        ).strip()
+        user_choice = input("Add Lens papers? (y/n):").strip()
         if user_choice == "y":
             if PATH_LENS_EXPORT.exists():
                 print("---- Reading Lens export ---")
@@ -177,8 +216,12 @@ def merge_papers(
         Merged DataFrame with columns: doi, title, date, abstract, plus all id_{db} columns
     """
     # Sometimes, doi / title do not have same uppercase : 10.1017/S0373463319000444 == 10.1017/s0373463319000444.
-    left_df["temp_key"] = left_df[NAME_COL_DOI].fillna(left_df[NAME_COL_TITLE]).str.lower()
-    right_df["temp_key"] = right_df[NAME_COL_DOI].fillna(right_df[NAME_COL_TITLE]).str.lower()
+    left_df["temp_key"] = (
+        left_df[NAME_COL_DOI].fillna(left_df[NAME_COL_TITLE]).str.lower()
+    )
+    right_df["temp_key"] = (
+        right_df[NAME_COL_DOI].fillna(right_df[NAME_COL_TITLE]).str.lower()
+    )
 
     # Rename right_df's id column to id_{right_db}
     right_id_col = f"id_{right_db_name}"
@@ -192,7 +235,7 @@ def merge_papers(
         right_df,
         on=["temp_key"],
         how="outer",
-        suffixes=(f"", f"_{right_db_name}"),
+        suffixes=("", f"_{right_db_name}"),
     )
     # BUG: Will have duplicata if one has doi and not the other
 
@@ -222,7 +265,10 @@ def merge_papers(
     # Check if papers are reference or not
     reference_paper = get_new_reference_df()
     # DOI Matches or title matches
-    result_df[NAME_COL_IS_REFERENCE] = (result_df[NAME_COL_DOI].notna() & result_df[NAME_COL_DOI].isin(reference_paper[NAME_COL_DOI])) | result_df[NAME_COL_TITLE].isin(reference_paper[NAME_COL_TITLE])
+    result_df[NAME_COL_IS_REFERENCE] = (
+        result_df[NAME_COL_DOI].notna()
+        & result_df[NAME_COL_DOI].isin(reference_paper[NAME_COL_DOI])
+    ) | result_df[NAME_COL_TITLE].isin(reference_paper[NAME_COL_TITLE])
     return result_df
 
 
@@ -262,36 +308,51 @@ def add_reference_papers(df: pd.DataFrame, reference_dois: List[str]) -> pd.Data
     new_df[NAME_COL_IS_REFERENCE] = new_df[NAME_COL_DOI].isin(REFERENCE_DOIS)
     return new_df
 
+
 def clean_merged_df(merged_papers: pd.DataFrame, database_names: List[str]):
     """
-    Make the clean of the datafram before further processing, and apply filters 
+    Make the clean of the datafram before further processing, and apply filters
     setup in ADDITIONAL_PARAMETERS
     """
     print("---------CLEANING------------")
     for db in database_names:
         merged_papers[f"in_{db}"] = merged_papers[f"id_{db}"].notna()
-    merged_papers["is_found"] =  pd.concat([merged_papers[f"in_{db}"] for db in database_names], axis=1).any(axis=1)
-    merged_papers["year"] = pd.to_datetime(merged_papers[NAME_COL_DATE],format="mixed").dt.year
-    merged_papers["year"] = merged_papers["year"].astype("Int64") # To avoid having floats
+    merged_papers["is_found"] = pd.concat(
+        [merged_papers[f"in_{db}"] for db in database_names], axis=1
+    ).any(axis=1)
+    merged_papers["year"] = pd.to_datetime(
+        merged_papers[NAME_COL_DATE], format="mixed"
+    ).dt.year
+    merged_papers["year"] = merged_papers["year"].astype(
+        "Int64"
+    )  # To avoid having floats
     if MINIMUM_YEAR_NAME in ADDITIONAL_PARAMETERS:
-        df_after = merged_papers[merged_papers['year'].isna() | (merged_papers['year'] >= ADDITIONAL_PARAMETERS[MINIMUM_YEAR_NAME])]
-        assert df_after[NAME_COL_IS_REFERENCE].sum() == merged_papers[NAME_COL_IS_REFERENCE].sum()
-        print(f"Filtering {len(merged_papers) - len(df_after)} papers that are before year {ADDITIONAL_PARAMETERS[MINIMUM_YEAR_NAME]}")
+        df_after = merged_papers[
+            merged_papers["year"].isna()
+            | (merged_papers["year"] >= ADDITIONAL_PARAMETERS[MINIMUM_YEAR_NAME])
+        ]
+        assert (
+            df_after[NAME_COL_IS_REFERENCE].sum()
+            == merged_papers[NAME_COL_IS_REFERENCE].sum()
+        )
+        print(
+            f"Filtering {len(merged_papers) - len(df_after)} papers that are before year {ADDITIONAL_PARAMETERS[MINIMUM_YEAR_NAME]}"
+        )
         merged_papers = df_after
     return merged_papers
-def show_merged_stats(
-    merged_papers: pd.DataFrame, database_names: List[str]
-) -> None:
+
+
+def show_merged_stats(merged_papers: pd.DataFrame, database_names: List[str]) -> None:
     """Print statistics about merged papers.
 
     Args:
         merged_papers: DataFrame with merged paper data
         reference_dois: List of reference DOIs
         database_names: List of database names (e.g., ['scopus', 'openalex'])
-    """    
+    """
     print("---------SUMMARIZING------------")
 
-    reference_df = merged_papers[merged_papers[NAME_COL_IS_REFERENCE]]    
+    reference_df = merged_papers[merged_papers[NAME_COL_IS_REFERENCE]]
 
     # Calculate common papers (in all databases)
     common_papers = (
@@ -300,16 +361,13 @@ def show_merged_stats(
         .sum()
     )
     # Calculate papers appearing in at least one database
-    found_papers = (
-       merged_papers["is_found"].sum()
-    )
+    found_papers = merged_papers["is_found"].sum()
     reference_found = (
         pd.concat([reference_df[f"in_{db}"] for db in database_names], axis=1)
         .any(axis=1)
         .sum()
     )
     total_reference = len(reference_df)
-
 
     print(f"Total number of papers found: {found_papers}")
     print(f"Reference papers found: {reference_found} over {total_reference}")
@@ -324,7 +382,6 @@ def show_merged_stats(
         print(f"Number of papers in {db}: {in_db}")
         print(f"Number of reference papers in {db}: {ref_in_db}")
     return merged_papers
-
 
 
 # --- File I/O functions ---
@@ -347,8 +404,9 @@ def save_dataframe_to_csv(df: pd.DataFrame, file_path: Path) -> None:
     """Save DataFrame to CSV with overwrite protection."""
     os.makedirs(file_path.parent, exist_ok=True)
     if check_overwrite(file_path, AUTOMATICALLY_OVERWRITE):
-        df.to_csv(file_path, index=False,date_format="%Y-%m-%d")
+        df.to_csv(file_path, index=False, date_format="%Y-%m-%d")
         print(f"Results saved in {file_path}")
+
 
 def prompt_user_for_action_before_querying() -> str:
     """Prompt the user for action: continue, print papers, or exit."""
@@ -359,6 +417,8 @@ def prompt_user_for_action_before_querying() -> str:
         if user_input in ["s", "i"]:
             return user_input
         print("Invalid option. Please try again.")
+
+
 def prompt_user_for_action_after_querying() -> str:
     """Prompt the user for action: continue, print papers, or exit."""
     while True:
@@ -369,21 +429,21 @@ def prompt_user_for_action_after_querying() -> str:
             return user_input
         print("Invalid option. Please try again.")
 
-def get_all_papers_from_databases(): 
-    pybliometrics.init() # Init for scopus
+
+def get_all_papers_from_databases():
+    pybliometrics.init()  # Init for scopus
     papers_df = get_new_reference_df()
     database_names = []
     # Step 1: Query Scopus
-    
+
     papers_df, database_names = add_scopus_papers(papers_df, database_names)
-    
+
     # Step 2: Query OpenAlex
     papers_df, database_names = add_openalex_papers(papers_df, database_names)
 
     # Step 3: Merge papers from Scopus and OpenAlex
     print("---- Merging papers ---")
-    
-    
+
     # Step 3b: Ask if user wants to add lens.database
     user_input = input("Search for Lens papers? (y/n): ").lower()
     if user_input == "y":
@@ -395,17 +455,21 @@ def get_all_papers_from_databases():
         papers_df, database_names = add_dimensions_papers(papers_df, database_names)
 
     # Add reference papers in the final dataframe.
-    papers_df = clean_merged_df(papers_df,database_names)
-    return papers_df,database_names
+    papers_df = clean_merged_df(papers_df, database_names)
+    return papers_df, database_names
+
+
 # --- Main workflow ---
 def main():
-    if prompt_user_for_action_before_querying() == "s": 
-        papers_df, database_names= get_all_papers_from_databases()
-    else: 
+    if prompt_user_for_action_before_querying() == "s":
+        papers_df, database_names = get_all_papers_from_databases()
+    else:
         papers_df = pd.read_csv(OUTPUT_CSV_QUERY_RESULTS)
-        
-        database_names = [c.removeprefix("id_") for c in papers_df.columns if c.startswith("id_")]
-        papers_df = clean_merged_df(papers_df,database_names)
+
+        database_names = [
+            c.removeprefix("id_") for c in papers_df.columns if c.startswith("id_")
+        ]
+        papers_df = clean_merged_df(papers_df, database_names)
     papers_df = show_merged_stats(papers_df, database_names)
     # Step 4: User interaction
     while True:
@@ -413,7 +477,11 @@ def main():
         if action == "e":  # exit
             return
         elif action == "p":  # print names
-            print(papers_df[[NAME_COL_TITLE,NAME_COL_DOI,NAME_COL_IS_REFERENCE, "is_found"]])
+            print(
+                papers_df[
+                    [NAME_COL_TITLE, NAME_COL_DOI, NAME_COL_IS_REFERENCE, "is_found"]
+                ]
+            )
         elif action == "s":  # Save merged papers as CSV
             save_dataframe_to_csv(papers_df, OUTPUT_CSV_QUERY_RESULTS)
         elif action == "u":
@@ -424,7 +492,11 @@ def main():
             os.makedirs(OUTPUT_CSV_AGENTS_PATH.parent, exist_ok=True)
             break
         elif action == "r":
-            print(papers_df.query(NAME_COL_IS_REFERENCE)[[NAME_COL_TITLE,NAME_COL_DOI,NAME_COL_IS_REFERENCE, "is_found"]])
+            print(
+                papers_df.query(NAME_COL_IS_REFERENCE)[
+                    [NAME_COL_TITLE, NAME_COL_DOI, NAME_COL_IS_REFERENCE, "is_found"]
+                ]
+            )
 
     # Check if file exists and prompt user for overwrite
     if OUTPUT_CSV_AGENTS_PATH.exists() and not AUTOMATICALLY_OVERWRITE:
