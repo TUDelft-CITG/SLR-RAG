@@ -1,6 +1,0 @@
-notebook>=7.5.6
-pandas>=3.0.3
-plotly>=6.7.0
-pybliometrics>=4.4.1
-ruff>=0.15.14
-upsetty>=0.1.3

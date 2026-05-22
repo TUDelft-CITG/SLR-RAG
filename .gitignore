@@ -10,3 +10,5 @@ output/
 outputs/
 data/export_databases/
 *.html
+*.egg-info/
+uv.lock
