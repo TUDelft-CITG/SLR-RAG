@@ -74,8 +74,9 @@ def add_scopus_papers(
     input_papers: DataFrame[SchemaPapers], database_names: List[str]
 ) -> tuple[DataFrame[SchemaPapers], List[str]]:
     print("---- Getting query on Scopus ---")
-    results_scopus = SchemaPapers.validate(query_scopus(MAIN_QUERY))
+    results_scopus = query_scopus(MAIN_QUERY)
     if results_scopus is not None:
+        results_scopus=  SchemaPapers.validate(results_scopus)
         input_papers: DataFrame[SchemaPapers] = merge_papers(
             input_papers, results_scopus, "scopus"
         )
@@ -87,8 +88,9 @@ def add_scopus_papers(
 def add_openalex_papers(
     input_papers: DataFrame[SchemaPapers], database_names: List[str]
 ) -> tuple[DataFrame[SchemaPapers], List[str]]:
-    results_openalex = SchemaPapers.validate(query_openalex(MAIN_QUERY))
+    results_openalex = query_openalex(MAIN_QUERY)
     if results_openalex is not None:
+        results_openalex=  SchemaPapers.validate(results_openalex)
         input_papers: DataFrame[SchemaPapers] = merge_papers(
             input_papers, results_openalex, "openalex"
         )
@@ -335,6 +337,7 @@ def clean_merged_df(merged_papers: DataFrame[SchemaPapers], database_names: List
     setup in ADDITIONAL_PARAMETERS
     """
     print("---------CLEANING------------")
+    assert len(database_names) > 0, "List of database is empty. Please use at least one Database."
     for db in database_names:
         merged_papers[f"in_{db}"] = merged_papers[f"id_{db}"].notna()
     merged_papers["is_found"] = pd.concat(
@@ -495,6 +498,7 @@ def main():
             c.removeprefix("id_") for c in papers_df.columns if c.startswith("id_")
         ]
         papers_df = clean_merged_df(papers_df, database_names)
+    print(f"Databases used : [{database_names}]")
     papers_df = show_merged_stats(papers_df, database_names)
 
     # Step 4: User interaction
