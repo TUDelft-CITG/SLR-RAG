@@ -217,7 +217,7 @@ REFERENCE_PAPERS = [
     ),
     (
         "Multi-Perspective Nautical Safety Risk Assessment of Allisions with Offshore Wind Parks",
-        "10.2139/ssrn.5002935",
+        "10.1016/j.apor.2025.104564",
         True,
         True,
         False,

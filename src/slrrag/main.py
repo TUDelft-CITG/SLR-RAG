@@ -77,10 +77,9 @@ def add_scopus_papers(
     results_scopus = query_scopus(MAIN_QUERY)
     if results_scopus is not None:
         results_scopus = SchemaPapers.validate(results_scopus)
-        input_papers: DataFrame[SchemaPapers] = merge_papers(
-            input_papers, results_scopus, "scopus"
+        input_papers, database_names = merge_papers(
+            input_papers, results_scopus, database_names, "scopus"
         )
-        database_names += ["scopus"]
     return input_papers, database_names
 
 
@@ -91,10 +90,9 @@ def add_openalex_papers(
     results_openalex = query_openalex(MAIN_QUERY)
     if results_openalex is not None:
         results_openalex = SchemaPapers.validate(results_openalex)
-        input_papers: DataFrame[SchemaPapers] = merge_papers(
-            input_papers, results_openalex, "openalex"
+        input_papers, database_names = merge_papers(
+            input_papers, results_openalex, database_names, "openalex"
         )
-        database_names += ["openalex"]
     return input_papers, database_names
 
 
@@ -138,8 +136,7 @@ def add_dimensions_papers(
                 )
                 print(f"Found {len(dimensions_df)} papers in Dimensions export")
                 print("---- Merging with Dimensions ---")
-                merged_papers = merge_papers(merged_papers, dimensions_df, "dimensions")
-                database_names.append("dimensions")
+                merged_papers, database_names = merge_papers(merged_papers, dimensions_df, database_names, "dimensions")
                 break
             else:
                 print(
@@ -202,8 +199,8 @@ def add_lens_papers(
                 lens_df = SchemaPapers.validate(read_lens_export(PATH_LENS_EXPORT))
                 print(f"Found {len(lens_df)} papers in Lens export")
                 print("---- Merging with Lens ---")
-                merged_papers = merge_papers(merged_papers, lens_df, "lens")
-                database_names.append("lens")
+                merged_papers, database_names = merge_papers(merged_papers, lens_df, database_names, "lens")
+
                 break
             else:
                 print(f"File {PATH_LENS_EXPORT} does not exist. Lens papers not added.")
@@ -222,6 +219,7 @@ def add_lens_papers(
 def merge_papers(
     left_df: DataFrame[SchemaPapers],
     right_df: DataFrame[SchemaPapers],
+    database_names: List[str],
     right_db_name: str,
 ) -> DataFrame[SchemaPapers]:
     """Merge two paper DataFrames by DOI/title, keeping only specified fields.
@@ -243,11 +241,8 @@ def merge_papers(
         right_df[NAME_COL_DOI].fillna(right_df[NAME_COL_TITLE]).str.lower()
     )
 
-    # Rename right_df's id column to id_{right_db}
-    right_id_col = f"id_{right_db_name}"
-    # Collect all id columns from left_df (may already have id_{db} from previous merges)
-    left_id_cols = [col for col in left_df.columns if col.startswith("id")]
-    all_id_cols = left_id_cols + [right_id_col]
+    
+
 
     # Merge by temp_key
     merged_df = pd.merge(
@@ -278,8 +273,13 @@ def merge_papers(
     )
 
     # Select columns to keep: core fields + all id columns that exist
+    all_id_cols = [col for col in left_df.columns if col.startswith("id")] + [f"id_{right_db_name}"]
+
+    all_topic_cols = [col for col in left_df.columns if col.startswith("topic")] + [f"topic_{right_db_name}"]
     result_cols = DEFAULT_DF_COLUMNS + [
         col for col in all_id_cols if col in merged_df.columns
+    ] + [
+        col for col in all_topic_cols if col in merged_df.columns
     ]
     result_df = merged_df[result_cols].copy()
     # Check if papers are reference or not
@@ -289,7 +289,8 @@ def merge_papers(
         result_df[NAME_COL_DOI].notna()
         & result_df[NAME_COL_DOI].isin(reference_paper[NAME_COL_DOI])
     ) | result_df[NAME_COL_TITLE].isin(reference_paper[NAME_COL_TITLE])
-    return result_df
+    database_names += [right_db_name]
+    return result_df, database_names
 
 
 @pa.check_types

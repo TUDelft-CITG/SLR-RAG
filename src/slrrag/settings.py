@@ -53,6 +53,9 @@ NAME_COL_PRESENT_SCOPUS = "present_scopus"
 NAME_COL_PRESENT_OPENALEX = "present_openalex"
 NAME_COL_PRESENT_LENS = "present_lens"
 NAME_COL_PRESENT_DIMENSIONS = "present_dimensions"
+NAME_COL_TOPIC_OPENALEX = "topic_openalex"
+NAME_COL_TOPIC_LENS= "topic_lens"
+NAME_COL_TOPIC_DIMENSION= "topic_dimensions"
 
 NAME_ARTICLE_TYPE_ARTICLE = "article"
 NAME_ARTICLE_TYPE_BOOK_CHAPTER = "book-chapter"
@@ -141,7 +144,6 @@ ARTICLE_TYPE_MAPPING = {
     "report": NAME_ARTICLE_TYPE_REPORT,
     # NAME_ARTICLE_CONFERENCE_PAPER
     "conference paper": NAME_ARTICLE_CONFERENCE_PAPER,
-    "conference review": NAME_ARTICLE_CONFERENCE_PAPER,
     # NAME_ARTICLE_CONFERENCE_PROCEEDING
     "proceeding": NAME_ARTICLE_TYPE_CONFERENCE_PROCEEDING,
     "conference proceedings": NAME_ARTICLE_TYPE_CONFERENCE_PROCEEDING,
@@ -154,6 +156,7 @@ ARTICLE_TYPE_MAPPING = {
     "software": NAME_ARTICLE_TYPE_SOFTWARE,
     # Other
     "other": NAME_ARTICLE_TYPE_OTHER,
+    "conference review": NAME_ARTICLE_TYPE_OTHER,
     "news": NAME_ARTICLE_TYPE_OTHER,
     "dataset": NAME_ARTICLE_TYPE_OTHER,
     "letter": NAME_ARTICLE_TYPE_OTHER,
@@ -220,6 +223,10 @@ class SchemaPapers(pa.DataFrameModel):
         nullable=True, alias=NAME_COL_PRESENT_DIMENSIONS
     )
 
+    topic_openalex: Optional[Series[String]] = pa.Field(
+        nullable=True, alias=NAME_COL_TOPIC_OPENALEX
+    )
+
     @pa.parser("type")  #
     def _parse_type(cls, series: Series) -> Series:
         result = series.copy()
@@ -255,5 +262,5 @@ DEFAULT_DF_COLUMNS = [
     NAME_COL_ABSTRACT,
     NAME_COL_TYPE,
 ]
-DEFAULT_DF_COLUMNS_LENS = DEFAULT_DF_COLUMNS + ["id_lens"]
-DEFAULT_DF_COLUMNS_DIMENSIONS = DEFAULT_DF_COLUMNS + ["id_dimensions"]
+DEFAULT_DF_COLUMNS_LENS = DEFAULT_DF_COLUMNS + ["id_lens", NAME_COL_TOPIC_LENS]
+DEFAULT_DF_COLUMNS_DIMENSIONS = DEFAULT_DF_COLUMNS + ["id_dimensions", NAME_COL_TOPIC_DIMENSION]
