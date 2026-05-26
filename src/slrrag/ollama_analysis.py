@@ -16,7 +16,7 @@ from tqdm import tqdm
 from slrrag.settings import SchemaPapers
 
 # Model configuration
-OLLAMA_MODEL = "llama3.1"
+OLLAMA_MODEL = "qwen3.5:0.8b"
 MISTRAL_MODEL = "ministral-3b-2512"
 PROMPT_MODEL = "Title: {title}\nAbstract: {abstract}\nQuestion: {question}\nOnly answer with 'True' or 'False', without a dot, nothing else."
 
@@ -57,18 +57,19 @@ def analyze_papers_with_agent(
 ) -> pd.DataFrame:
     """Analyze papers using agent and return DataFrame with answers."""
     results = []
-
     for paper in tqdm(papers_df.to_dict("records")):
         answers = analyze_paper(
-            agent, paper["title"], paper.get("abstract", ""), questions
+            agent, paper["title"], paper["abstract"], questions
         )
         paper_with_answers = {
             "doi": paper["doi"],
             "title": paper["title"],
             "date": paper["date"],
+            "abstract" : paper["abstract"],
             **answers,
         }
         results.append(paper_with_answers)
-        sleep(1)  # To avoid rate limit
+        if len(results) >= 200:
+            break
 
     return pd.DataFrame(results)
