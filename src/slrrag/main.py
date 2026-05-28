@@ -462,6 +462,42 @@ def prompt_user_for_action_after_querying() -> str:
         print("Invalid option. Please try again.")
 
 
+def handle_user_actions_after_querying(
+    papers_df: DataFrame[SchemaPapers],
+) -> bool:
+    """Handle user actions after querying databases.
+    
+    Returns:
+        True if user wants to continue to the next step.
+        False if user wants to exit.
+    """
+    while True:
+        action = prompt_user_for_action_after_querying()
+        if action == "e":  # exit
+            return False
+        elif action == "p":  # print names
+            print(
+                papers_df[
+                    [NAME_COL_TITLE, NAME_COL_DOI, NAME_COL_IS_REFERENCE, "is_found"]
+                ]
+            )
+        elif action == "s":  # Save merged papers as CSV
+            save_dataframe_to_csv(papers_df, OUTPUT_CSV_QUERY_RESULTS)
+        elif action == "u":
+            if check_overwrite(OUTPUT_UPSET, AUTOMATICALLY_OVERWRITE):
+                plot_and_save_upset(papers_df, OUTPUT_UPSET)
+                print(f"Upset plot saved to {OUTPUT_UPSET}")
+        elif action == "c":  # continue
+            os.makedirs(OUTPUT_CSV_AGENTS_PATH.parent, exist_ok=True)
+            return True
+        elif action == "r":
+            print(
+                papers_df.query(NAME_COL_IS_REFERENCE)[
+                    [NAME_COL_TITLE, NAME_COL_DOI, NAME_COL_IS_REFERENCE, "is_found"]
+                ]
+            )
+
+
 @pa.check_types
 def get_all_papers_from_databases() -> tuple[DataFrame[SchemaPapers], List[str]]:
     pybliometrics.init()  # Init for scopus
@@ -507,31 +543,8 @@ def main():
     papers_df = show_merged_stats(papers_df, database_names)
 
     # Step 4: User interaction
-    while True:
-        action = prompt_user_for_action_after_querying()
-        if action == "e":  # exit
-            return
-        elif action == "p":  # print names
-            print(
-                papers_df[
-                    [NAME_COL_TITLE, NAME_COL_DOI, NAME_COL_IS_REFERENCE, "is_found"]
-                ]
-            )
-        elif action == "s":  # Save merged papers as CSV
-            save_dataframe_to_csv(papers_df, OUTPUT_CSV_QUERY_RESULTS)
-        elif action == "u":
-            if check_overwrite(OUTPUT_UPSET, AUTOMATICALLY_OVERWRITE):
-                plot_and_save_upset(papers_df, OUTPUT_UPSET)
-                print(f"Upset plot saved to {OUTPUT_UPSET}")
-        elif action == "c":  # continue
-            os.makedirs(OUTPUT_CSV_AGENTS_PATH.parent, exist_ok=True)
-            break
-        elif action == "r":
-            print(
-                papers_df.query(NAME_COL_IS_REFERENCE)[
-                    [NAME_COL_TITLE, NAME_COL_DOI, NAME_COL_IS_REFERENCE, "is_found"]
-                ]
-            )
+    if not handle_user_actions_after_querying(papers_df):
+        return
 
     # Check if file exists and prompt user for overwrite
     if OUTPUT_CSV_AGENTS_PATH.exists() and not AUTOMATICALLY_OVERWRITE:
