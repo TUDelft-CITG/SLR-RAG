@@ -45,7 +45,6 @@ def read_lens_export(csv_path: Path | str) -> DataFrame[SchemaPapers]:
         if col not in df.columns:
             df[col] = None
     df["date"] = pd.to_datetime(df["date"], format="mixed")
-    df[NAME_COL_TOPIC_LENS] = df[NAME_COL_TOPIC_LENS].str.split(";")
     conversion_type_article_lens = {
         "book chapter": NAME_ARTICLE_TYPE_BOOK_CHAPTER,
         "journal article": NAME_ARTICLE_TYPE_ARTICLE,

@@ -32,5 +32,4 @@ def read_dimensions_export(csv_path: Path | str) -> DataFrame[SchemaPapers]:
     }
     # Rename columns that exist
     df = df.rename(columns={k: v for k, v in column_mapping.items() if k in df.columns})
-    df[NAME_COL_TOPIC_DIMENSION] = df[NAME_COL_TOPIC_DIMENSION].str.split(";")
     return SchemaPapers.validate(df[DEFAULT_DF_COLUMNS_DIMENSIONS].copy())
