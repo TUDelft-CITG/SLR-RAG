@@ -291,9 +291,9 @@ REFERENCE_PAPERS = [
 
 
 FIRST_ROUND_QUESTIONS = [
-    "This paper discusses about risk assessment or risk analysis in the context of nautical safety for ships or vessels."
+    "This paper discusses about risk assessment or risk analysis in the context of nautical safety for ships or vessels.",
     "This paper talks about nautical safety around offshore infrastructures, like offshore windfarms.",
-    "This paper talks about a method to estimate the probability or risk of collision or allision of ships."
+    "This paper talks about a method to estimate the probability or risk of collision or allision of ships.",
     "This paper includes a quantitative model.",
 ]
 
