@@ -123,9 +123,10 @@ MAIN_QUERY = """
 
 MINIMUM_YEAR_NAME = "minimum_year"
 LIST_TYPE_TO_KEEP_NAME = "type_paper_to_keep"
+
 ADDITIONAL_PARAMETERS = {
-    MINIMUM_YEAR_NAME: 2025,  # Comment this line if no date filtering
-    LIST_TYPE_TO_KEEP_NAME: [  # Comment a line if you do not want to include a specific type of paper.
+    MINIMUM_YEAR_NAME: 2010,  # Comment this line if no date filtering
+    LIST_TYPE_TO_KEEP_NAME: [  # Comment a line if you do not want to include a specific type of paper, or all of them if no type filtering
         NAME_DOCUMENT_TYPE_ARTICLE,
         NAME_DOCUMENT_TYPE_CONFERENCE_PAPER,
         NAME_DOCUMENT_TYPE_BOOK_CHAPTER,

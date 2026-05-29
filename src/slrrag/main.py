@@ -4,7 +4,6 @@ from typing import List
 from pandera.typing.pandas import DataFrame
 import pandera.pandas as pa
 import pandas as pd
-import pybliometrics
 from slrrag.querier_openalex import query_openalex
 from slrrag.querier_scopus import query_scopus
 from slrrag.query_converter import convert_query_to_lens
@@ -98,6 +97,7 @@ def load_or_query_database(
 def add_scopus_papers(
     input_papers: DataFrame[SchemaPapers], database_names: List[str]
 ) -> tuple[DataFrame[SchemaPapers], List[str]]:
+
     results_scopus = load_or_query_database("Scopus", OUTPUT_CSV_SCOPUS, query_scopus)
     if results_scopus is not None:
         input_papers, database_names = merge_papers(
@@ -511,7 +511,6 @@ def handle_user_actions_after_querying(
 
 @pa.check_types
 def get_all_papers_from_databases() -> tuple[DataFrame[SchemaPapers], List[str]]:
-    pybliometrics.init()  # Init for scopus
     papers_df = get_new_reference_df()
     database_names = []
     # Step 1: Query Scopus

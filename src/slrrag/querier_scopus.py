@@ -1,5 +1,6 @@
 import pandas as pd
 from pandera.typing import DataFrame
+import pybliometrics
 from pybliometrics.scopus import ScopusSearch
 
 from slrrag.settings import (
@@ -35,6 +36,7 @@ TITLE-ABS-KEY( {query})
 """
     print("Query :", scopus_query)
     try:
+        pybliometrics.init()  # Init for scopus
         nb_paper = ScopusSearch(
             query=scopus_query, download=False, subscriber=SCOPUS_IS_SUBSCRIBER
         ).get_results_size()
