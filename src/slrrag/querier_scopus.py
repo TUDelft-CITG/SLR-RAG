@@ -58,7 +58,7 @@ def scopus_to_dict_list(results: ScopusSearch) -> DataFrame[SchemaPapers]:
     """Convert Scopus results to a pandas DataFrame."""
     if results.results is None:
         return pd.DataFrame(columns=DEFAULT_DF_COLUMNS + ["id_scopus"])
-    
+
     data = [
         {
             "doi": paper.doi,

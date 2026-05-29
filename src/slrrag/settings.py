@@ -6,11 +6,8 @@ from datetime import datetime
 from typing import Optional
 from pandera.typing import Series
 
-from slrrag.input import REFERENCE_PAPERS
 
 # --- User-defined variables ---
-REFERENCE_DOIS = [paper[1] for paper in REFERENCE_PAPERS]
-
 AUTOMATICALLY_OVERWRITE = False
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent
@@ -23,12 +20,9 @@ OUTPUT_CSV_AGENTS_PATH = OUTPUT_PATH / "paper_analysis.csv"
 OUTPUT_CSV_QUERY_RESULTS = OUTPUT_PATH / "papers_selected.csv"
 OUTPUT_UPSET = OUTPUT_PATH / "upset.html"
 
-
 SCOPUS_IS_SUBSCRIBER = True
 THRESHOLD_BIG_COUNT_PAPER = 1
 DEFAULT_OPEN_ALEX_PAGING = 50
-
-LIST_NAME_DATABASE = ["scopus", "openalex"]
 
 NAME_COL_DOI = "doi"
 NAME_COL_TITLE = "title"
@@ -54,8 +48,8 @@ NAME_COL_PRESENT_OPENALEX = "present_openalex"
 NAME_COL_PRESENT_LENS = "present_lens"
 NAME_COL_PRESENT_DIMENSIONS = "present_dimensions"
 NAME_COL_TOPIC_OPENALEX = "topic_openalex"
-NAME_COL_TOPIC_LENS= "topic_lens"
-NAME_COL_TOPIC_DIMENSION= "topic_dimensions"
+NAME_COL_TOPIC_LENS = "topic_lens"
+NAME_COL_TOPIC_DIMENSION = "topic_dimensions"
 
 NAME_ARTICLE_TYPE_ARTICLE = "article"
 NAME_ARTICLE_TYPE_BOOK_CHAPTER = "book-chapter"
@@ -73,26 +67,6 @@ LIST_TYPE_DOCUMENTS = [
     NAME_ARTICLE_TYPE_BOOK,
     NAME_ARTICLE_TYPE_REPORT,
 ]
-
-CONVERSION_DICT_ARTICLE_TYPE_OPENALEX = {
-    "article": NAME_ARTICLE_TYPE_ARTICLE,
-    "other": NAME_ARTICLE_TYPE_OTHER,
-    "book-chapter": NAME_ARTICLE_TYPE_BOOK_CHAPTER,
-    "book": NAME_ARTICLE_TYPE_BOOK,
-    "report": NAME_ARTICLE_TYPE_REPORT,
-    "dissertation": NAME_ARTICLE_TYPE_DISSERTATION,
-    "preprint": NAME_ARTICLE_TYPE_PREPRINT,
-}
-
-CONVERSION_DICT_LENS = {
-    "book chapter": NAME_ARTICLE_TYPE_BOOK_CHAPTER,
-    "journal article": NAME_ARTICLE_TYPE_ARTICLE,
-    "preprint": NAME_ARTICLE_TYPE_PREPRINT,
-    "book": NAME_ARTICLE_TYPE_BOOK,
-    "dissertation": NAME_ARTICLE_TYPE_DISSERTATION,
-    "report": NAME_ARTICLE_TYPE_REPORT,
-}
-
 # Type categories
 
 NAME_ARTICLE_TYPE_ARTICLE = "article"
@@ -187,7 +161,7 @@ class SchemaPapers(pa.DataFrameModel):
     is_reference: Series[bool] = pa.Field(nullable=True, alias=NAME_COL_IS_REFERENCE)
     is_found: Series[bool] = pa.Field(nullable=True, alias=NAME_COL_IS_FOUND)
 
-    # Optional fields
+    # ID in databases
     id_scopus: Optional[Series[String]] = pa.Field(
         nullable=True, alias=NAME_COL_ID_SCOPUS
     )
@@ -198,7 +172,7 @@ class SchemaPapers(pa.DataFrameModel):
     id_dimensions: Optional[Series[String]] = pa.Field(
         nullable=True, alias=NAME_COL_ID_DIMENSIONS
     )
-
+    # If the paper is returned by the query
     in_scopus: Optional[Series[bool]] = pa.Field(
         nullable=True, alias=NAME_COL_IN_SCOPUS
     )
@@ -209,7 +183,7 @@ class SchemaPapers(pa.DataFrameModel):
     in_dimensions: Optional[Series[bool]] = pa.Field(
         nullable=True, alias=NAME_COL_IN_DIMENSIONS
     )
-
+    # If a paper has the reference paper in the database.
     present_scopus: Optional[Series[bool]] = pa.Field(
         nullable=True, alias=NAME_COL_PRESENT_SCOPUS
     )
@@ -223,6 +197,7 @@ class SchemaPapers(pa.DataFrameModel):
         nullable=True, alias=NAME_COL_PRESENT_DIMENSIONS
     )
 
+    # Topic fields
     topic_openalex: Optional[Series[String]] = pa.Field(
         nullable=True, alias=NAME_COL_TOPIC_OPENALEX
     )
@@ -263,4 +238,7 @@ DEFAULT_DF_COLUMNS = [
     NAME_COL_TYPE,
 ]
 DEFAULT_DF_COLUMNS_LENS = DEFAULT_DF_COLUMNS + ["id_lens", NAME_COL_TOPIC_LENS]
-DEFAULT_DF_COLUMNS_DIMENSIONS = DEFAULT_DF_COLUMNS + ["id_dimensions", NAME_COL_TOPIC_DIMENSION]
+DEFAULT_DF_COLUMNS_DIMENSIONS = DEFAULT_DF_COLUMNS + [
+    "id_dimensions",
+    NAME_COL_TOPIC_DIMENSION,
+]

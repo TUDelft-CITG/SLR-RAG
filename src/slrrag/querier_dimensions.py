@@ -28,7 +28,7 @@ def read_dimensions_export(csv_path: Path | str) -> DataFrame[SchemaPapers]:
         "Publication date": NAME_COL_DATE,
         "Publication Type": NAME_COL_TYPE,
         "Dimensions URL": "id_dimensions",
-        "Units of Assessment" : NAME_COL_TOPIC_DIMENSION
+        "Units of Assessment": NAME_COL_TOPIC_DIMENSION,
     }
     # Rename columns that exist
     df = df.rename(columns={k: v for k, v in column_mapping.items() if k in df.columns})

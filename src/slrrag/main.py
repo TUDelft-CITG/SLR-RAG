@@ -20,23 +20,18 @@ from slrrag.input import (
     MAIN_QUERY,
     MINIMUM_YEAR_NAME,
     FIRST_ROUND_QUESTIONS,
+    REFERENCE_PAPERS,
 )
 from slrrag.settings import (
     AUTOMATICALLY_OVERWRITE,
     DEFAULT_DF_COLUMNS,
     NAME_COL_IS_FOUND,
-    NAME_COL_PRESENT_DIMENSIONS,
-    NAME_COL_PRESENT_LENS,
-    NAME_COL_PRESENT_OPENALEX,
-    NAME_COL_PRESENT_SCOPUS,
     OUTPUT_CSV_AGENTS_PATH,
     OUTPUT_CSV_QUERY_RESULTS,
     OUTPUT_PATH,
     OUTPUT_UPSET,
     PATH_DIMENSIONS_EXPORT,
     PATH_LENS_EXPORT,
-    REFERENCE_DOIS,
-    REFERENCE_PAPERS,
 )
 from slrrag.settings import (
     NAME_COL_ABSTRACT,
@@ -57,10 +52,6 @@ def get_new_reference_df() -> DataFrame[SchemaPapers]:
         columns=[
             NAME_COL_TITLE,
             NAME_COL_DOI,
-            NAME_COL_PRESENT_SCOPUS,
-            NAME_COL_PRESENT_OPENALEX,
-            NAME_COL_PRESENT_LENS,
-            NAME_COL_PRESENT_DIMENSIONS,
         ],
     )
     df_ret[NAME_COL_IS_REFERENCE] = True
@@ -136,7 +127,9 @@ def add_dimensions_papers(
                 )
                 print(f"Found {len(dimensions_df)} papers in Dimensions export")
                 print("---- Merging with Dimensions ---")
-                merged_papers, database_names = merge_papers(merged_papers, dimensions_df, database_names, "dimensions")
+                merged_papers, database_names = merge_papers(
+                    merged_papers, dimensions_df, database_names, "dimensions"
+                )
                 break
             else:
                 print(
@@ -199,7 +192,9 @@ def add_lens_papers(
                 lens_df = SchemaPapers.validate(read_lens_export(PATH_LENS_EXPORT))
                 print(f"Found {len(lens_df)} papers in Lens export")
                 print("---- Merging with Lens ---")
-                merged_papers, database_names = merge_papers(merged_papers, lens_df, database_names, "lens")
+                merged_papers, database_names = merge_papers(
+                    merged_papers, lens_df, database_names, "lens"
+                )
 
                 break
             else:
@@ -241,9 +236,6 @@ def merge_papers(
         right_df[NAME_COL_DOI].fillna(right_df[NAME_COL_TITLE]).str.lower()
     )
 
-    
-
-
     # Merge by temp_key
     merged_df = pd.merge(
         left_df,
@@ -273,14 +265,18 @@ def merge_papers(
     )
 
     # Select columns to keep: core fields + all id columns that exist
-    all_id_cols = [col for col in left_df.columns if col.startswith("id")] + [f"id_{right_db_name}"]
-
-    all_topic_cols = [col for col in left_df.columns if col.startswith("topic")] + [f"topic_{right_db_name}"]
-    result_cols = DEFAULT_DF_COLUMNS + [
-        col for col in all_id_cols if col in merged_df.columns
-    ] + [
-        col for col in all_topic_cols if col in merged_df.columns
+    all_id_cols = [col for col in left_df.columns if col.startswith("id")] + [
+        f"id_{right_db_name}"
     ]
+
+    all_topic_cols = [col for col in left_df.columns if col.startswith("topic")] + [
+        f"topic_{right_db_name}"
+    ]
+    result_cols = (
+        DEFAULT_DF_COLUMNS
+        + [col for col in all_id_cols if col in merged_df.columns]
+        + [col for col in all_topic_cols if col in merged_df.columns]
+    )
     result_df = merged_df[result_cols].copy()
     # Check if papers are reference or not
     reference_paper = get_new_reference_df()
@@ -291,46 +287,6 @@ def merge_papers(
     ) | result_df[NAME_COL_TITLE].isin(reference_paper[NAME_COL_TITLE])
     database_names += [right_db_name]
     return result_df, database_names
-
-
-@pa.check_types
-def add_reference_papers(
-    df: DataFrame[SchemaPapers], reference_dois: List[str]
-) -> DataFrame[SchemaPapers]:
-    """Add reference papers to DataFrame if they don't already exist.
-
-    For each DOI in reference_dois that's not in the DataFrame's doi column,
-    adds a new row with that DOI and None for all other columns.
-
-    Args:
-        df: DataFrame with paper data (must have 'doi' column)
-        reference_dois: List of reference DOIs to ensure are present
-
-    Returns:
-        DataFrame with reference papers added
-    """
-    # Find reference DOIs not already in the DataFrame
-    existing_dois = set(df[NAME_COL_DOI].dropna().unique())
-    missing_dois = [doi for doi in reference_dois if doi not in existing_dois]
-
-    if not missing_dois:
-        return df
-
-    # Create new rows for missing reference papers
-    # Get the expected columns from the DataFrame
-    new_rows = []
-    for doi in missing_dois:
-        row = {NAME_COL_DOI: doi}
-        # Set all other columns to None
-        for col in df.columns:
-            if col != NAME_COL_DOI:
-                row[col] = None
-        new_rows.append(row)
-
-    # Append new rows to DataFrame
-    new_df = pd.concat([df, pd.DataFrame(new_rows)], ignore_index=True)
-    new_df[NAME_COL_IS_REFERENCE] = new_df[NAME_COL_DOI].isin(REFERENCE_DOIS)
-    return new_df
 
 
 @pa.check_types
@@ -466,7 +422,7 @@ def handle_user_actions_after_querying(
     papers_df: DataFrame[SchemaPapers],
 ) -> bool:
     """Handle user actions after querying databases.
-    
+
     Returns:
         True if user wants to continue to the next step.
         False if user wants to exit.

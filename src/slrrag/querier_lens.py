@@ -32,13 +32,13 @@ def read_lens_export(csv_path: Path | str) -> DataFrame[SchemaPapers]:
         "Date Published": NAME_COL_DATE,
         "Publication Type": NAME_COL_TYPE,
         "Lens ID": "id_lens",
-        "Fields of Study" : NAME_COL_TOPIC_LENS
+        "Fields of Study": NAME_COL_TOPIC_LENS,
     }
 
     # Rename columns that exist
     df = df.rename(columns={k: v for k, v in column_mapping.items() if k in df.columns})
     # Convert the ; that lens use to seprate topics in list, that can be explodable later.
-    
+
     # Select only the columns we need, filling missing ones with None
     result_cols = DEFAULT_DF_COLUMNS_LENS
     for col in result_cols:

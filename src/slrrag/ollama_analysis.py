@@ -2,7 +2,6 @@
 
 import getpass
 import os
-from time import sleep
 from typing import Dict, List
 from pandera.typing.pandas import DataFrame
 
@@ -58,14 +57,12 @@ def analyze_papers_with_agent(
     """Analyze papers using agent and return DataFrame with answers."""
     results = []
     for paper in tqdm(papers_df.to_dict("records")):
-        answers = analyze_paper(
-            agent, paper["title"], paper["abstract"], questions
-        )
+        answers = analyze_paper(agent, paper["title"], paper["abstract"], questions)
         paper_with_answers = {
             "doi": paper["doi"],
             "title": paper["title"],
             "date": paper["date"],
-            "abstract" : paper["abstract"],
+            "abstract": paper["abstract"],
             **answers,
         }
         results.append(paper_with_answers)
