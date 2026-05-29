@@ -315,8 +315,11 @@ def merge_papers(
     # DOI Matches or title matches
     result_df[NAME_COL_IS_REFERENCE] = (
         result_df[NAME_COL_DOI].notna()
-        & result_df[NAME_COL_DOI].isin(reference_paper[NAME_COL_DOI])
-    ) | result_df[NAME_COL_TITLE].isin(reference_paper[NAME_COL_TITLE])
+        & result_df[NAME_COL_DOI].isin(reference_paper[NAME_COL_DOI])  # SAME DOI
+    ) | (
+        result_df[NAME_COL_TITLE].isin(reference_paper[NAME_COL_TITLE])
+        & result_df[NAME_COL_DOI].isna() # SAME title if DOI is None.
+    )
     database_names += [right_db_name]
     return result_df, database_names
 
