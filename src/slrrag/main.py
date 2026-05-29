@@ -68,21 +68,21 @@ def load_or_query_database(
     query_func,
 ) -> DataFrame[SchemaPapers] | None:
     """Helper function to load database results from CSV or query the database.
-    
+
     Args:
         db_name: Name of the database (for display purposes)
         csv_path: Path to the CSV file for caching results
         query_func: Function to call to query the database
-        
+
     Returns:
         DataFrame with results or None if no results
     """
     if csv_path.exists():
         user_choice = input(f"{db_name}: Load from {csv_path}? (y/n): ").strip().lower()
-        if user_choice == 'y':
+        if user_choice == "y":
             print(f"---- Loading {db_name} results from {csv_path} ---")
             return SchemaPapers.validate(pd.read_csv(csv_path))
-    
+
     # Query the database
     print(f"---- Getting query on {db_name} ---")
     results = query_func(MAIN_QUERY)
@@ -97,11 +97,7 @@ def load_or_query_database(
 def add_scopus_papers(
     input_papers: DataFrame[SchemaPapers], database_names: List[str]
 ) -> tuple[DataFrame[SchemaPapers], List[str]]:
-    results_scopus = load_or_query_database(
-        "Scopus", 
-        OUTPUT_CSV_SCOPUS, 
-        query_scopus
-    )
+    results_scopus = load_or_query_database("Scopus", OUTPUT_CSV_SCOPUS, query_scopus)
     if results_scopus is not None:
         input_papers, database_names = merge_papers(
             input_papers, results_scopus, database_names, "scopus"
@@ -114,9 +110,7 @@ def add_openalex_papers(
     input_papers: DataFrame[SchemaPapers], database_names: List[str]
 ) -> tuple[DataFrame[SchemaPapers], List[str]]:
     results_openalex = load_or_query_database(
-        "OpenAlex",
-        OUTPUT_CSV_OPENALEX,
-        query_openalex
+        "OpenAlex", OUTPUT_CSV_OPENALEX, query_openalex
     )
     if results_openalex is not None:
         input_papers, database_names = merge_papers(

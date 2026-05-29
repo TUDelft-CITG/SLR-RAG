@@ -26,6 +26,8 @@ SCOPUS_IS_SUBSCRIBER = True
 THRESHOLD_BIG_COUNT_PAPER = 1
 DEFAULT_OPEN_ALEX_PAGING = 50
 
+# Globl variables column names in dataframes
+
 NAME_COL_DOI = "doi"
 NAME_COL_TITLE = "title"
 NAME_COL_DATE = "date"
@@ -34,7 +36,6 @@ NAME_COL_TYPE = "type"
 NAME_COL_PDF = "pdf"
 NAME_COL_IS_REFERENCE = "is_reference"
 
-# New global variables for missing columns
 NAME_COL_IS_FOUND = "is_found"
 NAME_COL_YEAR = "year"
 NAME_COL_ID_SCOPUS = "id_scopus"
@@ -53,22 +54,6 @@ NAME_COL_TOPIC_OPENALEX = "topic_openalex"
 NAME_COL_TOPIC_LENS = "topic_lens"
 NAME_COL_TOPIC_DIMENSION = "topic_dimensions"
 
-NAME_ARTICLE_TYPE_ARTICLE = "article"
-NAME_ARTICLE_TYPE_BOOK_CHAPTER = "book-chapter"
-NAME_ARTICLE_TYPE_DISSERTATION = "dissertation"
-NAME_ARTICLE_TYPE_PREPRINT = "preprint"
-NAME_ARTICLE_TYPE_BOOK = "book"
-NAME_ARTICLE_TYPE_REPORT = "report"
-NAME_ARTICLE_TYPE_OTHER = "other"
-
-LIST_TYPE_DOCUMENTS = [
-    NAME_ARTICLE_TYPE_ARTICLE,
-    NAME_ARTICLE_TYPE_BOOK_CHAPTER,
-    NAME_ARTICLE_TYPE_DISSERTATION,
-    NAME_ARTICLE_TYPE_PREPRINT,
-    NAME_ARTICLE_TYPE_BOOK,
-    NAME_ARTICLE_TYPE_REPORT,
-]
 # Type categories
 
 NAME_ARTICLE_TYPE_ARTICLE = "article"
@@ -84,7 +69,7 @@ NAME_ARTICLE_TYPE_SOFTWARE = "software"
 NAME_ARTICLE_TYPE_OTHER = "other"
 
 
-ARTICLE_TYPES = [
+ALL_ARTICLE_TYPES = [
     NAME_ARTICLE_TYPE_ARTICLE,
     NAME_ARTICLE_TYPE_BOOK_CHAPTER,
     NAME_ARTICLE_TYPE_DISSERTATION,
@@ -151,11 +136,40 @@ ARTICLE_TYPE_MAPPING = {
 
 
 class SchemaPapers(pa.DataFrameModel):
+    """Pandera schema for the papers DataFrame.
+
+    This schema defines the structure and data types for the papers DataFrame used
+    throughout the SLR-RAG application. It includes core paper metadata fields
+    (DOI, title, date, abstract, etc.) and database-specific fields to track which
+    databases each paper was found in.
+
+    The schema validates that:
+    - Core fields like DOI, title, date, and abstract have the correct data types
+    - Database ID fields (id_scopus, id_openalex, etc.) are optional strings
+    - Boolean flags track reference status and database presence
+    - Paper types are validated against known article types
+    - Date fields are properly formatted as datetime objects
+
+    Attributes:
+        doi: Digital Object Identifier (primary identifier)
+        title: Paper title
+        type: Publication type (e.g., 'article', 'review', 'conference')
+        year: Publication year
+        date: Publication date
+        abstract: Paper abstract text
+        is_reference: Whether this paper is in the reference list
+        is_found: Whether this paper was found in any database
+        id_scopus, id_openalex, id_lens, id_dimensions: Database-specific IDs
+        in_scopus, in_openalex, in_lens, in_dimensions: Flags indicating presence in each database
+        present_scopus, present_openalex, present_lens, present_dimensions: Flags indicating if reference papers are in each database
+        topic_openalex: Topics/categories from OpenAlex
+    """
+
     doi: Series[str] = pa.Field(nullable=True, alias=NAME_COL_DOI)
     title: Series[String] = pa.Field(nullable=True, alias=NAME_COL_TITLE)
 
     type: Series[String] = pa.Field(
-        nullable=True, alias=NAME_COL_TYPE, isin=ARTICLE_TYPES
+        nullable=True, alias=NAME_COL_TYPE, isin=ALL_ARTICLE_TYPES
     )
     year: Series[Int64] = pa.Field(nullable=True, alias=NAME_COL_YEAR, coerce=True)
     date: Series[datetime] = pa.Field(nullable=True, alias=NAME_COL_DATE)

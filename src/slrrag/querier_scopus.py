@@ -6,7 +6,6 @@ from slrrag.settings import (
     DEFAULT_DF_COLUMNS,
     SCOPUS_IS_SUBSCRIBER,
     THRESHOLD_BIG_COUNT_PAPER,
-    LIST_TYPE_DOCUMENTS,
     SchemaPapers,
 )
 
@@ -35,8 +34,6 @@ def query_scopus(query: str) -> DataFrame[SchemaPapers] | None:
 TITLE-ABS-KEY( {query})
 """
     print("Query :", scopus_query)
-    if LIST_TYPE_DOCUMENTS is not None and len(LIST_TYPE_DOCUMENTS) > 0:
-        scopus_query + " AND DOCTYPE"
     try:
         nb_paper = ScopusSearch(
             query=scopus_query, download=False, subscriber=SCOPUS_IS_SUBSCRIBER
