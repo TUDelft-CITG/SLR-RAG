@@ -322,3 +322,5 @@ SECOND_ROUND_QUESTIONS = {
     },
     "": {},
 }
+
+OLLAMA_MODELS = ["qwen3.5:0.8b"]
