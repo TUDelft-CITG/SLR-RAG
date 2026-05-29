@@ -5,12 +5,12 @@ import pandas as pd
 from pandera.typing import DataFrame
 from slrrag.settings import (
     DEFAULT_DF_COLUMNS_LENS,
-    NAME_ARTICLE_TYPE_ARTICLE,
-    NAME_ARTICLE_TYPE_BOOK,
-    NAME_ARTICLE_TYPE_BOOK_CHAPTER,
-    NAME_ARTICLE_TYPE_DISSERTATION,
-    NAME_ARTICLE_TYPE_PREPRINT,
-    NAME_ARTICLE_TYPE_REPORT,
+    NAME_DOCUMENT_TYPE_ARTICLE,
+    NAME_DOCUMENT_TYPE_BOOK,
+    NAME_DOCUMENT_TYPE_BOOK_CHAPTER,
+    NAME_DOCUMENT_TYPE_DISSERTATION,
+    NAME_DOCUMENT_TYPE_PREPRINT,
+    NAME_DOCUMENT_TYPE_REPORT,
     NAME_COL_ABSTRACT,
     NAME_COL_DATE,
     NAME_COL_DOI,
@@ -46,12 +46,12 @@ def read_lens_export(csv_path: Path | str) -> DataFrame[SchemaPapers]:
             df[col] = None
     df["date"] = pd.to_datetime(df["date"], format="mixed")
     conversion_type_article_lens = {
-        "book chapter": NAME_ARTICLE_TYPE_BOOK_CHAPTER,
-        "journal article": NAME_ARTICLE_TYPE_ARTICLE,
-        "preprint": NAME_ARTICLE_TYPE_PREPRINT,
-        "book": NAME_ARTICLE_TYPE_BOOK,
-        "dissertation": NAME_ARTICLE_TYPE_DISSERTATION,
-        "report": NAME_ARTICLE_TYPE_REPORT,
+        "book chapter": NAME_DOCUMENT_TYPE_BOOK_CHAPTER,
+        "journal article": NAME_DOCUMENT_TYPE_ARTICLE,
+        "preprint": NAME_DOCUMENT_TYPE_PREPRINT,
+        "book": NAME_DOCUMENT_TYPE_BOOK,
+        "dissertation": NAME_DOCUMENT_TYPE_DISSERTATION,
+        "report": NAME_DOCUMENT_TYPE_REPORT,
     }
     df = df.replace({NAME_COL_TYPE: conversion_type_article_lens})
     return SchemaPapers.validate(df[result_cols].copy())

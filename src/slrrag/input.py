@@ -1,3 +1,10 @@
+from slrrag.settings import (
+    NAME_DOCUMENT_TYPE_ARTICLE,
+    NAME_DOCUMENT_TYPE_BOOK,
+    NAME_DOCUMENT_TYPE_BOOK_CHAPTER,
+    NAME_DOCUMENT_TYPE_CONFERENCE_PAPER,
+)
+
 ### FIRST QUERY
 
 # MAIN_QUERY = """
@@ -106,6 +113,7 @@
 
 ### 12th QUERY
 
+
 MAIN_QUERY = """
 ((("offshore") AND ("infrastructure" OR "construction" OR "installation" OR "windfarm" OR "wind farm" OR "windmill" OR "wind turbine" OR "wind park" OR "wind energy" OR "platform" OR "quay" OR "wharf" OR "lidar")) OR ("bridge" OR "flotel" OR "Aquaculture farm" OR "Artificial Island" OR "Synthetic Island")) AND
 (("Navigation risk assessment" OR "Navigational risk assessment" OR "Navigation risk assessments" OR "Navigational risk assessments") OR
@@ -114,8 +122,15 @@ MAIN_QUERY = """
 """
 
 MINIMUM_YEAR_NAME = "minimum_year"
+LIST_TYPE_TO_KEEP_NAME = "type_paper_to_keep"
 ADDITIONAL_PARAMETERS = {
-    MINIMUM_YEAR_NAME: 2010  # Comment this line if no date filtering
+    MINIMUM_YEAR_NAME: 2025,  # Comment this line if no date filtering
+    LIST_TYPE_TO_KEEP_NAME: [  # Comment a line if you do not want to include a specific type of paper.
+        NAME_DOCUMENT_TYPE_ARTICLE,
+        NAME_DOCUMENT_TYPE_CONFERENCE_PAPER,
+        NAME_DOCUMENT_TYPE_BOOK_CHAPTER,
+        NAME_DOCUMENT_TYPE_BOOK,
+    ],
 }
 
 # TITLE, DOI

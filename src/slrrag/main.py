@@ -17,6 +17,7 @@ from slrrag.querier_dimensions import read_dimensions_export
 from slrrag.querier_lens import read_lens_export
 from slrrag.input import (
     ADDITIONAL_PARAMETERS,
+    LIST_TYPE_TO_KEEP_NAME,
     MAIN_QUERY,
     MINIMUM_YEAR_NAME,
     FIRST_ROUND_QUESTIONS,
@@ -260,7 +261,9 @@ def merge_papers(
     Returns:
         Merged DataFrame with columns: doi, title, date, abstract, plus all id_{db} columns
     """
+    # Temporary Key is the DOI, Title if the DOI is None.
     # Sometimes, doi / title do not have same uppercase : 10.1017/S0373463319000444 == 10.1017/s0373463319000444.
+    # BUG: Will have duplicata if one has doi and not the other
     left_df["temp_key"] = (
         left_df[NAME_COL_DOI].fillna(left_df[NAME_COL_TITLE]).str.lower()
     )
@@ -276,7 +279,6 @@ def merge_papers(
         how="outer",
         suffixes=("", f"_{right_db_name}"),
     )
-    # BUG: Will have duplicata if one has doi and not the other
 
     # Combine fields - prefer left database
     merged_df[NAME_COL_DOI] = merged_df[NAME_COL_DOI].fillna(
@@ -318,7 +320,7 @@ def merge_papers(
         & result_df[NAME_COL_DOI].isin(reference_paper[NAME_COL_DOI])  # SAME DOI
     ) | (
         result_df[NAME_COL_TITLE].isin(reference_paper[NAME_COL_TITLE])
-        & result_df[NAME_COL_DOI].isna() # SAME title if DOI is None.
+        & result_df[NAME_COL_DOI].isna()  # Same title if DOI is None.
     )
     database_names += [right_db_name]
     return result_df, database_names
@@ -349,14 +351,32 @@ def clean_merged_df(merged_papers: DataFrame[SchemaPapers], database_names: List
         df_after = merged_papers[
             merged_papers["year"].isna()
             | (merged_papers["year"] >= ADDITIONAL_PARAMETERS[MINIMUM_YEAR_NAME])
-        ]
-        assert (
-            df_after[NAME_COL_IS_REFERENCE].sum()
-            == merged_papers[NAME_COL_IS_REFERENCE].sum()
-        )
+        ].copy()
+
         print(
             f"Filtering {len(merged_papers) - len(df_after)} papers that are before year {ADDITIONAL_PARAMETERS[MINIMUM_YEAR_NAME]}"
         )
+        assert (
+            df_after[NAME_COL_IS_REFERENCE].sum()
+            == merged_papers[NAME_COL_IS_REFERENCE].sum()
+        ), f"""one or more reference papers are before {ADDITIONAL_PARAMETERS[MINIMUM_YEAR_NAME]}.
+              f{merged_papers[merged_papers["is_reference"] & ~merged_papers.index.isin(df_after.index)][[NAME_COL_TITLE, NAME_COL_DATE]]}\n
+              Make sure to decrease the year or to remove these reference paper"""  # Make sure that a reference paper is not removed by the filtering
+        merged_papers = df_after
+    if LIST_TYPE_TO_KEEP_NAME in ADDITIONAL_PARAMETERS:
+        df_after = merged_papers[
+            merged_papers[NAME_COL_TYPE].isin(
+                ADDITIONAL_PARAMETERS[LIST_TYPE_TO_KEEP_NAME]
+            )
+        ].copy()
+        print(
+            f"Filtering {len(merged_papers) - len(df_after)} papers that are not{ADDITIONAL_PARAMETERS[LIST_TYPE_TO_KEEP_NAME]}"
+        )
+        assert (
+            df_after[NAME_COL_IS_REFERENCE].sum()
+            == merged_papers[NAME_COL_IS_REFERENCE].sum()
+        ), f"""one or more reference papers type are not in {ADDITIONAL_PARAMETERS[LIST_TYPE_TO_KEEP_NAME]}.
+            {merged_papers[merged_papers["is_reference"] & ~merged_papers.index.isin(df_after.index)][[NAME_COL_TITLE, NAME_COL_TYPE]]}"""  # Make sure that a reference paper is not removed by the filtering
         merged_papers = df_after
     return merged_papers
 
@@ -515,7 +535,6 @@ def get_all_papers_from_databases() -> tuple[DataFrame[SchemaPapers], List[str]]
         papers_df, database_names = add_dimensions_papers(papers_df, database_names)
 
     # Add reference papers in the final dataframe.
-    papers_df = clean_merged_df(papers_df, database_names)
     return papers_df, database_names
 
 
@@ -524,13 +543,13 @@ def main():
     if prompt_user_for_action_before_querying() == "s":
         papers_df, database_names = get_all_papers_from_databases()
     else:
-        papers_df = SchemaPapers(pd.read_csv(OUTPUT_CSV_QUERY_RESULTS))
+        papers_df = SchemaPapers.validate(pd.read_csv(OUTPUT_CSV_QUERY_RESULTS))
 
         database_names = [
             c.removeprefix("id_") for c in papers_df.columns if c.startswith("id_")
         ]
-        papers_df = clean_merged_df(papers_df, database_names)
-    print(f"Databases used : [{database_names}]")
+    papers_df = clean_merged_df(papers_df, database_names)
+    print(f"Databases used : {database_names}")
     papers_df = show_merged_stats(papers_df, database_names)
 
     # Step 4: User interaction
