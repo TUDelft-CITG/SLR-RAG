@@ -19,6 +19,8 @@ OUTPUT_PATH = PATH_INPUT  # Convenient when backuping the results
 OUTPUT_CSV_AGENTS_PATH = OUTPUT_PATH / "paper_analysis.csv"
 OUTPUT_CSV_QUERY_RESULTS = OUTPUT_PATH / "papers_selected.csv"
 OUTPUT_UPSET = OUTPUT_PATH / "upset.html"
+OUTPUT_CSV_SCOPUS = OUTPUT_PATH / "scopus_results.csv"
+OUTPUT_CSV_OPENALEX = OUTPUT_PATH / "openalex_results.csv"
 
 SCOPUS_IS_SUBSCRIBER = True
 THRESHOLD_BIG_COUNT_PAPER = 1

@@ -28,6 +28,8 @@ from slrrag.settings import (
     NAME_COL_IS_FOUND,
     OUTPUT_CSV_AGENTS_PATH,
     OUTPUT_CSV_QUERY_RESULTS,
+    OUTPUT_CSV_SCOPUS,
+    OUTPUT_CSV_OPENALEX,
     OUTPUT_PATH,
     OUTPUT_UPSET,
     PATH_DIMENSIONS_EXPORT,
@@ -60,14 +62,47 @@ def get_new_reference_df() -> DataFrame[SchemaPapers]:
     return SchemaPapers.validate(df_ret)
 
 
+def load_or_query_database(
+    db_name: str,
+    csv_path: Path,
+    query_func,
+) -> DataFrame[SchemaPapers] | None:
+    """Helper function to load database results from CSV or query the database.
+    
+    Args:
+        db_name: Name of the database (for display purposes)
+        csv_path: Path to the CSV file for caching results
+        query_func: Function to call to query the database
+        
+    Returns:
+        DataFrame with results or None if no results
+    """
+    if csv_path.exists():
+        user_choice = input(f"{db_name}: Load from {csv_path}? (y/n): ").strip().lower()
+        if user_choice == 'y':
+            print(f"---- Loading {db_name} results from {csv_path} ---")
+            return SchemaPapers.validate(pd.read_csv(csv_path))
+    
+    # Query the database
+    print(f"---- Getting query on {db_name} ---")
+    results = query_func(MAIN_QUERY)
+    if results is not None:
+        results = SchemaPapers.validate(results)
+        # Save results to CSV
+        save_dataframe_to_csv(results, csv_path)
+    return results
+
+
 @pa.check_types
 def add_scopus_papers(
     input_papers: DataFrame[SchemaPapers], database_names: List[str]
 ) -> tuple[DataFrame[SchemaPapers], List[str]]:
-    print("---- Getting query on Scopus ---")
-    results_scopus = query_scopus(MAIN_QUERY)
+    results_scopus = load_or_query_database(
+        "Scopus", 
+        OUTPUT_CSV_SCOPUS, 
+        query_scopus
+    )
     if results_scopus is not None:
-        results_scopus = SchemaPapers.validate(results_scopus)
         input_papers, database_names = merge_papers(
             input_papers, results_scopus, database_names, "scopus"
         )
@@ -78,9 +113,12 @@ def add_scopus_papers(
 def add_openalex_papers(
     input_papers: DataFrame[SchemaPapers], database_names: List[str]
 ) -> tuple[DataFrame[SchemaPapers], List[str]]:
-    results_openalex = query_openalex(MAIN_QUERY)
+    results_openalex = load_or_query_database(
+        "OpenAlex",
+        OUTPUT_CSV_OPENALEX,
+        query_openalex
+    )
     if results_openalex is not None:
-        results_openalex = SchemaPapers.validate(results_openalex)
         input_papers, database_names = merge_papers(
             input_papers, results_openalex, database_names, "openalex"
         )
