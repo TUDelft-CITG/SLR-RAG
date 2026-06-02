@@ -6,6 +6,7 @@ from tqdm import tqdm
 from slrrag.settings import (
     DEFAULT_OPEN_ALEX_PAGING,
     NAME_COL_TOPIC_OPENALEX,
+    PANDERA_LAZY_VALIDATION,
     THRESHOLD_BIG_COUNT_PAPER,
     SchemaPapers,
 )
