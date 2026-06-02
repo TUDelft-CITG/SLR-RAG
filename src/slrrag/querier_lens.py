@@ -17,6 +17,7 @@ from slrrag.settings import (
     NAME_COL_TITLE,
     NAME_COL_TOPIC_LENS,
     NAME_COL_TYPE,
+    PANDERA_LAZY_VALIDATION,
     SchemaPapers,
 )
 
@@ -54,4 +55,4 @@ def read_lens_export(csv_path: Path | str) -> DataFrame[SchemaPapers]:
         "report": NAME_DOCUMENT_TYPE_REPORT,
     }
     df = df.replace({NAME_COL_TYPE: conversion_type_article_lens})
-    return SchemaPapers.validate(df[result_cols].copy())
+    return SchemaPapers.validate(df[result_cols].copy(),lazy=PANDERA_LAZY_VALIDATION)

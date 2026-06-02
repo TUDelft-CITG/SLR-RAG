@@ -12,11 +12,12 @@ from slrrag.settings import (
     NAME_COL_TITLE,
     NAME_COL_TOPIC_DIMENSION,
     NAME_COL_TYPE,
+    PANDERA_LAZY_VALIDATION,
     SchemaPapers,
 )
 
 
-@pa.check_types
+@pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
 def read_dimensions_export(csv_path: Path | str) -> DataFrame[SchemaPapers]:
     """Read Dimensions export CSV and extract required columns: title, doi, abstract, date, id_dimensions."""
     df = pd.read_csv(csv_path, skiprows=1)
@@ -32,4 +33,4 @@ def read_dimensions_export(csv_path: Path | str) -> DataFrame[SchemaPapers]:
     }
     # Rename columns that exist
     df = df.rename(columns={k: v for k, v in column_mapping.items() if k in df.columns})
-    return SchemaPapers.validate(df[DEFAULT_DF_COLUMNS_DIMENSIONS].copy())
+    return SchemaPapers.validate(df[DEFAULT_DF_COLUMNS_DIMENSIONS].copy(),lazy=PANDERA_LAZY_VALIDATION)

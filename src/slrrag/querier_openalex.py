@@ -70,4 +70,4 @@ def query_openalex(query: str) -> DataFrame[SchemaPapers]:
         columns={"publication_date": NAME_COL_DATE, "id": "id_openalex"}
     )
     return_df["doi"] = return_df["doi"].str.removeprefix("https://doi.org/")
-    return SchemaPapers.validate(return_df)
+    return SchemaPapers.validate(return_df,lazy=PANDERA_LAZY_VALIDATION)

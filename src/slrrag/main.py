@@ -32,6 +32,7 @@ from slrrag.settings import (
     OUTPUT_CSV_OPENALEX,
     OUTPUT_PATH,
     OUTPUT_UPSET,
+    PANDERA_LAZY_VALIDATION,
     PATH_DIMENSIONS_EXPORT,
     PATH_LENS_EXPORT,
 )
@@ -59,7 +60,7 @@ def get_new_reference_df() -> DataFrame[SchemaPapers]:
     df_ret[NAME_COL_IS_REFERENCE] = True
     df_ret[NAME_COL_IS_FOUND] = False
     # df_ret[[NAME_COL_DATE,NAME_COL_TYPE,NAME_COL_YEAR,NAME_COL_ABSTRACT]] = pd.NA
-    return SchemaPapers.validate(df_ret)
+    return SchemaPapers.validate(df_ret,lazy=PANDERA_LAZY_VALIDATION)
 
 
 def load_or_query_database(
@@ -81,19 +82,19 @@ def load_or_query_database(
         user_choice = input(f"{db_name}: Load from {csv_path}? (y/n): ").strip().lower()
         if user_choice == "y":
             print(f"---- Loading {db_name} results from {csv_path} ---")
-            return SchemaPapers.validate(pd.read_csv(csv_path))
+            return SchemaPapers.validate(pd.read_csv(csv_path),lazy=PANDERA_LAZY_VALIDATION)
 
     # Query the database
     print(f"---- Getting query on {db_name} ---")
     results = query_func(MAIN_QUERY)
     if results is not None:
-        results = SchemaPapers.validate(results)
+        results = SchemaPapers.validate(results,lazy=PANDERA_LAZY_VALIDATION)
         # Save results to CSV
         save_dataframe_to_csv(results, csv_path)
     return results
 
 
-@pa.check_types
+@pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
 def add_scopus_papers(
     input_papers: DataFrame[SchemaPapers], database_names: List[str]
 ) -> tuple[DataFrame[SchemaPapers], List[str]]:
@@ -106,7 +107,7 @@ def add_scopus_papers(
     return input_papers, database_names
 
 
-@pa.check_types
+@pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
 def add_openalex_papers(
     input_papers: DataFrame[SchemaPapers], database_names: List[str]
 ) -> tuple[DataFrame[SchemaPapers], List[str]]:
@@ -120,7 +121,7 @@ def add_openalex_papers(
     return input_papers, database_names
 
 
-@pa.check_types
+@pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
 def add_dimensions_papers(
     merged_papers: DataFrame[SchemaPapers], database_names: List[str]
 ) -> tuple[DataFrame[SchemaPapers], List[str]]:
@@ -178,7 +179,7 @@ def add_dimensions_papers(
     return merged_papers, database_names
 
 
-@pa.check_types
+@pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
 def add_lens_papers(
     merged_papers: DataFrame[SchemaPapers], database_names: List[str]
 ) -> tuple[DataFrame[SchemaPapers], List[str]]:
@@ -243,7 +244,7 @@ def add_lens_papers(
 
 
 # --- Merge and stats functions ---
-@pa.check_types
+@pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
 def merge_papers(
     left_df: DataFrame[SchemaPapers],
     right_df: DataFrame[SchemaPapers],
@@ -326,7 +327,7 @@ def merge_papers(
     return result_df, database_names
 
 
-@pa.check_types
+@pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
 def clean_merged_df(merged_papers: DataFrame[SchemaPapers], database_names: List[str]):
     """
     Make the clean of the datafram before further processing, and apply filters
@@ -366,7 +367,7 @@ def clean_merged_df(merged_papers: DataFrame[SchemaPapers], database_names: List
     if LIST_TYPE_TO_KEEP_NAME in ADDITIONAL_PARAMETERS:
         df_after = merged_papers[
             merged_papers[NAME_COL_TYPE].isin(
-                ADDITIONAL_PARAMETERS[LIST_TYPE_TO_KEEP_NAME]
+                ADDITIONAL_PARAMETERS[LIST_TYPE_TO_KEEP_NAME ] + [None,pd.NA]
             )
         ].copy()
         print(
@@ -381,7 +382,7 @@ def clean_merged_df(merged_papers: DataFrame[SchemaPapers], database_names: List
     return merged_papers
 
 
-@pa.check_types
+@pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
 def show_merged_stats(
     merged_papers: DataFrame[SchemaPapers], database_names: List[str]
 ) -> None:
@@ -442,7 +443,7 @@ def check_overwrite(
     return True
 
 
-@pa.check_types
+@pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
 def save_dataframe_to_csv(df: DataFrame[SchemaPapers], file_path: Path) -> None:
     """Save DataFrame to CSV with overwrite protection."""
     os.makedirs(file_path.parent, exist_ok=True)
@@ -509,7 +510,7 @@ def handle_user_actions_after_querying(
             )
 
 
-@pa.check_types
+@pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
 def get_all_papers_from_databases() -> tuple[DataFrame[SchemaPapers], List[str]]:
     papers_df = get_new_reference_df()
     database_names = []

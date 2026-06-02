@@ -12,13 +12,13 @@ from langchain_core.runnables.base import RunnableSequence
 from langchain_ollama import ChatOllama
 from tqdm import tqdm
 
+from slrrag.input import OLLAMA_MODELS
 from slrrag.settings import SchemaPapers
 
 # Model configuration
-OLLAMA_MODEL = "qwen3.5:0.8b"
 MISTRAL_MODEL = "ministral-3b-2512"
 PROMPT_MODEL = "Title: {title}\nAbstract: {abstract}\nQuestion: {question}\nOnly answer with 'True' or 'False', without a dot, nothing else."
-
+OLLAMA_MODEL = OLLAMA_MODELS[0]# TODO : Make as a list
 
 def setup_chat_agent() -> ChatOllama:
     """Initialize Chat agent."""

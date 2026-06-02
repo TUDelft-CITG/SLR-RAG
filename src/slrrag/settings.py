@@ -5,8 +5,6 @@ import pandera.pandas as pa
 from datetime import datetime
 from typing import Optional
 from pandera.typing import Series
-
-
 # --- User-defined variables ---
 AUTOMATICALLY_OVERWRITE = False
 
@@ -81,6 +79,8 @@ ALL_ARTICLE_TYPES = [
     NAME_DOCUMENT_TYPE_CONFERENCE_PROCEEDING,
     NAME_DOCUMENT_TYPE_SEMINAR,
     NAME_DOCUMENT_TYPE_SOFTWARE,
+    None,
+    pd.NA
 ]
 # Mapping from possible input values to canonical categories
 
@@ -245,7 +245,7 @@ class SchemaPapers(pa.DataFrameModel):
     class Config:
         add_missing_columns = True
 
-
+PANDERA_LAZY_VALIDATION = True
 DEFAULT_DF_COLUMNS = [
     NAME_COL_DOI,
     NAME_COL_TITLE,

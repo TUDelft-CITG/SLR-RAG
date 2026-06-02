@@ -5,6 +5,7 @@ from pybliometrics.scopus import ScopusSearch
 
 from slrrag.settings import (
     DEFAULT_DF_COLUMNS,
+    PANDERA_LAZY_VALIDATION,
     SCOPUS_IS_SUBSCRIBER,
     THRESHOLD_BIG_COUNT_PAPER,
     SchemaPapers,
@@ -71,4 +72,4 @@ def scopus_to_dict_list(results: ScopusSearch) -> DataFrame[SchemaPapers]:
     ]
 
     return_df = pd.DataFrame(data)
-    return SchemaPapers.validate(return_df)
+    return SchemaPapers.validate(return_df,lazy=PANDERA_LAZY_VALIDATION)
