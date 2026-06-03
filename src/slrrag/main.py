@@ -24,8 +24,7 @@ from slrrag.input import (
 )
 from slrrag.settings import (
     AUTOMATICALLY_OVERWRITE,
-    DEFAULT_DF_COLUMNS,
-    NAME_COL_IS_FOUND,
+    NAME_COL_YEAR,
     OUTPUT_CSV_AGENTS_PATH,
     OUTPUT_CSV_QUERY_RESULTS,
     OUTPUT_CSV_SCOPUS,
@@ -57,10 +56,7 @@ def get_new_reference_df() -> DataFrame[SchemaPapers]:
             NAME_COL_DOI,
         ],
     )
-    df_ret[NAME_COL_IS_REFERENCE] = True
-    df_ret[NAME_COL_IS_FOUND] = False
-    # df_ret[[NAME_COL_DATE,NAME_COL_TYPE,NAME_COL_YEAR,NAME_COL_ABSTRACT]] = pd.NA
-    return SchemaPapers.validate(df_ret,lazy=PANDERA_LAZY_VALIDATION)
+    return SchemaPapers.validate(df_ret, lazy=PANDERA_LAZY_VALIDATION)
 
 
 def load_or_query_database(
@@ -82,13 +78,15 @@ def load_or_query_database(
         user_choice = input(f"{db_name}: Load from {csv_path}? (y/n): ").strip().lower()
         if user_choice == "y":
             print(f"---- Loading {db_name} results from {csv_path} ---")
-            return SchemaPapers.validate(pd.read_csv(csv_path),lazy=PANDERA_LAZY_VALIDATION)
+            return SchemaPapers.validate(
+                pd.read_csv(csv_path), lazy=PANDERA_LAZY_VALIDATION
+            )
 
     # Query the database
     print(f"---- Getting query on {db_name} ---")
     results = query_func(MAIN_QUERY)
     if results is not None:
-        results = SchemaPapers.validate(results,lazy=PANDERA_LAZY_VALIDATION)
+        results = SchemaPapers.validate(results, lazy=PANDERA_LAZY_VALIDATION)
         # Save results to CSV
         save_dataframe_to_csv(results, csv_path)
     return results
@@ -280,51 +278,25 @@ def merge_papers(
         how="outer",
         suffixes=("", f"_{right_db_name}"),
     )
-
+    merged_df = merged_df.drop(columns=["temp_key"])
+    columns_to_combine = [
+        NAME_COL_DOI,
+        NAME_COL_TITLE,
+        NAME_COL_DATE,
+        NAME_COL_ABSTRACT,
+        NAME_COL_TYPE,
+        NAME_COL_YEAR,
+    ]
     # Combine fields - prefer left database
-    merged_df[NAME_COL_DOI] = merged_df[NAME_COL_DOI].fillna(
-        merged_df.get(f"{NAME_COL_DOI}_{right_db_name}", None)
-    )
-    merged_df[NAME_COL_TITLE] = merged_df[NAME_COL_TITLE].fillna(
-        merged_df.get(f"{NAME_COL_TITLE}_{right_db_name}", None)
-    )
-    merged_df[NAME_COL_DATE] = merged_df[NAME_COL_DATE].fillna(
-        merged_df.get(f"{NAME_COL_DATE}_{right_db_name}", None)
-    )
+    for col in columns_to_combine:
+        merged_df[col] = merged_df[col].fillna(
+            merged_df.get(f"{col}_{right_db_name}", None)
+        )
+        # Remove useless column
+        merged_df = merged_df.drop(columns=f"{col}_{right_db_name}")
 
-    merged_df[NAME_COL_ABSTRACT] = merged_df[NAME_COL_ABSTRACT].fillna(
-        merged_df.get(f"{NAME_COL_ABSTRACT}_{right_db_name}", None)
-    )
-    merged_df[NAME_COL_TYPE] = merged_df[NAME_COL_TYPE].fillna(
-        merged_df.get(f"{NAME_COL_TYPE}_{right_db_name}", None)
-    )
-
-    # Select columns to keep: core fields + all id columns that exist
-    all_id_cols = [col for col in left_df.columns if col.startswith("id")] + [
-        f"id_{right_db_name}"
-    ]
-
-    all_topic_cols = [col for col in left_df.columns if col.startswith("topic")] + [
-        f"topic_{right_db_name}"
-    ]
-    result_cols = (
-        DEFAULT_DF_COLUMNS
-        + [col for col in all_id_cols if col in merged_df.columns]
-        + [col for col in all_topic_cols if col in merged_df.columns]
-    )
-    result_df = merged_df[result_cols].copy()
-    # Check if papers are reference or not
-    reference_paper = get_new_reference_df()
-    # DOI Matches or title matches
-    result_df[NAME_COL_IS_REFERENCE] = (
-        result_df[NAME_COL_DOI].notna()
-        & result_df[NAME_COL_DOI].isin(reference_paper[NAME_COL_DOI])  # SAME DOI
-    ) | (
-        result_df[NAME_COL_TITLE].isin(reference_paper[NAME_COL_TITLE])
-        & result_df[NAME_COL_DOI].isna()  # Same title if DOI is None.
-    )
     database_names += [right_db_name]
-    return result_df, database_names
+    return merged_df, database_names
 
 
 @pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
@@ -348,6 +320,15 @@ def clean_merged_df(merged_papers: DataFrame[SchemaPapers], database_names: List
     merged_papers["year"] = merged_papers["year"].astype(
         "Int64"
     )  # To avoid having floats
+    reference_paper = get_new_reference_df()
+    # DOI Matches or title matches
+    merged_papers[NAME_COL_IS_REFERENCE] = (
+        merged_papers[NAME_COL_DOI].notna()
+        & merged_papers[NAME_COL_DOI].isin(reference_paper[NAME_COL_DOI])  # SAME DOI
+    ) | (
+        merged_papers[NAME_COL_TITLE].isin(reference_paper[NAME_COL_TITLE])
+        & merged_papers[NAME_COL_DOI].isna()  # Same title if DOI is None.
+    )
     if MINIMUM_YEAR_NAME in ADDITIONAL_PARAMETERS:
         df_after = merged_papers[
             merged_papers["year"].isna()
@@ -367,7 +348,7 @@ def clean_merged_df(merged_papers: DataFrame[SchemaPapers], database_names: List
     if LIST_TYPE_TO_KEEP_NAME in ADDITIONAL_PARAMETERS:
         df_after = merged_papers[
             merged_papers[NAME_COL_TYPE].isin(
-                ADDITIONAL_PARAMETERS[LIST_TYPE_TO_KEEP_NAME ] + [None,pd.NA]
+                ADDITIONAL_PARAMETERS[LIST_TYPE_TO_KEEP_NAME] + [None, pd.NA]
             )
         ].copy()
         print(

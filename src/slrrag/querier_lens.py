@@ -4,7 +4,8 @@ from pathlib import Path
 import pandas as pd
 from pandera.typing import DataFrame
 from slrrag.settings import (
-    DEFAULT_DF_COLUMNS_LENS,
+    DEFAULT_DF_COLUMNS,
+    NAME_COL_KEYWORDS_LENS,
     NAME_DOCUMENT_TYPE_ARTICLE,
     NAME_DOCUMENT_TYPE_BOOK,
     NAME_DOCUMENT_TYPE_BOOK_CHAPTER,
@@ -18,6 +19,7 @@ from slrrag.settings import (
     NAME_COL_TOPIC_LENS,
     NAME_COL_TYPE,
     PANDERA_LAZY_VALIDATION,
+    SchemaLensPapers,
     SchemaPapers,
 )
 
@@ -34,6 +36,7 @@ def read_lens_export(csv_path: Path | str) -> DataFrame[SchemaPapers]:
         "Publication Type": NAME_COL_TYPE,
         "Lens ID": "id_lens",
         "Fields of Study": NAME_COL_TOPIC_LENS,
+        "Keywords": NAME_COL_KEYWORDS_LENS,
     }
 
     # Rename columns that exist
@@ -41,8 +44,12 @@ def read_lens_export(csv_path: Path | str) -> DataFrame[SchemaPapers]:
     # Convert the ; that lens use to seprate topics in list, that can be explodable later.
 
     # Select only the columns we need, filling missing ones with None
-    result_cols = DEFAULT_DF_COLUMNS_LENS
-    for col in result_cols:
+    columns_to_keep = DEFAULT_DF_COLUMNS + [
+        "id_lens",
+        NAME_COL_TOPIC_LENS,
+        NAME_COL_KEYWORDS_LENS,
+    ]
+    for col in columns_to_keep:
         if col not in df.columns:
             df[col] = None
     df["date"] = pd.to_datetime(df["date"], format="mixed")
@@ -55,4 +62,6 @@ def read_lens_export(csv_path: Path | str) -> DataFrame[SchemaPapers]:
         "report": NAME_DOCUMENT_TYPE_REPORT,
     }
     df = df.replace({NAME_COL_TYPE: conversion_type_article_lens})
-    return SchemaPapers.validate(df[result_cols].copy(),lazy=PANDERA_LAZY_VALIDATION)
+    return SchemaLensPapers.validate(
+        df[columns_to_keep].copy(), lazy=PANDERA_LAZY_VALIDATION
+    )

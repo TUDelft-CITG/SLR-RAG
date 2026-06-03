@@ -3,8 +3,8 @@ import pandas as pd
 from pandera import String, Int64
 import pandera.pandas as pa
 from datetime import datetime
-from typing import Optional
 from pandera.typing import Series
+
 # --- User-defined variables ---
 AUTOMATICALLY_OVERWRITE = False
 
@@ -48,7 +48,9 @@ NAME_COL_PRESENT_SCOPUS = "present_scopus"
 NAME_COL_PRESENT_OPENALEX = "present_openalex"
 NAME_COL_PRESENT_LENS = "present_lens"
 NAME_COL_PRESENT_DIMENSIONS = "present_dimensions"
-NAME_COL_TOPIC_OPENALEX = "topic_openalex"
+NAME_COL_PRIMARY_TOPIC_OPENALEX = "topic_openalex"
+NAME_COL_PRIMARY_FIELD_OPENALEX = "fields_openalex"
+
 NAME_COL_TOPIC_LENS = "topic_lens"
 NAME_COL_TOPIC_DIMENSIONS = "topic_dimensions"
 NAME_COL_KEYWORDS_SCOPUS = "keywords_scopus"
@@ -84,7 +86,7 @@ ALL_ARTICLE_TYPES = [
     NAME_DOCUMENT_TYPE_SEMINAR,
     NAME_DOCUMENT_TYPE_SOFTWARE,
     None,
-    pd.NA
+    pd.NA,
 ]
 # Mapping from possible input values to canonical categories
 
@@ -144,13 +146,10 @@ class SchemaPapers(pa.DataFrameModel):
 
     This schema defines the structure and data types for the papers DataFrame used
     throughout the SLR-RAG application. It includes core paper metadata fields
-    (DOI, title, date, abstract, etc.) and database-specific fields to track which
-    databases each paper was found in.
+    (DOI, title, date, abstract, etc.).
 
     The schema validates that:
     - Core fields like DOI, title, date, and abstract have the correct data types
-    - Database ID fields (id_scopus, id_openalex, etc.) are optional strings
-    - Boolean flags track reference status and database presence
     - Paper types are validated against known article types
     - Date fields are properly formatted as datetime objects
 
@@ -163,10 +162,6 @@ class SchemaPapers(pa.DataFrameModel):
         abstract: Paper abstract text
         is_reference: Whether this paper is in the reference list
         is_found: Whether this paper was found in any database
-        id_scopus, id_openalex, id_lens, id_dimensions: Database-specific IDs
-        in_scopus, in_openalex, in_lens, in_dimensions: Flags indicating presence in each database
-        present_scopus, present_openalex, present_lens, present_dimensions: Flags indicating if reference papers are in each database
-        topic_openalex: Topics/categories from OpenAlex
     """
 
     doi: Series[str] = pa.Field(nullable=True, alias=NAME_COL_DOI)
@@ -178,49 +173,6 @@ class SchemaPapers(pa.DataFrameModel):
     year: Series[Int64] = pa.Field(nullable=True, alias=NAME_COL_YEAR, coerce=True)
     date: Series[datetime] = pa.Field(nullable=True, alias=NAME_COL_DATE)
     abstract: Series[String] = pa.Field(nullable=True, alias=NAME_COL_ABSTRACT)
-    is_reference: Series[bool] = pa.Field(nullable=True, alias=NAME_COL_IS_REFERENCE)
-    is_found: Series[bool] = pa.Field(nullable=True, alias=NAME_COL_IS_FOUND)
-
-    # ID in databases
-    id_scopus: Optional[Series[String]] = pa.Field(
-        nullable=True, alias=NAME_COL_ID_SCOPUS
-    )
-    id_openalex: Optional[Series[String]] = pa.Field(
-        nullable=True, alias=NAME_COL_ID_DIMENSIONS
-    )
-    id_lens: Optional[Series[String]] = pa.Field(nullable=True, alias=NAME_COL_ID_LENS)
-    id_dimensions: Optional[Series[String]] = pa.Field(
-        nullable=True, alias=NAME_COL_ID_DIMENSIONS
-    )
-    # If the paper is returned by the query
-    in_scopus: Optional[Series[bool]] = pa.Field(
-        nullable=True, alias=NAME_COL_IN_SCOPUS
-    )
-    in_openalex: Optional[Series[bool]] = pa.Field(
-        nullable=True, alias=NAME_COL_IN_OPENALEX
-    )
-    in_lens: Optional[Series[bool]] = pa.Field(nullable=True, alias=NAME_COL_IN_LENS)
-    in_dimensions: Optional[Series[bool]] = pa.Field(
-        nullable=True, alias=NAME_COL_IN_DIMENSIONS
-    )
-    # If a paper has the reference paper in the database.
-    present_scopus: Optional[Series[bool]] = pa.Field(
-        nullable=True, alias=NAME_COL_PRESENT_SCOPUS
-    )
-    present_openalex: Optional[Series[bool]] = pa.Field(
-        nullable=True, alias=NAME_COL_PRESENT_OPENALEX
-    )
-    present_lens: Optional[Series[bool]] = pa.Field(
-        nullable=True, alias=NAME_COL_PRESENT_LENS
-    )
-    present_dimensions: Optional[Series[bool]] = pa.Field(
-        nullable=True, alias=NAME_COL_PRESENT_DIMENSIONS
-    )
-
-    # Topic fields
-    topic_openalex: Optional[Series[String]] = pa.Field(
-        nullable=True, alias=NAME_COL_TOPIC_OPENALEX
-    )
 
     @pa.parser("type")  #
     def _parse_type(cls, series: Series) -> Series:
@@ -249,16 +201,79 @@ class SchemaPapers(pa.DataFrameModel):
     class Config:
         add_missing_columns = True
 
-PANDERA_LAZY_VALIDATION = True
+
+class SchemaScopusPapers(SchemaPapers):
+    # ID in databases (a link if possible)
+
+    id_scopus: Series[String] = pa.Field(nullable=True, alias=NAME_COL_ID_SCOPUS)
+
+    keywords_scopus: Series[String] = pa.Field(
+        nullable=True, alias=NAME_COL_KEYWORDS_SCOPUS
+    )
+
+
+class SchemaOpenAlexPapers(SchemaPapers):
+    # ID in databases (a link if possible)
+
+    id_openalex: Series[String] = pa.Field(nullable=True, alias=NAME_COL_ID_OPENALEX)
+
+    # Topic fields : https://developers.openalex.org/api-reference/topics
+    topic_openalex: Series[String] = pa.Field(
+        nullable=True, alias=NAME_COL_PRIMARY_TOPIC_OPENALEX
+    )
+
+    # Field fields : https://developers.openalex.org/api-reference/fields
+    fields_openalex: Series[String] = pa.Field(
+        nullable=True, alias=NAME_COL_PRIMARY_TOPIC_OPENALEX
+    )
+
+    pdf: Series[String] = pa.Field(nullable=True, alias=NAME_COL_PDF)
+
+    keywords_openalex: Series[String] = pa.Field(
+        nullable=True, alias=NAME_COL_KEYWORDS_OPENALEX
+    )
+
+
+class SchemaLensPapers(SchemaPapers):
+    # ID in databases (a link if possible)
+
+    id_lens: Series[String] = pa.Field(nullable=True, alias=NAME_COL_ID_LENS)
+
+    # Topic fields
+    topic_lens: Series[String] = pa.Field(nullable=True, alias=NAME_COL_TOPIC_LENS)
+    keywords_lens: Series[String] = pa.Field(
+        nullable=True, alias=NAME_COL_KEYWORDS_LENS
+    )
+
+
+class SchemaDimensionsPapers(SchemaPapers):
+    # ID in databases (a link if possible)
+
+    id_dimensions: Series[String] = pa.Field(
+        nullable=True, alias=NAME_COL_ID_DIMENSIONS
+    )
+    # Topic fields
+    topic_dimensions: Series[String] = pa.Field(
+        nullable=True, alias=NAME_COL_TOPIC_DIMENSIONS
+    )
+
+    keywords_dimensions: Series[String] = pa.Field(
+        nullable=True, alias=NAME_COL_KEYWORDS_DIMENSIONS
+    )
+
+
+class SchemaAnalysisPapers(SchemaPapers):
+    is_reference: Series[bool] = pa.Field(nullable=True, alias=NAME_COL_IS_REFERENCE)
+
+    # Fields to know if a reference paper has been found
+    is_found: Series[bool] = pa.Field(nullable=True, alias=NAME_COL_IS_FOUND)
+
+
+PANDERA_LAZY_VALIDATION = False
 DEFAULT_DF_COLUMNS = [
     NAME_COL_DOI,
     NAME_COL_TITLE,
     NAME_COL_DATE,
     NAME_COL_ABSTRACT,
     NAME_COL_TYPE,
-]
-DEFAULT_DF_COLUMNS_LENS = DEFAULT_DF_COLUMNS + ["id_lens", NAME_COL_TOPIC_LENS]
-DEFAULT_DF_COLUMNS_DIMENSIONS = DEFAULT_DF_COLUMNS + [
-    "id_dimensions",
-    NAME_COL_TOPIC_DIMENSIONS,
 ]

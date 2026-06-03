@@ -18,7 +18,8 @@ from slrrag.settings import SchemaPapers
 # Model configuration
 MISTRAL_MODEL = "ministral-3b-2512"
 PROMPT_MODEL = "Title: {title}\nAbstract: {abstract}\nQuestion: {question}\nOnly answer with 'True' or 'False', without a dot, nothing else."
-OLLAMA_MODEL = OLLAMA_MODELS[0]# TODO : Make as a list
+OLLAMA_MODEL = OLLAMA_MODELS[0]  # TODO : Make as a list
+
 
 def setup_chat_agent() -> ChatOllama:
     """Initialize Chat agent."""

@@ -9,6 +9,7 @@ from slrrag.settings import (
     SCOPUS_IS_SUBSCRIBER,
     THRESHOLD_BIG_COUNT_PAPER,
     SchemaPapers,
+    SchemaScopusPapers,
 )
 
 
@@ -67,10 +68,10 @@ def scopus_to_dict_list(results: ScopusSearch) -> DataFrame[SchemaPapers]:
             "abstract": paper.description,
             "id_scopus": paper.eid,
             "type": paper.subtypeDescription,
-            "keywords_scopus" : paper.authkeywords
+            "keywords_scopus": paper.authkeywords,
         }
         for paper in results.results
     ]
 
     return_df = pd.DataFrame(data)
-    return SchemaPapers.validate(return_df,lazy=PANDERA_LAZY_VALIDATION)
+    return SchemaScopusPapers.validate(return_df, lazy=PANDERA_LAZY_VALIDATION)
