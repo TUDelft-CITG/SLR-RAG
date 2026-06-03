@@ -5,6 +5,7 @@ from tqdm import tqdm
 
 from slrrag.settings import (
     DEFAULT_OPEN_ALEX_PAGING,
+    NAME_COL_KEYWORDS_OPENALEX,
     NAME_COL_TOPIC_OPENALEX,
     PANDERA_LAZY_VALIDATION,
     THRESHOLD_BIG_COUNT_PAPER,
@@ -25,12 +26,12 @@ def check_doi_in_openalex(doi: str) -> bool:
 
 
 # --- OpenAlex functions ---
-def query_openalex(query: str) -> DataFrame[SchemaPapers]:
+def query_openalex(query: str, ask_input= True,n_paper_max = None) -> DataFrame[SchemaPapers]:
     """Query OpenAlex and return results as a pandas DataFrame."""
     print("Query :", query)
     works = Works().search_filter(title_and_abstract=query)
     nb_paper = works.count()
-    if nb_paper > THRESHOLD_BIG_COUNT_PAPER:
+    if nb_paper > THRESHOLD_BIG_COUNT_PAPER and ask_input:
         user_input = input(f"{nb_paper} found in OpenAlex. Continue? (y/n)").lower()
         if user_input != "y":
             return None
@@ -39,6 +40,8 @@ def query_openalex(query: str) -> DataFrame[SchemaPapers]:
     pager = works.paginate(per_page=DEFAULT_OPEN_ALEX_PAGING)
     for page in tqdm(pager, total=nb_paper / DEFAULT_OPEN_ALEX_PAGING):
         list_ret += page
+        if n_paper_max and len(list_ret) > n_paper_max:
+            break
     input_openalex_columns_name = [
         "doi",
         "id",
@@ -50,6 +53,9 @@ def query_openalex(query: str) -> DataFrame[SchemaPapers]:
 
     # Due to legal reasons, we have to extract the abstract manually : https://pypi.org/project/pyalex/#get-abstract:~:text=Get%20abstract
     # TODO : we get the pdf url, but we must setup a API key to download them.
+    # TODO : OpenAlex has much more then just the "primary_topic" -> we can use more of this.
+    # Notably the subfields
+    # See more : https://developers.openalex.org/api-reference/introduction
     def get_topic(paper):
         if (paper["primary_topic"] is not None) and (
             "display_name" in paper["primary_topic"]
@@ -57,15 +63,20 @@ def query_openalex(query: str) -> DataFrame[SchemaPapers]:
             return paper["primary_topic"]["display_name"]
         else:
             return None
-
+    def get_keywords(paper):
+        if (paper["keywords"] is not None):
+            return "|".join([x.get("display_name") for x in paper["keywords"]]) # Get all keywords in one string , separated by "|"
+        else:
+            return None
     return_df = pd.DataFrame(
         [
             [x[col_name] for col_name in input_openalex_columns_name]
             + [x.pdf.url]
             + [get_topic(x)]
+            + [get_keywords(x)]
             for x in list_ret
         ],
-        columns=input_openalex_columns_name + ["pdf"] + [NAME_COL_TOPIC_OPENALEX],
+        columns=input_openalex_columns_name + ["pdf"] + [NAME_COL_TOPIC_OPENALEX] + [NAME_COL_KEYWORDS_OPENALEX],
     )
     return_df = return_df.rename(
         columns={"publication_date": NAME_COL_DATE, "id": "id_openalex"}

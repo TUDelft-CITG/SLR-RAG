@@ -50,7 +50,11 @@ NAME_COL_PRESENT_LENS = "present_lens"
 NAME_COL_PRESENT_DIMENSIONS = "present_dimensions"
 NAME_COL_TOPIC_OPENALEX = "topic_openalex"
 NAME_COL_TOPIC_LENS = "topic_lens"
-NAME_COL_TOPIC_DIMENSION = "topic_dimensions"
+NAME_COL_TOPIC_DIMENSIONS = "topic_dimensions"
+NAME_COL_KEYWORDS_SCOPUS = "keywords_scopus"
+NAME_COL_KEYWORDS_OPENALEX = "keywords_openalex"
+NAME_COL_KEYWORDS_LENS = "keywords_lens"
+NAME_COL_KEYWORDS_DIMENSIONS = "keywords_dimensions"
 
 # Type categories
 
@@ -256,5 +260,5 @@ DEFAULT_DF_COLUMNS = [
 DEFAULT_DF_COLUMNS_LENS = DEFAULT_DF_COLUMNS + ["id_lens", NAME_COL_TOPIC_LENS]
 DEFAULT_DF_COLUMNS_DIMENSIONS = DEFAULT_DF_COLUMNS + [
     "id_dimensions",
-    NAME_COL_TOPIC_DIMENSION,
+    NAME_COL_TOPIC_DIMENSIONS,
 ]

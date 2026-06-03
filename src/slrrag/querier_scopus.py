@@ -67,6 +67,7 @@ def scopus_to_dict_list(results: ScopusSearch) -> DataFrame[SchemaPapers]:
             "abstract": paper.description,
             "id_scopus": paper.eid,
             "type": paper.subtypeDescription,
+            "keywords_scopus" : paper.authkeywords
         }
         for paper in results.results
     ]
