@@ -41,19 +41,19 @@ def setup_chat_agent() -> ChatOllama:
             print(f"Wrong output. {user_out_agent}")
 
 
-def analyze_paper(agent, title: str, abstract: str, questions: List[str]) -> Dict:
+def analyze_paper(agent, title: str, abstract: str, questions: Dict[str,str]) -> Dict:
     """Use the agent to answer questions about a paper."""
     prompt = ChatPromptTemplate.from_template(PROMPT_MODEL)
     chain: RunnableSequence = prompt | agent | StrOutputParser()
     answers = {}
-    for q in questions:
-        response = chain.invoke({"title": title, "abstract": abstract, "question": q})
+    for q in questions.keys():
+        response = chain.invoke({"title": title, "abstract": abstract, "question": questions[q]})
         answers[q] = response.strip()
     return answers
 
 
 def analyze_papers_with_agent(
-    agent, papers_df: DataFrame[SchemaPapers], questions: List[str]
+    agent, papers_df: DataFrame[SchemaPapers], questions: Dict[str,str]
 ) -> pd.DataFrame:
     """Analyze papers using agent and return DataFrame with answers."""
     results = []
