@@ -97,6 +97,7 @@
 
 /* === TOPIC 3: SAFETY & INCIDENTS (Red) === */
 .kw-collision,
+.kw-safety,
 .kw-accident {
     color: var(--kw-red-fg) !important;
     font-weight: 600 !important;
@@ -116,6 +117,7 @@
 
 /* === TOPIC 5: RISK ASSESSMENT (Green) === */
 .kw-risk,
+.kw-safety,
 .kw-probability,
 .kw-chance,
 .kw-assess,

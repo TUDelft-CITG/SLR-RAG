@@ -14,6 +14,7 @@ import os
 import regex as re
 from pathlib import Path
 from typing import Optional, List, Dict, Any
+from tqdm import tqdm
 
 # Import the keyword highlighting functionality
 from slrrag.convertmarkdown.highlight_keywords import STEMMING_DICT, root_to_class, get_all_keyword_variants
@@ -115,8 +116,8 @@ def slugify(title: str) -> str:
     # Remove trailing/leading hyphens
     slug = slug.rstrip('-').lstrip('-')
     
-    # Limit length to 150 characters
-    slug = slug[:150]
+    # Limit length to 100 characters
+    slug = slug[:100]
     
     # If empty after all processing, return untitled
     if not slug:
@@ -453,7 +454,7 @@ def write_paper_into_markdown(
     num_batches = (total_papers + batch_size - 1) // batch_size
     
     # Iterate through each batch
-    for batch_num in range(num_batches):
+    for batch_num in tqdm(range(num_batches), desc="Processing batches", unit="batch"):
         start_idx = batch_num * batch_size
         end_idx = min(start_idx + batch_size, total_papers)
         batch_df = df.iloc[start_idx:end_idx]
@@ -462,10 +463,8 @@ def write_paper_into_markdown(
         batch_dir = os.path.join(output_dir, f"{batch_num + 1:03d}_batch")
         Path(batch_dir).mkdir(parents=True, exist_ok=True)
         
-        print(f"\nProcessing batch {batch_num + 1}/{num_batches} ({len(batch_df)} papers)")
-        
         # Iterate through each row (paper) in the batch DataFrame
-        for idx, row in batch_df.iterrows():
+        for idx, row in tqdm(batch_df.iterrows(), desc=f"Batch {batch_num + 1}", unit="paper", leave=False):
             paper_dict = row.to_dict()
             
             # Create filename from title
@@ -476,7 +475,6 @@ def write_paper_into_markdown(
             
             # Check if file exists and overwrite is False
             if not overwrite and os.path.exists(filepath):
-                print(f"Skipping existing file: {filename}")
                 continue
             
             # Write the paper
@@ -487,7 +485,6 @@ def write_paper_into_markdown(
                 add_yaml_frontmatter=add_yaml_frontmatter
             )
             created_files.append(created_path)
-            print(f"Created: {filename} in {batch_dir}")
     
     print(f"\nTotal files created: {len(created_files)} in {num_batches} batch folders")
     return created_files
@@ -645,7 +642,7 @@ if __name__ == "__main__":
     output_dir = sys.argv[2] if len(sys.argv) > 2 else "./papers"
     
     # Read the CSV
-    df = pd.read_csv(input_csv).head(100)
+    df = pd.read_csv(input_csv)
     
     # Create markdown files
     print(f"Processing {len(df)} papers from {input_csv}...")
