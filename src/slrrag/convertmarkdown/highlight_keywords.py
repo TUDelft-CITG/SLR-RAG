@@ -120,7 +120,7 @@ def process_file(filepath):
 
         new_content = re.sub(
             pattern,
-            f'<span class="{class_name}">\\1</span>',
+            rf'<span class="{class_name}">\1</span>',
             content,
             flags=re.IGNORECASE
         )
@@ -133,7 +133,7 @@ def process_file(filepath):
         # Add marker at the top
         with open(filepath, 'w', encoding='utf-8') as f:
             f.write(content)
-        print(f"✓ Processed: {filepath.name}")
+        print(f"✓ Processed: {filepath}")
         return True
 
     return False
