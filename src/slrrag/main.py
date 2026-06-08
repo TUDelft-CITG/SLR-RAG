@@ -4,7 +4,7 @@ from typing import List
 from pandera.typing.pandas import DataFrame
 import pandera.pandas as pa
 import pandas as pd
-from slrrag.querier_openalex import query_openalex
+from slrrag.querier_openalex import query_openalex_and_standardize
 from slrrag.querier_scopus import query_scopus
 from slrrag.query_converter import convert_query_to_lens
 from slrrag.query_converter import query_to_dimensions_url
@@ -110,7 +110,7 @@ def add_openalex_papers(
     input_papers: DataFrame[SchemaPapers], database_names: List[str]
 ) -> tuple[DataFrame[SchemaPapers], List[str]]:
     results_openalex = load_or_query_database(
-        "OpenAlex", OUTPUT_CSV_OPENALEX, query_openalex
+        "OpenAlex", OUTPUT_CSV_OPENALEX, query_openalex_and_standardize
     )
     if results_openalex is not None:
         input_papers, database_names = merge_papers(

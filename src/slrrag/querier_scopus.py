@@ -5,9 +5,9 @@ from pybliometrics.scopus import ScopusSearch
 
 from slrrag.settings import (
     DEFAULT_DF_COLUMNS,
+    NAME_COL_RELEVANCE_ORDER_SCOPUS,
     PANDERA_LAZY_VALIDATION,
     SCOPUS_IS_SUBSCRIBER,
-    THRESHOLD_BIG_COUNT_PAPER,
     SchemaPapers,
     SchemaScopusPapers,
 )
@@ -42,14 +42,14 @@ TITLE-ABS-KEY( {query})
         nb_paper = ScopusSearch(
             query=scopus_query, download=False, subscriber=SCOPUS_IS_SUBSCRIBER
         ).get_results_size()
-        if nb_paper > THRESHOLD_BIG_COUNT_PAPER:
-            if input(f"{nb_paper} found in Scopus. Continue? (y/n)").lower() == "y":
-                scopus_search = ScopusSearch(
-                    query=scopus_query, verbose=True, subscriber=SCOPUS_IS_SUBSCRIBER
-                )
-                return scopus_to_dict_list(scopus_search)
-            else:
-                return None
+        
+        if input(f"{nb_paper} found in Scopus. Continue? (y/n)").lower() == "y":
+            scopus_search = ScopusSearch(
+                query=scopus_query, verbose=True, subscriber=SCOPUS_IS_SUBSCRIBER, refresh=True, sort="-relevance"
+            )
+            return scopus_to_dict_list(scopus_search)
+        else:
+            return None
     except Exception as e:
         print(e, "\nReturning None")
         return None
@@ -74,4 +74,5 @@ def scopus_to_dict_list(results: ScopusSearch) -> DataFrame[SchemaPapers]:
     ]
 
     return_df = pd.DataFrame(data)
+    return_df[NAME_COL_RELEVANCE_ORDER_SCOPUS] = return_df.index
     return SchemaScopusPapers.validate(return_df, lazy=PANDERA_LAZY_VALIDATION)

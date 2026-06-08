@@ -55,7 +55,11 @@ NAME_COL_TOPIC_LENS = "topic_lens"
 NAME_COL_TOPIC_DIMENSIONS = "topic_dimensions"
 NAME_COL_KEYWORDS_SCOPUS = "keywords_scopus"
 NAME_COL_KEYWORDS_OPENALEX = "keywords_openalex"
+NAME_COL_RELEVANCE_OPENALEX = "relevance_openlex"
+NAME_COL_RELEVANCE_ORDER_SCOPUS = "relevance_order_scopus"
+
 NAME_COL_KEYWORDS_LENS = "keywords_lens"
+
 NAME_COL_KEYWORDS_DIMENSIONS = "keywords_dimensions"
 
 # Type categories
@@ -210,6 +214,10 @@ class SchemaScopusPapers(SchemaPapers):
     keywords_scopus: Series[String] = pa.Field(
         nullable=True, alias=NAME_COL_KEYWORDS_SCOPUS
     )
+    # Order of the paper after being sort by relevance
+    relevance_order_scopus : Series[Int64] =  pa.Field(
+        nullable=True, alias=NAME_COL_RELEVANCE_ORDER_SCOPUS
+    )
 
 
 class SchemaOpenAlexPapers(SchemaPapers):
@@ -231,6 +239,10 @@ class SchemaOpenAlexPapers(SchemaPapers):
 
     keywords_openalex: Series[String] = pa.Field(
         nullable=True, alias=NAME_COL_KEYWORDS_OPENALEX
+    )
+    relevance_openale: Series[float] =  pa.Field(
+        nullable=True, alias=NAME_COL_RELEVANCE_OPENALEX
+
     )
 
 
