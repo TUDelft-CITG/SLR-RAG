@@ -3,6 +3,7 @@ Pytest tests for paper_review_tools.py module
 
 Tests cover:
 - sanitize_filename function
+- slugify function
 - format_field_value function
 - get_field_group function
 - highlight_keywords_in_text function
@@ -25,6 +26,7 @@ from slrrag.convertmarkdown.paper_review_tools import (
     MANUAL_REVIEW_FIELD,
     FIELD_GROUPS,
     sanitize_filename,
+    slugify,
     format_field_value,
     get_field_group,
     highlight_keywords_in_text,
@@ -195,6 +197,116 @@ class TestSanitizeFilename:
 
 
 # =============================================================================
+# Tests for slugify function
+# =============================================================================
+
+class TestSlugify:
+    """Tests for the slugify function."""
+    
+    def test_basic_title(self):
+        """Test slugification of a basic title."""
+        result = slugify("Offshore Wind Farms")
+        assert result == "offshore-wind-farms"
+    
+    def test_lowercase_conversion(self):
+        """Test that slug is lowercase."""
+        result = slugify("UPPER CASE TITLE")
+        assert result == "upper-case-title"
+        assert result.islower()
+    
+    def test_special_characters_removed(self):
+        """Test that special characters are removed."""
+        result = slugify("Title/with:special*chars?")
+        assert "/" not in result
+        assert ":" not in result
+        assert "*" not in result
+        assert "?" not in result
+        assert result == "titlewithspecialchars"
+    
+    def test_colon_removal(self):
+        """Test that colons are removed."""
+        result = slugify("Title: A Subtitle")
+        assert ":" not in result
+        assert result == "title-a-subtitle"
+    
+    def test_dashes(self):
+        """Test handling of dashes."""
+        result = slugify("Title \u2013 with \u2014 dashes")
+        assert "\u2013" not in result
+        assert "\u2014" not in result
+        assert result == "title-with-dashes"
+    
+    def test_spaces_to_hyphens(self):
+        """Test that spaces are converted to hyphens."""
+        result = slugify("Title with spaces")
+        assert result == "title-with-spaces"
+    
+    def test_multiple_spaces(self):
+        """Test that multiple spaces are collapsed to single hyphens."""
+        result = slugify("Title   with   multiple    spaces")
+        assert "  " not in result
+        assert "---" not in result
+        assert result == "title-with-multiple-spaces"
+    
+    def test_empty_title(self):
+        """Test handling of empty title."""
+        result = slugify("")
+        assert result == "untitled"
+    
+    def test_none_title(self):
+        """Test handling of None title."""
+        result = slugify(None)
+        assert result == "untitled"
+    
+    def test_na_title(self):
+        """Test handling of pd.NA title."""
+        result = slugify(pd.NA)
+        assert result == "untitled"
+    
+    def test_leading_trailing_hyphens(self):
+        """Test that leading/trailing hyphens are removed."""
+        result = slugify("---Title---")
+        assert not result.startswith("-")
+        assert not result.endswith("-")
+        assert result == "title"
+    
+    def test_long_title(self):
+        """Test that long titles are truncated."""
+        long_title = "A " * 100  # 200 characters
+        result = slugify(long_title)
+        assert len(result) <= 150
+    
+    def test_title_with_brackets(self):
+        """Test handling of brackets."""
+        result = slugify("Title (with) [brackets]")
+        assert "(" not in result
+        assert ")" not in result
+        assert "[" not in result
+        assert "]" not in result
+        assert result == "title-with-brackets"
+    
+    def test_title_with_curly_braces(self):
+        """Test handling of curly braces."""
+        result = slugify("Title {with} curly {braces}")
+        assert "{" not in result
+        assert "}" not in result
+        assert result == "title-with-curly-braces"
+    
+    def test_complex_title(self):
+        """Test a complex title with various special characters."""
+        result = slugify("The Impact of AI: A Comprehensive Analysis (2024)")
+        assert result == "the-impact-of-ai-a-comprehensive-analysis-2024"
+    
+    def test_filename_usage(self):
+        """Test that slug is suitable for filenames."""
+        result = slugify("Test Title")
+        filename = result + ".md"
+        assert filename == "test-title.md"
+
+
+# =============================================================================
+# Tests for format_field_value function
+# ==========================================================================================================================================================
 # Tests for format_field_value function
 # =============================================================================
 
@@ -465,7 +577,7 @@ class TestWritePaperToMarkdown:
             content = f.read()
         
         assert "---" in content
-        assert 'title: "Offshore Wind Farm Risk Assessment"' in content
+        assert 'title: "offshore-wind-farm-risk-assessment"' in content
     
     def test_no_yaml_frontmatter(self, temp_output_dir, sample_paper_dict):
         """Test that YAML frontmatter can be disabled."""
@@ -479,7 +591,7 @@ class TestWritePaperToMarkdown:
             content = f.read()
         
         # Should not have YAML frontmatter (title: at start)
-        assert 'title: "Offshore Wind Farm Risk Assessment"' not in content
+        assert 'title: "offshore-wind-farm-risk-assessment"' not in content
         # The file should start with the title header
         assert content.startswith("#")
     

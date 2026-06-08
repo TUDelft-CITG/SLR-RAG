@@ -94,7 +94,7 @@ def slugify(title: str) -> str:
     Returns:
         A slugified version of the title (lowercase, hyphens instead of spaces, special chars removed)
     """
-    if not title or pd.isna(title):
+    if pd.isna(title) or title is None:
         return "untitled"
     
     # Convert to string, lowercase, and strip
