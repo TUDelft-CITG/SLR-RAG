@@ -417,10 +417,12 @@ def write_paper_into_markdown(
     output_dir: str = "./papers",
     template_path: Optional[str] = None,
     add_yaml_frontmatter: bool = True,
-    overwrite: bool = False
+    overwrite: bool = False,
+    batch_size: int = 50
 ) -> List[str]:
     """
     Convert a pandas DataFrame of papers to individual markdown files.
+    Files are split into batches of `batch_size` (default 50) in numerically prefixed subfolders.
     
     This is the main function that processes the entire DataFrame.
     
@@ -430,6 +432,7 @@ def write_paper_into_markdown(
         template_path: Optional path to a custom template file
         add_yaml_frontmatter: Whether to add YAML frontmatter (default: True)
         overwrite: Whether to overwrite existing files (default: False)
+        batch_size: Number of papers per batch folder (default: 50)
         
     Returns:
         List of paths to created markdown files
@@ -437,7 +440,7 @@ def write_paper_into_markdown(
     Example:
         >>> import pandas as pd
         >>> df = pd.read_csv("papers.csv")
-        >>> created_files = write_paper_into_markdown(df, output_dir="./my_papers")
+        >>> created_files = write_paper_into_markdown(df, output_dir="./my_papers", batch_size=50)
         >>> print(f"Created {len(created_files)} markdown files")
     """
     created_files = []
@@ -445,32 +448,48 @@ def write_paper_into_markdown(
     # Ensure output directory exists
     Path(output_dir).mkdir(parents=True, exist_ok=True)
     
-    # Iterate through each row (paper) in the DataFrame
-    for idx, row in df.iterrows():
-        paper_dict = row.to_dict()
-        
-        # Create filename from title
-        title = paper_dict.get("title", f"paper_{idx}")
-        slug = slugify(title)
-        filename = slug + ".md"
-        filepath = os.path.join(output_dir, filename)
-        
-        # Check if file exists and overwrite is False
-        if not overwrite and os.path.exists(filepath):
-            print(f"Skipping existing file: {filename}")
-            continue
-        
-        # Write the paper
-        created_path = write_paper_to_markdown(
-            paper_dict,
-            output_dir=output_dir,
-            template_path=template_path,
-            add_yaml_frontmatter=add_yaml_frontmatter
-        )
-        created_files.append(created_path)
-        print(f"Created: {filename}")
+    # Calculate number of batches needed
+    total_papers = len(df)
+    num_batches = (total_papers + batch_size - 1) // batch_size
     
-    print(f"\nTotal files created: {len(created_files)}")
+    # Iterate through each batch
+    for batch_num in range(num_batches):
+        start_idx = batch_num * batch_size
+        end_idx = min(start_idx + batch_size, total_papers)
+        batch_df = df.iloc[start_idx:end_idx]
+        
+        # Create batch subfolder with numerical prefix
+        batch_dir = os.path.join(output_dir, f"{batch_num + 1:03d}_batch")
+        Path(batch_dir).mkdir(parents=True, exist_ok=True)
+        
+        print(f"\nProcessing batch {batch_num + 1}/{num_batches} ({len(batch_df)} papers)")
+        
+        # Iterate through each row (paper) in the batch DataFrame
+        for idx, row in batch_df.iterrows():
+            paper_dict = row.to_dict()
+            
+            # Create filename from title
+            title = paper_dict.get("title", f"paper_{idx}")
+            slug = slugify(title)
+            filename = slug + ".md"
+            filepath = os.path.join(batch_dir, filename)
+            
+            # Check if file exists and overwrite is False
+            if not overwrite and os.path.exists(filepath):
+                print(f"Skipping existing file: {filename}")
+                continue
+            
+            # Write the paper
+            created_path = write_paper_to_markdown(
+                paper_dict,
+                output_dir=batch_dir,
+                template_path=template_path,
+                add_yaml_frontmatter=add_yaml_frontmatter
+            )
+            created_files.append(created_path)
+            print(f"Created: {filename} in {batch_dir}")
+    
+    print(f"\nTotal files created: {len(created_files)} in {num_batches} batch folders")
     return created_files
 
 
@@ -626,7 +645,7 @@ if __name__ == "__main__":
     output_dir = sys.argv[2] if len(sys.argv) > 2 else "./papers"
     
     # Read the CSV
-    df = pd.read_csv(input_csv).head()
+    df = pd.read_csv(input_csv).head(100)
     
     # Create markdown files
     print(f"Processing {len(df)} papers from {input_csv}...")
