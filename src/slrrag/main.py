@@ -4,7 +4,7 @@ from typing import List
 from pandera.typing.pandas import DataFrame
 import pandera.pandas as pa
 import pandas as pd
-from slrrag.querier_openalex import query_openalex
+from slrrag.querier_openalex import query_openalex_and_standardize
 from slrrag.querier_scopus import query_scopus
 from slrrag.query_converter import convert_query_to_lens
 from slrrag.query_converter import query_to_dimensions_url
@@ -20,6 +20,7 @@ from slrrag.input import (
     MAIN_QUERY,
     MINIMUM_YEAR_NAME,
     FIRST_ROUND_QUESTIONS,
+    OLLAMA_MODELS,
     REFERENCE_PAPERS,
 )
 from slrrag.settings import (
@@ -110,7 +111,7 @@ def add_openalex_papers(
     input_papers: DataFrame[SchemaPapers], database_names: List[str]
 ) -> tuple[DataFrame[SchemaPapers], List[str]]:
     results_openalex = load_or_query_database(
-        "OpenAlex", OUTPUT_CSV_OPENALEX, query_openalex
+        "OpenAlex", OUTPUT_CSV_OPENALEX, query_openalex_and_standardize
     )
     if results_openalex is not None:
         input_papers, database_names = merge_papers(
@@ -545,12 +546,10 @@ def main():
         if user_input != "y":
             print("Operation cancelled by user.")
             return
-    # Step 5: Initialize agent and process papers
-    print("Creating a chat with ollama")
-    agent = setup_chat_agent()
-
-    print("Analyzing papers with agent")
-    results_df = analyze_papers_with_agent(agent, papers_df, FIRST_ROUND_QUESTIONS)
+    print(f"Analyzing papers with agent : {OLLAMA_MODELS}")
+    results_df = analyze_papers_with_agent(
+            OLLAMA_MODELS, papers_df, FIRST_ROUND_QUESTIONS
+        )
 
     print(f"Saving results to {OUTPUT_CSV_AGENTS_PATH}")
     save_dataframe_to_csv(results_df, OUTPUT_CSV_AGENTS_PATH)

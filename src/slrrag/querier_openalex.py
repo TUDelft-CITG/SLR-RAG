@@ -8,6 +8,7 @@ from slrrag.settings import (
     NAME_COL_KEYWORDS_OPENALEX,
     NAME_COL_PRIMARY_FIELD_OPENALEX,
     NAME_COL_PRIMARY_TOPIC_OPENALEX,
+    NAME_COL_RELEVANCE_OPENALEX,
     PANDERA_LAZY_VALIDATION,
     THRESHOLD_BIG_COUNT_PAPER,
     SchemaOpenAlexPapers,
@@ -26,13 +27,7 @@ def check_doi_in_openalex(doi: str) -> bool:
     except Exception:
         return False
 
-
-# --- OpenAlex functions ---
-def query_openalex(
-    query: str, ask_input=True, n_paper_max=None
-) -> DataFrame[SchemaPapers]:
-    """Query OpenAlex and return results as a pandas DataFrame."""
-    print("Query :", query)
+def query_openalex(query: str, ask_input=True, n_paper_max=None):
     works = Works().search_filter(title_and_abstract=query)
     nb_paper = works.count()
     if nb_paper > THRESHOLD_BIG_COUNT_PAPER and ask_input:
@@ -46,6 +41,14 @@ def query_openalex(
         list_ret += page
         if n_paper_max and len(list_ret) > n_paper_max:
             break
+    return list_ret
+# --- OpenAlex functions ---
+def query_openalex_and_standardize(
+    query: str, ask_input=True, n_paper_max=None
+) -> DataFrame[SchemaPapers]:
+    """Query OpenAlex and return results as a pandas DataFrame."""
+    print("Query :", query)
+    list_ret = query_openalex(query,ask_input,n_paper_max)
     input_openalex_columns_name = [
         "doi",
         "id",
@@ -53,6 +56,7 @@ def query_openalex(
         "publication_date",
         "abstract",
         "type",
+        "relevance_score"
     ]
 
     # Due to legal reasons, we have to extract the abstract manually : https://pypi.org/project/pyalex/#get-abstract:~:text=Get%20abstract
@@ -102,7 +106,7 @@ def query_openalex(
         ],
     )
     return_df = return_df.rename(
-        columns={"publication_date": NAME_COL_DATE, "id": "id_openalex"}
+        columns={"publication_date": NAME_COL_DATE, "id": "id_openalex", "relevance_score" : NAME_COL_RELEVANCE_OPENALEX}
     )
     return_df["doi"] = return_df["doi"].str.removeprefix("https://doi.org/")
     return SchemaOpenAlexPapers.validate(return_df, lazy=PANDERA_LAZY_VALIDATION)
