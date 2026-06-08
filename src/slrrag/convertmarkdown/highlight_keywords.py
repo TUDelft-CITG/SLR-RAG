@@ -44,7 +44,7 @@ STEMMING_DICT = {
     "accident": ["accident", "accidents"],
 
     # === 4. NAUTICAL & NAVIGATION ===
-    "nautical": ["nautical", "maritime", "navigation", "navigational"],
+    "nautical": ["nautical", "maritime", "navigation", "navigational", "navigate"],
 
     # === 5. RISK ASSESSMENT ===
     "risk": ["risk", "risks", "risky"],

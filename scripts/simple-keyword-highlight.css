@@ -79,8 +79,8 @@
 .kw-other-offshore-infrastructures {
     color: var(--kw-blue-fg) !important;
     font-weight: 600 !important;
-    background-color: var(--kw-blue-bg) !important;
-    border-radius: 2px !important;
+    /* background-color: var(--kw-blue-bg) !important;
+    border-radius: 2px !important; */
     padding: 0 2px !important;
 }
 
@@ -90,8 +90,8 @@
 .kw-vessel {
     color: var(--kw-cyan-fg) !important;
     font-weight: 600 !important;
-    background-color: var(--kw-cyan-bg) !important;
-    border-radius: 2px !important;
+    /* background-color: var(--kw-cyan-bg) !important;
+    border-radius: 2px !important; */
     padding: 0 2px !important;
 }
 
@@ -100,8 +100,8 @@
 .kw-accident {
     color: var(--kw-red-fg) !important;
     font-weight: 600 !important;
-    background-color: var(--kw-red-bg) !important;
-    border-radius: 2px !important;
+    /* background-color: var(--kw-red-bg) !important;
+    border-radius: 2px !important; */
     padding: 0 2px !important;
 }
 
@@ -109,8 +109,8 @@
 .kw-nautical {
     color: var(--kw-purple-fg) !important;
     font-weight: 600 !important;
-    background-color: var(--kw-purple-bg) !important;
-    border-radius: 2px !important;
+    /* background-color: var(--kw-purple-bg) !important;
+    border-radius: 2px !important; */
     padding: 0 2px !important;
 }
 
@@ -122,8 +122,8 @@
 .kw-navigation-risk-assessment {
     color: var(--kw-green-fg) !important;
     font-weight: 600 !important;
-    background-color: var(--kw-green-bg) !important;
-    border-radius: 2px !important;
+    /* background-color: var(--kw-green-bg) !important;
+    border-radius: 2px !important; */
     padding: 0 2px !important;
 }
 
@@ -133,8 +133,8 @@
 .kw-analyse {
     color: var(--kw-orange-fg) !important;
     font-weight: 600 !important;
-    background-color: var(--kw-orange-bg) !important;
-    border-radius: 2px !important;
+    /* background-color: var(--kw-orange-bg) !important;
+    border-radius: 2px !important; */
     padding: 0 2px !important;
 }
 
@@ -142,8 +142,8 @@
 .kw-irrelevant {
     color: var(--kw-gray-fg) !important;
     font-weight: 600 !important;
-    background-color: var(--kw-gray-bg) !important;
-    border-radius: 2px !important;
+    /* background-color: var(--kw-gray-bg) !important;
+    border-radius: 2px !important; */
     padding: 0 2px !important;
 }
 

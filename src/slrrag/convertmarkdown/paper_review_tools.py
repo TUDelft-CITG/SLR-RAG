@@ -25,13 +25,13 @@ DEFAULT_REVIEW_STATUS = None  # Can be "keep", "removed", "not-sure", or None
 
 # Field groupings for better organization in markdown
 FIELD_GROUPS = {
-    "Identifiers": ["title", "doi", "id_scopus", "id_openalex", "id_lens", "id_dimensions"],
-    "Publication Info": ["type", "year", "date"],
-    "Content": ["abstract", "pdf"],
-    "Scopus": ["keywords_scopus", "relevance_order_scopus", "in_scopus"],
-    "OpenAlex": ["topic_openalex", "fields_openalex", "keywords_openalex", "relevance_openalex", "in_openalex"],
-    "Lens": ["topic_lens", "keywords_lens", "in_lens"],
-    "Dimensions": ["topic_dimensions", "keywords_dimensions", "in_dimensions"],
+    "Identifiers": ["title"],
+    "Publication Info": ["type", "year"],
+    "Content": ["abstract"],
+    "Scopus": ["relevance_order_scopus", "in_scopus"],
+    "OpenAlex": ["relevance_openalex", "in_openalex"],
+    "Lens": ["in_lens"],
+    "Dimensions": ["in_dimensions"],
     "Status": ["is_found", "is_reference", MANUAL_REVIEW_FIELD],
 }
 
@@ -234,13 +234,41 @@ def write_paper_to_markdown(
     # Start building markdown content
     lines = []
     
-    # Add YAML frontmatter
+    # Add YAML frontmatter with metadata
     if add_yaml_frontmatter:
         lines.append("---")
         lines.append(f"title: \"{title}\"")
+        
+        # Add DOI
+        doi = paper.get("doi", "")
+        if doi and doi != "N/A" and str(doi).lower() not in ['nan', 'none', '']:
+            lines.append(f'doi: "{doi}"')
+        
+        # Add tags field (placeholder)
+        lines.append("tags:")
+        
+        # Add PDF link
+        pdf = paper.get("pdf", "")
+        if pdf and pdf != "N/A":
+            lines.append(f'pdf: "{pdf}"')
+        
+        # Add date of publication
+        date = paper.get("date", "")
+        if date and date != "N/A":
+            lines.append(f'date: "{date}"')
+        
+        # Add database IDs
+        for db in ["scopus", "openalex", "lens", "dimensions"]:
+            id_field = f"id_{db}"
+            id_value = paper.get(id_field, "")
+            if id_value and id_value != "N/A":
+                lines.append(f'{id_field}: "{id_value}"')
+        
+        # Add manual review status
         review_status = paper.get(MANUAL_REVIEW_FIELD)
         if review_status and review_status != "None" and not pd.isna(review_status):
             lines.append(f"manual_review: {review_status}")
+        
         lines.append("---")
         lines.append("")
     
@@ -249,25 +277,43 @@ def write_paper_to_markdown(
     lines.append(f"# {highlighted_title}")
     lines.append("")
     
-    # Add DOI if available
-    doi = paper.get("doi", "")
-    if doi and doi != "N/A" and str(doi).lower() not in ['nan', 'none', '']:
-        lines.append(f"**DOI:** [{doi}](https://doi.org/{doi})")
-        lines.append("")
+    # Add keywords and topics from all databases (just before abstract)
+    all_keywords = []
+    all_topics = []
     
-    # Add manual review status as a prominent badge
-    review_status = paper.get(MANUAL_REVIEW_FIELD)
-    if review_status:
-        if review_status == "keep":
-            lines.append("🏷️ **Status:** 🟢 KEEP")
-        elif review_status == "removed":
-            lines.append("🏷️ **Status:** 🔴 REMOVED")
-        elif review_status == "not-sure":
-            lines.append("🏷️ **Status:** 🟡 NOT SURE")
-        lines.append("")
-    else:
-        lines.append("🏷️ **Status:** ⚪ NOT REVIEWED")
-        lines.append("")
+    # Collect keywords from all database fields
+    for db in ["scopus", "openalex", "lens", "dimensions"]:
+        keywords_field = f"keywords_{db}"
+        if keywords_field in paper:
+            keywords = paper.get(keywords_field, "")
+            if keywords and keywords != "N/A" and isinstance(keywords, str):
+                kw_list = [k.strip() for k in keywords.split('|') if k.strip()]
+                all_keywords.extend(kw_list)
+        
+        topics_field = f"topic_{db}"
+        if topics_field in paper:
+            topics = paper.get(topics_field, "")
+            if topics and topics != "N/A" and isinstance(topics, str):
+                topic_list = [t.strip() for t in topics.split('|') if t.strip()]
+                all_topics.extend(topic_list)
+        
+        fields_field = f"fields_{db}"
+        if fields_field in paper and db == "openalex":
+            fields = paper.get(fields_field, "")
+            if fields and fields != "N/A" and isinstance(fields, str):
+                field_list = [f.strip() for f in fields.split('|') if f.strip()]
+                all_topics.extend(field_list)
+    
+    # Add keywords and topics if any exist
+    if all_keywords or all_topics:
+        keywords_line_parts = []
+        if all_keywords:
+            keywords_line_parts.extend(f"#{kw.replace(' ', '_')}" for kw in all_keywords)
+        if all_topics:
+            keywords_line_parts.extend(all_topics)
+        if keywords_line_parts:
+            lines.append(", ".join(keywords_line_parts))
+            lines.append("")
     
     # Add abstract (most important field)
     abstract = paper.get("abstract", "")
@@ -278,44 +324,21 @@ def write_paper_to_markdown(
         lines.append(highlighted_abstract)
         lines.append("")
     
-    # Add PDF link if available
-    pdf = paper.get("pdf", "")
-    if pdf and pdf != "N/A":
-        lines.append("## PDF")
-        lines.append("")
-        if isinstance(pdf, str) and pdf.startswith('http'):
-            lines.append(f"[Download PDF]({pdf})")
-        else:
-            lines.append(f"{pdf}")
-        lines.append("")
-    
-    # Add year and type
-    year = paper.get("year", "")
-    paper_type = paper.get("type", "")
-    date = paper.get("date", "")
-    
-    if year and year != "N/A" or paper_type and paper_type != "N/A" or date and date != "N/A":
-        lines.append("## Publication Info")
-        lines.append("")
-        info_parts = []
-        if paper_type and paper_type != "N/A":
-            info_parts.append(f"Type: {paper_type}")
-        if year and year != "N/A":
-            info_parts.append(f"Year: {year}")
-        if date and date != "N/A":
-            info_parts.append(f"Date: {date}")
-        lines.append(" | ".join(info_parts))
-        lines.append("")
-    
     # Group remaining fields by category
     lines.append("---")
     lines.append("")
     lines.append("## Metadata")
     lines.append("")
     
-    # Process fields in groups
+    # Process fields in groups - exclude fields already in frontmatter
+    excluded_fields = {"title", "abstract", "pdf", "doi", "date", "manual_review_field", 
+                      "id_scopus", "id_openalex", "id_lens", "id_dimensions",
+                      "keywords_scopus", "keywords_openalex", "keywords_lens", "keywords_dimensions",
+                      "topic_scopus", "topic_openalex", "topic_lens", "topic_dimensions",
+                      "fields_openalex"}
+    
     for group_name, fields in FIELD_GROUPS.items():
-        group_fields = [f for f in fields if f in paper and f != "title" and f != "abstract" and f != "pdf"]
+        group_fields = [f for f in fields if f in paper and f not in excluded_fields]
         if group_fields:
             lines.append(f"### {group_name}")
             lines.append("")
@@ -325,16 +348,6 @@ def write_paper_to_markdown(
                 field_display = field.replace("_", " ").title()
                 lines.append(f"- **{field_display}:** {formatted_value}")
             lines.append("")
-    
-    # Add navigation note at the bottom
-    lines.append("---")
-    lines.append("")
-    lines.append("*Use keyboard shortcuts to classify this paper:*")
-    lines.append("- `Ctrl+↑` (Up Arrow): **Keep**")
-    lines.append("- `Ctrl+↓` (Down Arrow): **Removed**")
-    lines.append("- `Ctrl+→` (Right Arrow): **Not Sure**")
-    lines.append("- `Ctrl+←` (Left Arrow): Go to previous paper")
-    lines.append("")
     
     # Write to file
     with open(filepath, 'w', encoding='utf-8') as f:

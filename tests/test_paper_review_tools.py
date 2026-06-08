@@ -269,23 +269,18 @@ class TestGetFieldGroup:
     def test_identifiers_group(self):
         """Test fields in Identifiers group."""
         assert get_field_group("title") == "Identifiers"
-        assert get_field_group("doi") == "Identifiers"
-        assert get_field_group("id_scopus") == "Identifiers"
     
     def test_publication_info_group(self):
         """Test fields in Publication Info group."""
         assert get_field_group("year") == "Publication Info"
         assert get_field_group("type") == "Publication Info"
-        assert get_field_group("date") == "Publication Info"
     
     def test_content_group(self):
         """Test fields in Content group."""
         assert get_field_group("abstract") == "Content"
-        assert get_field_group("pdf") == "Content"
     
     def test_scopus_group(self):
         """Test fields in Scopus group."""
-        assert get_field_group("keywords_scopus") == "Scopus"
         assert get_field_group("relevance_order_scopus") == "Scopus"
         assert get_field_group("in_scopus") == "Scopus"
     
@@ -446,7 +441,7 @@ class TestWritePaperToMarkdown:
         assert "<span class=\"kw-assess\">assess</span>" in content
     
     def test_file_contains_doi(self, temp_output_dir, sample_paper_dict):
-        """Test that the file contains the DOI."""
+        """Test that the file contains the DOI in frontmatter."""
         filepath = write_paper_to_markdown(
             sample_paper_dict,
             output_dir=temp_output_dir
@@ -455,7 +450,8 @@ class TestWritePaperToMarkdown:
         with open(filepath, 'r', encoding='utf-8') as f:
             content = f.read()
         
-        assert "https://doi.org/10.1234/abc" in content
+        # DOI is now in frontmatter
+        assert 'doi: "10.1234/abc"' in content
     
     def test_yaml_frontmatter(self, temp_output_dir, sample_paper_dict):
         """Test that YAML frontmatter is included."""
@@ -597,11 +593,11 @@ class TestUpdatePaperReviewStatus:
         result = update_paper_review_status(filepath, "keep")
         assert result is True
         
-        # Check file
+        # Check file - status is now only in frontmatter
         with open(filepath, 'r', encoding='utf-8') as f:
             content = f.read()
         
-        assert "🟢 KEEP" in content or "KEEP" in content
+        assert "manual_review: keep" in content
     
     def test_updates_status_removed(self, temp_output_dir, sample_paper_dict):
         """Test updating status to removed."""
@@ -616,7 +612,7 @@ class TestUpdatePaperReviewStatus:
         with open(filepath, 'r', encoding='utf-8') as f:
             content = f.read()
         
-        assert "🔴 REMOVED" in content or "REMOVED" in content
+        assert "manual_review: removed" in content
     
     def test_updates_status_not_sure(self, temp_output_dir, sample_paper_dict):
         """Test updating status to not-sure."""
@@ -631,7 +627,7 @@ class TestUpdatePaperReviewStatus:
         with open(filepath, 'r', encoding='utf-8') as f:
             content = f.read()
         
-        assert "🟡 NOT SURE" in content or "NOT SURE" in content
+        assert "manual_review: not-sure" in content
     
     def test_invalid_status(self):
         """Test that invalid status raises error."""
