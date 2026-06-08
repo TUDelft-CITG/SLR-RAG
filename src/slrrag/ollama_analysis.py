@@ -21,13 +21,15 @@ PROMPT_MODEL = "Title: {title}\nAbstract: {abstract}\nQuestion: {question}\nOnly
 OLLAMA_MODEL = OLLAMA_MODELS[0]  # TODO : Make as a list
 
 
-def setup_chat_agent() -> ChatOllama:
+def setup_chat_agent(name_ollama_model: str) -> ChatOllama:
     """Initialize Chat agent."""
-    user_out_agent = input(f"Use ollama:{OLLAMA_MODEL} ('o') , or Mistral ('m')?\n>")
+    user_out_agent = input(
+        f"Use ollama:{name_ollama_model} ('o') , or Mistral ('m')?\n>"
+    )
     while True:
         if user_out_agent == "o":
-            print(f"using ollama:{OLLAMA_MODEL}")
-            return ChatOllama(model=OLLAMA_MODEL)
+            print(f"using ollama:{name_ollama_model}")
+            return ChatOllama(model=name_ollama_model)
         elif user_out_agent == "m":
             print("Using Mistral")
             from langchain_mistralai import ChatMistralAI
@@ -41,33 +43,44 @@ def setup_chat_agent() -> ChatOllama:
             print(f"Wrong output. {user_out_agent}")
 
 
-def analyze_paper(agent, title: str, abstract: str, questions: Dict[str,str]) -> Dict:
+def analyze_paper(
+    agent: ChatOllama, title: str, abstract: str, questions: Dict[str, str]
+) -> Dict:
     """Use the agent to answer questions about a paper."""
     prompt = ChatPromptTemplate.from_template(PROMPT_MODEL)
     chain: RunnableSequence = prompt | agent | StrOutputParser()
     answers = {}
     for q in questions.keys():
-        response = chain.invoke({"title": title, "abstract": abstract, "question": questions[q]})
-        answers[q] = response.strip()
+        response = chain.invoke(
+            {"title": title, "abstract": abstract, "question": questions[q]}
+        )
+        answers[q + "_" + agent.model] = response.strip()
     return answers
 
 
 def analyze_papers_with_agent(
-    agent, papers_df: DataFrame[SchemaPapers], questions: Dict[str,str]
+    list_agents_name: List[str],
+    papers_df: DataFrame[SchemaPapers],
+    questions: Dict[str, str],
 ) -> pd.DataFrame:
     """Analyze papers using agent and return DataFrame with answers."""
+    list_agents = []
+    for agent_model in list_agents_name:
+        list_agents.append(ChatOllama(model=agent_model))
     results = []
     for paper in tqdm(papers_df.to_dict("records")):
-        answers = analyze_paper(agent, paper["title"], paper["abstract"], questions)
         paper_with_answers = {
             "doi": paper["doi"],
             "title": paper["title"],
             "date": paper["date"],
             "abstract": paper["abstract"],
-            **answers,
         }
-        results.append(paper_with_answers)
-        if len(results) >= 200:
-            break
 
+        for agent in list_agents:
+            answers = analyze_paper(agent, paper["title"], paper["abstract"], questions)
+            paper_with_answers = {
+                **paper_with_answers,
+                **answers,
+            }
+        results.append(paper_with_answers)
     return pd.DataFrame(results)

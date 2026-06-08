@@ -20,6 +20,7 @@ from slrrag.input import (
     MAIN_QUERY,
     MINIMUM_YEAR_NAME,
     FIRST_ROUND_QUESTIONS,
+    OLLAMA_MODELS,
     REFERENCE_PAPERS,
 )
 from slrrag.settings import (
@@ -545,12 +546,10 @@ def main():
         if user_input != "y":
             print("Operation cancelled by user.")
             return
-    # Step 5: Initialize agent and process papers
-    print("Creating a chat with ollama")
-    agent = setup_chat_agent()
-
-    print("Analyzing papers with agent")
-    results_df = analyze_papers_with_agent(agent, papers_df, FIRST_ROUND_QUESTIONS)
+    print(f"Analyzing papers with agent : {OLLAMA_MODELS}")
+    results_df = analyze_papers_with_agent(
+            OLLAMA_MODELS, papers_df, FIRST_ROUND_QUESTIONS
+        )
 
     print(f"Saving results to {OUTPUT_CSV_AGENTS_PATH}")
     save_dataframe_to_csv(results_df, OUTPUT_CSV_AGENTS_PATH)
