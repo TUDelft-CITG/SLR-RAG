@@ -1,0 +1,357 @@
+/*
+ * Simple Keyword Highlight Theme for Obsidian
+ * SLR-RAG Project
+ * 
+ * Automatically highlights specific keywords in the markdown preview.
+ * Organized by 7 topics with distinct colors for each category.
+ * 
+ * ==== INSTALLATION ====
+ * 1. Copy this file to: Your-Vault/.obsidian/snippets/
+ * 2. Enable it in Obsidian: Settings -> Appearance -> CSS Snippets
+ * 3. Run highlight_keywords.py to automatically wrap keywords in your notes
+ * 
+ * ==== HOW IT WORKS ====
+ * This CSS provides the STYLES for keyword highlighting.
+ * For automatic wrapping, use the highlight_keywords.py script which will
+ * wrap keywords in spans with the appropriate kw- class names.
+ * 
+ * ==== TOPICS & COLORS ====
+ * Topic 1 - OFFSHORE INFRASTRUCTURE: Blue (#1e90ff)
+ * Topic 2 - MARITIME VESSELS & STRUCTURES: Cyan (#00bcd4)
+ * Topic 3 - SAFETY & INCIDENTS: Red (#d32f2f)
+ * Topic 4 - NAUTICAL & NAVIGATION: Purple (#9c27b0)
+ * Topic 5 - RISK ASSESSMENT: Green (#388e3c)
+ * Topic 6 - ANALYSIS & PREDICTION: Orange (#f57c00)
+ * Topic 7 - IRRELEVANT: Gray (#9e9e9e)
+ * 
+ * ==== KEYWORDS BY TOPIC ====
+ * 
+ * Topic 1 (Blue): offshore, infrastructure, wind-farm, other-offshore-infrastructures
+ * Topic 2 (Cyan): bridge, ship, vessel
+ * Topic 3 (Red): collision, accident
+ * Topic 4 (Purple): nautical
+ * Topic 5 (Green): risk, probability, chance, assess, navigation-risk-assessment
+ * Topic 6 (Orange): model, predict, analyse
+ * Topic 7 (Gray): irrelevant
+ */
+
+:root {
+    /* === TOPIC 1: OFFSHORE INFRASTRUCTURE (Blue) === */
+    --kw-blue-fg: #1e90ff;
+    --kw-blue-bg: rgba(30, 144, 255, 0.15);
+    
+    /* === TOPIC 2: MARITIME VESSELS & STRUCTURES (Cyan) === */
+    --kw-cyan-fg: #00bcd4;
+    --kw-cyan-bg: rgba(0, 188, 212, 0.15);
+    
+    /* === TOPIC 3: SAFETY & INCIDENTS (Red) === */
+    --kw-red-fg: #d32f2f;
+    --kw-red-bg: rgba(211, 47, 47, 0.15);
+    
+    /* === TOPIC 4: NAUTICAL & NAVIGATION (Purple) === */
+    --kw-purple-fg: #9c27b0;
+    --kw-purple-bg: rgba(156, 39, 176, 0.15);
+    
+    /* === TOPIC 5: RISK ASSESSMENT (Green) === */
+    --kw-green-fg: #388e3c;
+    --kw-green-bg: rgba(56, 142, 60, 0.15);
+    
+    /* === TOPIC 6: ANALYSIS & PREDICTION (Orange) === */
+    --kw-orange-fg: #f57c00;
+    --kw-orange-bg: rgba(245, 124, 0, 0.15);
+    
+    /* === TOPIC 7: IRRELEVANT (Gray) === */
+    --kw-gray-fg: #9e9e9e;
+    --kw-gray-bg: rgba(158, 158, 158, 0.15);
+}
+
+
+/* ============================================
+   MANUAL HIGHLIGHTING (Both Preview and Live Preview)
+   Use these classes when manually wrapping keywords or when
+   using the highlight_keywords.py script
+   ============================================ */
+
+/* === TOPIC 1: OFFSHORE INFRASTRUCTURE (Blue) === */
+.kw-offshore,
+.kw-infrastructure,
+.kw-wind-farm,
+.kw-other-offshore-infrastructures {
+    color: var(--kw-blue-fg) !important;
+    font-weight: 600 !important;
+    background-color: var(--kw-blue-bg) !important;
+    border-radius: 2px !important;
+    padding: 0 2px !important;
+}
+
+/* === TOPIC 2: MARITIME VESSELS & STRUCTURES (Cyan) === */
+.kw-bridge,
+.kw-ship,
+.kw-vessel {
+    color: var(--kw-cyan-fg) !important;
+    font-weight: 600 !important;
+    background-color: var(--kw-cyan-bg) !important;
+    border-radius: 2px !important;
+    padding: 0 2px !important;
+}
+
+/* === TOPIC 3: SAFETY & INCIDENTS (Red) === */
+.kw-collision,
+.kw-accident {
+    color: var(--kw-red-fg) !important;
+    font-weight: 600 !important;
+    background-color: var(--kw-red-bg) !important;
+    border-radius: 2px !important;
+    padding: 0 2px !important;
+}
+
+/* === TOPIC 4: NAUTICAL & NAVIGATION (Purple) === */
+.kw-nautical {
+    color: var(--kw-purple-fg) !important;
+    font-weight: 600 !important;
+    background-color: var(--kw-purple-bg) !important;
+    border-radius: 2px !important;
+    padding: 0 2px !important;
+}
+
+/* === TOPIC 5: RISK ASSESSMENT (Green) === */
+.kw-risk,
+.kw-probability,
+.kw-chance,
+.kw-assess,
+.kw-navigation-risk-assessment {
+    color: var(--kw-green-fg) !important;
+    font-weight: 600 !important;
+    background-color: var(--kw-green-bg) !important;
+    border-radius: 2px !important;
+    padding: 0 2px !important;
+}
+
+/* === TOPIC 6: ANALYSIS & PREDICTION (Orange) === */
+.kw-model,
+.kw-predict,
+.kw-analyse {
+    color: var(--kw-orange-fg) !important;
+    font-weight: 600 !important;
+    background-color: var(--kw-orange-bg) !important;
+    border-radius: 2px !important;
+    padding: 0 2px !important;
+}
+
+/* === TOPIC 7: IRRELEVANT (Gray) === */
+.kw-irrelevant {
+    color: var(--kw-gray-fg) !important;
+    font-weight: 600 !important;
+    background-color: var(--kw-gray-bg) !important;
+    border-radius: 2px !important;
+    padding: 0 2px !important;
+}
+
+
+/* ============================================
+   DARK MODE SUPPORT
+   ============================================ */
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        /* More opaque backgrounds for better visibility in dark mode */
+        --kw-blue-bg: rgba(30, 144, 255, 0.25);
+        --kw-cyan-bg: rgba(0, 188, 212, 0.25);
+        --kw-red-bg: rgba(211, 47, 47, 0.25);
+        --kw-purple-bg: rgba(156, 39, 176, 0.25);
+        --kw-green-bg: rgba(56, 142, 60, 0.25);
+        --kw-orange-bg: rgba(245, 124, 0, 0.25);
+        --kw-gray-bg: rgba(158, 158, 158, 0.25);
+    }
+}
+
+
+/* ============================================
+   AUTOMATIC HIGHLIGHTING (Live Preview Mode)
+   Targets CodeMirror spans directly
+   ============================================ */
+
+/* Topic 1: Offshore Infrastructure (Blue) */
+.cm-line span[data-text*="offshore"] {
+    color: var(--kw-blue-fg) !important;
+    font-weight: 600 !important;
+    background-color: var(--kw-blue-bg) !important;
+    border-radius: 2px !important;
+    padding: 0 2px !important;
+}
+
+.cm-line span[data-text*="infrastructure"] {
+    color: var(--kw-blue-fg) !important;
+    font-weight: 600 !important;
+    background-color: var(--kw-blue-bg) !important;
+    border-radius: 2px !important;
+    padding: 0 2px !important;
+}
+
+.cm-line span[data-text*="wind"] + span[data-text*="farm"] {
+    color: var(--kw-blue-fg) !important;
+    font-weight: 600 !important;
+    background-color: var(--kw-blue-bg) !important;
+    border-radius: 2px !important;
+    padding: 0 2px !important;
+}
+
+/* Topic 2: Maritime Vessels & Structures (Cyan) */
+.cm-line span[data-text*="bridge"] {
+    color: var(--kw-cyan-fg) !important;
+    font-weight: 600 !important;
+    background-color: var(--kw-cyan-bg) !important;
+    border-radius: 2px !important;
+    padding: 0 2px !important;
+}
+
+.cm-line span[data-text*="ship"] {
+    color: var(--kw-cyan-fg) !important;
+    font-weight: 600 !important;
+    background-color: var(--kw-cyan-bg) !important;
+    border-radius: 2px !important;
+    padding: 0 2px !important;
+}
+
+.cm-line span[data-text*="vessel"] {
+    color: var(--kw-cyan-fg) !important;
+    font-weight: 600 !important;
+    background-color: var(--kw-cyan-bg) !important;
+    border-radius: 2px !important;
+    padding: 0 2px !important;
+}
+
+/* Topic 3: Safety & Incidents (Red) */
+.cm-line span[data-text*="collision"] {
+    color: var(--kw-red-fg) !important;
+    font-weight: 600 !important;
+    background-color: var(--kw-red-bg) !important;
+    border-radius: 2px !important;
+    padding: 0 2px !important;
+}
+
+.cm-line span[data-text*="accident"] {
+    color: var(--kw-red-fg) !important;
+    font-weight: 600 !important;
+    background-color: var(--kw-red-bg) !important;
+    border-radius: 2px !important;
+    padding: 0 2px !important;
+}
+
+/* Topic 5: Risk Assessment (Green) */
+.cm-line span[data-text*="risk"] {
+    color: var(--kw-green-fg) !important;
+    font-weight: 600 !important;
+    background-color: var(--kw-green-bg) !important;
+    border-radius: 2px !important;
+    padding: 0 2px !important;
+}
+
+.cm-line span[data-text*="assessment"] {
+    color: var(--kw-green-fg) !important;
+    font-weight: 600 !important;
+    background-color: var(--kw-green-bg) !important;
+    border-radius: 2px !important;
+    padding: 0 2px !important;
+}
+
+
+/* ============================================
+   UTILITY STYLES
+   ============================================ */
+
+/* Remove extra padding from consecutive highlights */
+span.kw-offshore + span.kw-farm,
+span.kw-wind + span.kw-farm {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+}
+
+/* Ensure highlights work in editor and preview */
+.cm-editor span[kw-offshore],
+.cm-editor span[kw-infrastructure],
+.cm-editor span[kw-wind-farm],
+.cm-editor span[kw-other-offshore-infrastructures],
+.cm-editor span[kw-bridge],
+.cm-editor span[kw-ship],
+.cm-editor span[kw-vessel],
+.cm-editor span[kw-collision],
+.cm-editor span[kw-accident],
+.cm-editor span[kw-nautical],
+.cm-editor span[kw-risk],
+.cm-editor span[kw-probability],
+.cm-editor span[kw-chance],
+.cm-editor span[kw-assess],
+.cm-editor span[kw-navigation-risk-assessment],
+.cm-editor span[kw-model],
+.cm-editor span[kw-predict],
+.cm-editor span[kw-analyse],
+.cm-editor span[kw-irrelevant],
+.markdown-preview-view span[kw-offshore],
+.markdown-preview-view span[kw-infrastructure],
+.markdown-preview-view span[kw-wind-farm],
+.markdown-preview-view span[kw-other-offshore-infrastructures],
+.markdown-preview-view span[kw-bridge],
+.markdown-preview-view span[kw-ship],
+.markdown-preview-view span[kw-vessel],
+.markdown-preview-view span[kw-collision],
+.markdown-preview-view span[kw-accident],
+.markdown-preview-view span[kw-nautical],
+.markdown-preview-view span[kw-risk],
+.markdown-preview-view span[kw-probability],
+.markdown-preview-view span[kw-chance],
+.markdown-preview-view span[kw-assess],
+.markdown-preview-view span[kw-navigation-risk-assessment],
+.markdown-preview-view span[kw-model],
+.markdown-preview-view span[kw-predict],
+.markdown-preview-view span[kw-analyse],
+.markdown-preview-view span[kw-irrelevant] {
+    /* Inherit styles from class definitions */
+}
+
+
+/* ============================================
+   INSTRUCTIONS
+   ============================================ */
+
+/*
+ * HOW TO USE:
+ * 
+ * Option 1 (Recommended - Automatic):
+ *   1. Run: python highlight_keywords.py /path/to/your/vault
+ *   2. Enable this CSS snippet in Obsidian
+ *   3. All keywords will be automatically wrapped and highlighted
+ * 
+ * Option 2 (Manual):
+ *   Wrap keywords in spans with the appropriate kw- class:
+ *   <span class="kw-offshore">offshore</span>
+ *   <span class="kw-collision">collision</span>
+ *   <span class="kw-risk">risk</span>
+ *   <span class="kw-navigation-risk-assessment">navigation risk assessment</span>
+ * 
+ * Option 3 (Semi-automatic):
+ *   Use Find & Replace (Ctrl+H) in Obsidian to wrap keywords
+ * 
+ * Available keyword classes by topic:
+ * 
+ * Topic 1 (Blue) - Offshore Infrastructure:
+ *   kw-offshore, kw-infrastructure, kw-wind-farm, kw-other-offshore-infrastructures
+ * 
+ * Topic 2 (Cyan) - Maritime Vessels & Structures:
+ *   kw-bridge, kw-ship, kw-vessel
+ * 
+ * Topic 3 (Red) - Safety & Incidents:
+ *   kw-collision, kw-accident
+ * 
+ * Topic 4 (Purple) - Nautical & Navigation:
+ *   kw-nautical
+ * 
+ * Topic 5 (Green) - Risk Assessment:
+ *   kw-risk, kw-probability, kw-chance, kw-assess, kw-navigation-risk-assessment
+ * 
+ * Topic 6 (Orange) - Analysis & Prediction:
+ *   kw-model, kw-predict, kw-analyse
+ * 
+ * Topic 7 (Gray) - Irrelevant (for filtering):
+ *   kw-irrelevant
+ */
