@@ -48,7 +48,7 @@ def analyze_paper(agent, title: str, abstract: str, questions: Dict[str,str]) ->
     answers = {}
     for q in questions.keys():
         response = chain.invoke({"title": title, "abstract": abstract, "question": questions[q]})
-        answers[q] = response.strip()
+        answers[q + "_" + agent] = response.strip()
     return answers
 
 
