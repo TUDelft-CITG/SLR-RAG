@@ -47,7 +47,9 @@ STEMMING_DICT = {
     "nautical": ["nautical", "maritime", "navigation", "navigational", "navigate"],
 
     # === 5. RISK ASSESSMENT ===
+    "safety" : ["safety", "safe"],
     "risk": ["risk", "risks", "risky"],
+
     "probability": ["probability", "probabilities", "probable", "probably", "probabilistic"],
     "chance": ["chance", "chances", "likelihood", "likely", "unlikely"],
     "assess": ["assess", "assessment", "assessments", "assessing", "assessed"],

@@ -84,6 +84,47 @@ def sanitize_filename(title: str) -> str:
     return filename
 
 
+def slugify(title: str) -> str:
+    """
+    Convert a paper title to a URL-friendly slug.
+
+    Args:
+        title: The paper title
+        
+    Returns:
+        A slugified version of the title (lowercase, hyphens instead of spaces, special chars removed)
+    """
+    if not title or pd.isna(title):
+        return "untitled"
+    
+    # Convert to string, lowercase, and strip
+    slug = str(title).strip().lower()
+    
+    # Replace spaces with hyphens
+    slug = slug.replace(' ', '-')
+    
+    # Remove special characters and replace with empty or hyphen
+    # Characters to remove completely
+    for char in ['/', '\\', ':', '*', '?', '"', '<', '>', '|', '–', '—', '‘', '’', ',', ';', '(', ')', '[', ']', '{', '}']:
+        slug = slug.replace(char, '')
+    
+    # Replace multiple hyphens with single hyphen
+    while '--' in slug:
+        slug = slug.replace('--', '-')
+    
+    # Remove trailing/leading hyphens
+    slug = slug.rstrip('-').lstrip('-')
+    
+    # Limit length to 150 characters
+    slug = slug[:150]
+    
+    # If empty after all processing, return untitled
+    if not slug:
+        return "untitled"
+    
+    return slug
+
+
 def format_field_value(field_name: str, value: Any) -> str:
     """
     Format a field value for markdown display.
@@ -224,7 +265,8 @@ def write_paper_to_markdown(
     
     # Get title and create filename
     title = paper.get("title", "Untitled")
-    filename = sanitize_filename(title) + ".md"
+    slug = slugify(title)
+    filename = slug + ".md"
     filepath = os.path.join(output_dir, filename)
     
     # Ensure manual_review field exists
@@ -237,7 +279,7 @@ def write_paper_to_markdown(
     # Add YAML frontmatter with metadata
     if add_yaml_frontmatter:
         lines.append("---")
-        lines.append(f"title: \"{title}\"")
+        lines.append(f"title: \"{slug}\"")
         
         # Add DOI
         doi = paper.get("doi", "")
@@ -277,43 +319,41 @@ def write_paper_to_markdown(
     lines.append(f"# {highlighted_title}")
     lines.append("")
     
-    # Add keywords and topics from all databases (just before abstract)
-    all_keywords = []
-    all_topics = []
-    
-    # Collect keywords from all database fields
+    # Collect topics from all database fields
+    db_topics = {}
+    db_keywords = {}
+
     for db in ["scopus", "openalex", "lens", "dimensions"]:
-        keywords_field = f"keywords_{db}"
-        if keywords_field in paper:
-            keywords = paper.get(keywords_field, "")
-            if keywords and keywords != "N/A" and isinstance(keywords, str):
-                kw_list = [k.strip() for k in keywords.split('|') if k.strip()]
-                all_keywords.extend(kw_list)
-        
+        db_topics[db] = []
+        db_keywords[db] = []
+
+    for db in ["scopus", "openalex", "lens", "dimensions"]:
         topics_field = f"topic_{db}"
         if topics_field in paper:
             topics = paper.get(topics_field, "")
             if topics and topics != "N/A" and isinstance(topics, str):
                 topic_list = [t.strip() for t in topics.split('|') if t.strip()]
-                all_topics.extend(topic_list)
+                db_topics[db].extend(topic_list)
         
-        fields_field = f"fields_{db}"
-        if fields_field in paper and db == "openalex":
-            fields = paper.get(fields_field, "")
-            if fields and fields != "N/A" and isinstance(fields, str):
-                field_list = [f.strip() for f in fields.split('|') if f.strip()]
-                all_topics.extend(field_list)
+        keywords_field = f"keywords_{db}"
+        if keywords_field in paper:
+            keywords = paper.get(keywords_field, "")
+            if keywords and keywords != "N/A" and isinstance(keywords, str):
+                kw_list = [k.strip() for k in keywords.split('|') if k.strip()]
+                db_keywords[db].extend(kw_list)
+
+    # Add topics (Openalex, Lens, Dimensions) - skip Scopus as per requirement
+    topics_has_content = False
+    for db in ["openalex", "lens", "dimensions"]:
+        if db_topics[db]:
+            topics_has_content = True
+            break
     
-    # Add keywords and topics if any exist
-    if all_keywords or all_topics:
-        keywords_line_parts = []
-        if all_keywords:
-            keywords_line_parts.extend(f"#{kw.replace(' ', '_')}" for kw in all_keywords)
-        if all_topics:
-            keywords_line_parts.extend(all_topics)
-        if keywords_line_parts:
-            lines.append(", ".join(keywords_line_parts))
-            lines.append("")
+    if topics_has_content:
+        for db in ["openalex", "lens", "dimensions"]:
+            if db_topics[db]:
+                lines.append(f"**Topic {db.capitalize()}** : {', '.join(db_topics[db])}")
+        lines.append("")
     
     # Add abstract (most important field)
     abstract = paper.get("abstract", "")
@@ -322,6 +362,22 @@ def write_paper_to_markdown(
         lines.append("")
         highlighted_abstract = highlight_keywords_in_text(abstract)
         lines.append(highlighted_abstract)
+        lines.append("")
+
+    # Add keywords from all databases
+    keywords_has_content = False
+    for db in ["scopus", "openalex", "lens", "dimensions"]:
+        if db_keywords[db]:
+            keywords_has_content = True
+            break
+    
+    if keywords_has_content:
+        lines.append("## Keywords")
+        lines.append("")
+        for db in ["scopus", "openalex", "lens", "dimensions"]:
+            if db_keywords[db]:
+                keywords_as_tags = [f"#{kw.replace(' ', '_')}" for kw in db_keywords[db]]
+                lines.append(f"**{db.capitalize()}** : {', '.join(keywords_as_tags)}")
         lines.append("")
     
     # Group remaining fields by category
@@ -395,7 +451,8 @@ def write_paper_into_markdown(
         
         # Create filename from title
         title = paper_dict.get("title", f"paper_{idx}")
-        filename = sanitize_filename(title) + ".md"
+        slug = slugify(title)
+        filename = slug + ".md"
         filepath = os.path.join(output_dir, filename)
         
         # Check if file exists and overwrite is False
