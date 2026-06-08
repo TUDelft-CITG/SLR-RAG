@@ -225,12 +225,12 @@ REFERENCE_PAPERS = [
 ]
 
 
-FIRST_ROUND_QUESTIONS = [
-    "This paper discusses about risk assessment or risk analysis in the context of nautical safety for ships or vessels.",
-    "This paper talks about nautical safety around offshore infrastructures, like offshore windfarms.",
-    "This paper talks about a method to estimate the probability or risk of collision or allision of ships.",
-    "This paper includes a quantitative model.",
-]
+FIRST_ROUND_QUESTIONS = {
+    "risk_nautical": "This paper discusses about risk assessment or risk analysis in the context of nautical safety for ships or vessels.",
+    "nautical_offshore": "This paper is about nautical safety around offshore infrastructures, like offshore windfarms.",
+    "probability_collision": "This paper includes a method to estimate the probability or risk of collision or allision of ships.",
+    "quantitative_model": "This paper includes a quantitative model.",
+}
 
 
 # TODO : make global name (ASK an LLM)
@@ -258,4 +258,4 @@ SECOND_ROUND_QUESTIONS = {
     "": {},
 }
 
-OLLAMA_MODELS = ["llama3.1"]
+OLLAMA_MODELS = ["llama3.1", "ministral-3:3b", "granite4.1:3b"]

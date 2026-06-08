@@ -6,7 +6,7 @@ from datetime import datetime
 from pandera.typing import Series
 
 # --- User-defined variables ---
-AUTOMATICALLY_OVERWRITE = False
+AUTOMATICALLY_OVERWRITE = True
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 PATH_INPUT = PROJECT_ROOT / Path("data/export_databases/")
