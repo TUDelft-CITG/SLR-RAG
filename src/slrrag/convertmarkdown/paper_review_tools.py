@@ -224,8 +224,7 @@ def highlight_keywords_in_text(text: str) -> str:
 
 def write_paper_to_markdown(
     paper: Dict[str, Any],
-    output_dir: str,
-    template_path: Optional[str] = None,
+    output_file: Path,
     add_yaml_frontmatter: bool = True,
 ) -> str:
     """
@@ -233,20 +232,14 @@ def write_paper_to_markdown(
 
     Args:
         paper: Dictionary containing paper data
-        output_dir: Directory to save the markdown file
-        template_path: Optional path to a custom template file
+        output_file: Directory to save the markdown file
         add_yaml_frontmatter: Whether to add YAML frontmatter
 
     Returns:
         Path to the created markdown file
     """
-    # Create output directory if it doesn't exist
-    Path(output_dir).mkdir(parents=True, exist_ok=True)
-
     # Get title and create filename
     title = paper.get("title", "Untitled")
-    filename = slugify(title, limit=100) + ".md"
-    filepath = os.path.join(output_dir, filename)
 
     # Ensure manual_review field exists
     if MANUAL_REVIEW_FIELD not in paper:
@@ -404,16 +397,15 @@ def write_paper_to_markdown(
             lines.append("")
 
     # Write to file
-    with open(filepath, "w", encoding="utf-8") as f:
+    with open(output_file, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
 
-    return filepath
+    return output_file
 
 
-def write_paper_into_markdown(
+def write_series_papers_into_markdown(
     df: pd.DataFrame,
     output_dir: str = "./papers",
-    template_path: Optional[str] = None,
     add_yaml_frontmatter: bool = True,
     overwrite: bool = False,
     batch_size: int = 50,
@@ -427,7 +419,6 @@ def write_paper_into_markdown(
     Args:
         df: pandas DataFrame containing paper data with columns as described
         output_dir: Directory to save markdown files (default: ./papers)
-        template_path: Optional path to a custom template file
         add_yaml_frontmatter: Whether to add YAML frontmatter (default: True)
         overwrite: Whether to overwrite existing files (default: False)
         batch_size: Number of papers per batch folder (default: 50)
@@ -482,106 +473,13 @@ def write_paper_into_markdown(
             # Write the paper
             created_path = write_paper_to_markdown(
                 paper_dict,
-                output_dir=batch_dir,
-                template_path=template_path,
+                output_file=filepath,
                 add_yaml_frontmatter=add_yaml_frontmatter,
             )
             created_files.append(created_path)
 
     print(f"\nTotal files created: {len(created_files)} in {num_batches} batch folders")
     return created_files
-
-
-def update_paper_review_status(markdown_file: str, status: str) -> bool:
-    """
-    Update the manual_review status in a markdown file.
-
-    This function can be called programmatically to update the classification.
-
-    Args:
-        markdown_file: Path to the markdown file
-        status: One of "keep", "removed", "not-sure", or None
-
-    Returns:
-        True if update was successful, False otherwise
-    """
-    if status not in ["keep", "removed", "not-sure", None]:
-        raise ValueError(
-            f"Invalid status: {status}. Must be 'keep', 'removed', 'not-sure', or None"
-        )
-
-    try:
-        with open(markdown_file, "r", encoding="utf-8") as f:
-            content = f.read()
-
-        # Update YAML frontmatter
-        if "---" in content:
-            lines = content.split("\n")
-            new_lines = []
-            in_frontmatter = False
-            updated = False
-
-            for line in lines:
-                if line.strip() == "---":
-                    if in_frontmatter:
-                        # Closing frontmatter
-                        in_frontmatter = False
-                    else:
-                        # Opening frontmatter
-                        in_frontmatter = True
-                        new_lines.append(line)
-                        continue
-
-                if in_frontmatter:
-                    if line.strip().startswith("manual_review:"):
-                        if status is None:
-                            new_lines.append("manual_review: ")
-                        else:
-                            new_lines.append(f"manual_review: {status}")
-                        updated = True
-                    else:
-                        new_lines.append(line)
-                else:
-                    new_lines.append(line)
-
-            if not updated:
-                # Add manual_review field
-                for i, line in enumerate(new_lines):
-                    if line.strip() == "---" and i > 0:
-                        new_lines.insert(
-                            i, f"manual_review: {status if status else ''}"
-                        )
-                        break
-
-            content = "\n".join(new_lines)
-
-        # Update the status badge in the content
-        if status == "keep":
-            content = content.replace("⚪ NOT REVIEWED", "🟢 KEEP")
-            content = content.replace("🔴 REMOVED", "🟢 KEEP")
-            content = content.replace("🟡 NOT SURE", "🟢 KEEP")
-            content = content.replace("🏷️ **Status:** 🟢 KEEP", "🏷️ **Status:** 🟢 KEEP")
-        elif status == "removed":
-            content = content.replace("⚪ NOT REVIEWED", "🔴 REMOVED")
-            content = content.replace("🟢 KEEP", "🔴 REMOVED")
-            content = content.replace("🟡 NOT SURE", "🔴 REMOVED")
-        elif status == "not-sure":
-            content = content.replace("⚪ NOT REVIEWED", "🟡 NOT SURE")
-            content = content.replace("🟢 KEEP", "🟡 NOT SURE")
-            content = content.replace("🔴 REMOVED", "🟡 NOT SURE")
-        else:
-            content = content.replace("🟢 KEEP", "⚪ NOT REVIEWED")
-            content = content.replace("🔴 REMOVED", "⚪ NOT REVIEWED")
-            content = content.replace("🟡 NOT SURE", "⚪ NOT REVIEWED")
-
-        with open(markdown_file, "w", encoding="utf-8") as f:
-            f.write(content)
-
-        return True
-
-    except Exception as e:
-        print(f"Error updating {markdown_file}: {e}")
-        return False
 
 
 def get_next_paper_file(current_file: str, output_dir: str) -> Optional[str]:
@@ -649,6 +547,6 @@ if __name__ == "__main__":
 
     # Create markdown files
     print(f"Processing {len(df)} papers from {input_csv}...")
-    created_files = write_paper_into_markdown(df, output_dir=output_dir)
+    created_files = write_series_papers_into_markdown(df, output_dir=output_dir)
 
     print(f"\nDone! Created {len(created_files)} markdown files in {output_dir}")

@@ -26,9 +26,8 @@ from slrrag.convertmarkdown.paper_review_tools import (
     slugify,
     format_field_value,
     highlight_keywords_in_text,
-    write_paper_into_markdown,
+    write_series_papers_into_markdown,
     write_paper_to_markdown,
-    update_paper_review_status,
 )
 
 
@@ -36,6 +35,12 @@ from slrrag.convertmarkdown.paper_review_tools import (
 # Fixtures
 # =============================================================================
 
+
+@pytest.fixture
+def temp_output_file():
+    """Create a temporary output directory."""
+    with tempfile.NamedTemporaryFile() as temp_file:
+        yield temp_file.name
 
 @pytest.fixture
 def temp_output_dir():
@@ -409,18 +414,17 @@ class TestHighlightKeywordsInText:
 class TestWritePaperToMarkdown:
     """Tests for the write_paper_to_markdown function."""
 
-    def test_creates_file(self, temp_output_dir, sample_paper_dict):
+    def test_creates_file(self, temp_output_file, sample_paper_dict):
         """Test that a file is created."""
         filepath = write_paper_to_markdown(
-            sample_paper_dict, output_dir=temp_output_dir
+            sample_paper_dict, output_file=temp_output_file
         )
         assert os.path.exists(filepath)
-        assert filepath.endswith(".md")
 
-    def test_file_contains_title(self, temp_output_dir, sample_paper_dict):
+    def test_file_contains_title(self, temp_output_file, sample_paper_dict):
         """Test that the file contains the title."""
         filepath = write_paper_to_markdown(
-            sample_paper_dict, output_dir=temp_output_dir
+            sample_paper_dict, output_file=temp_output_file
         )
 
         with open(filepath, "r", encoding="utf-8") as f:
@@ -432,10 +436,10 @@ class TestWritePaperToMarkdown:
         assert '<span class="kw-risk">Risk</span>' in content
         assert '<span class="kw-assess">Assessment</span>' in content
 
-    def test_file_contains_abstract(self, temp_output_dir, sample_paper_dict):
+    def test_file_contains_abstract(self, temp_output_file, sample_paper_dict):
         """Test that the file contains the abstract."""
         filepath = write_paper_to_markdown(
-            sample_paper_dict, output_dir=temp_output_dir
+            sample_paper_dict, output_file=temp_output_file
         )
 
         with open(filepath, "r", encoding="utf-8") as f:
@@ -449,10 +453,10 @@ class TestWritePaperToMarkdown:
         assert '<span class="kw-wind-farm">wind farms</span>' in content
         assert '<span class="kw-assess">assess</span>' in content
 
-    def test_file_contains_doi(self, temp_output_dir, sample_paper_dict):
+    def test_file_contains_doi(self, temp_output_file, sample_paper_dict):
         """Test that the file contains the DOI in frontmatter."""
         filepath = write_paper_to_markdown(
-            sample_paper_dict, output_dir=temp_output_dir
+            sample_paper_dict, output_file=temp_output_file
         )
 
         with open(filepath, "r", encoding="utf-8") as f:
@@ -461,10 +465,10 @@ class TestWritePaperToMarkdown:
         # DOI is now in frontmatter
         assert 'doi: "10.1234/abc"' in content
 
-    def test_yaml_frontmatter(self, temp_output_dir, sample_paper_dict):
+    def test_yaml_frontmatter(self, temp_output_file, sample_paper_dict):
         """Test that YAML frontmatter is included."""
         filepath = write_paper_to_markdown(
-            sample_paper_dict, output_dir=temp_output_dir, add_yaml_frontmatter=True
+            sample_paper_dict, output_file=temp_output_file, add_yaml_frontmatter=True
         )
 
         with open(filepath, "r", encoding="utf-8") as f:
@@ -473,10 +477,10 @@ class TestWritePaperToMarkdown:
         assert "---" in content
         assert 'title: "offshore-wind-farm-risk-assessment"' in content
 
-    def test_no_yaml_frontmatter(self, temp_output_dir, sample_paper_dict):
+    def test_no_yaml_frontmatter(self, temp_output_file, sample_paper_dict):
         """Test that YAML frontmatter can be disabled."""
         filepath = write_paper_to_markdown(
-            sample_paper_dict, output_dir=temp_output_dir, add_yaml_frontmatter=False
+            sample_paper_dict, output_file=temp_output_file, add_yaml_frontmatter=False
         )
 
         with open(filepath, "r", encoding="utf-8") as f:
@@ -487,10 +491,10 @@ class TestWritePaperToMarkdown:
         # The file should start with the title header
         assert content.startswith("#")
 
-    def test_highlighted_title(self, temp_output_dir, sample_paper_dict):
+    def test_highlighted_title(self, temp_output_file, sample_paper_dict):
         """Test that title contains highlighted keywords."""
         filepath = write_paper_to_markdown(
-            sample_paper_dict, output_dir=temp_output_dir
+            sample_paper_dict, output_file=temp_output_file
         )
 
         with open(filepath, "r", encoding="utf-8") as f:
@@ -510,10 +514,10 @@ class TestWritePaperToMarkdown:
             or '<span class="kw-risk">risk</span>' in content.lower()
         )
 
-    def test_highlighted_abstract(self, temp_output_dir, sample_paper_dict):
+    def test_highlighted_abstract(self, temp_output_file, sample_paper_dict):
         """Test that abstract contains highlighted keywords."""
         filepath = write_paper_to_markdown(
-            sample_paper_dict, output_dir=temp_output_dir
+            sample_paper_dict, output_file=temp_output_file
         )
 
         with open(filepath, "r", encoding="utf-8") as f:
@@ -540,12 +544,12 @@ class TestWritePaperToMarkdown:
 # =============================================================================
 
 
-class TestWritePaperIntoMarkdown:
+class TestWriteSeriesPapersIntoMarkdown:
     """Tests for the write_paper_into_markdown function."""
 
     def test_creates_multiple_files(self, temp_output_dir, sample_dataframe):
         """Test that multiple files are created from DataFrame."""
-        created_files = write_paper_into_markdown(
+        created_files = write_series_papers_into_markdown(
             sample_dataframe, output_dir=temp_output_dir
         )
 
@@ -555,10 +559,10 @@ class TestWritePaperIntoMarkdown:
     def test_skips_existing_files(self, temp_output_dir, sample_dataframe):
         """Test that existing files are skipped when overwrite=False."""
         # First create files
-        write_paper_into_markdown(sample_dataframe, output_dir=temp_output_dir)
+        write_series_papers_into_markdown(sample_dataframe, output_dir=temp_output_dir)
 
         # Try again with overwrite=False - should skip all
-        created_files = write_paper_into_markdown(
+        created_files = write_series_papers_into_markdown(
             sample_dataframe, output_dir=temp_output_dir, overwrite=False
         )
 
@@ -567,81 +571,15 @@ class TestWritePaperIntoMarkdown:
     def test_overwrites_existing_files(self, temp_output_dir, sample_dataframe):
         """Test that existing files are overwritten when overwrite=True."""
         # First create files
-        write_paper_into_markdown(sample_dataframe, output_dir=temp_output_dir)
+        write_series_papers_into_markdown(sample_dataframe, output_dir=temp_output_dir)
 
         # Try again with overwrite=True - should recreate all
-        created_files = write_paper_into_markdown(
+        created_files = write_series_papers_into_markdown(
             sample_dataframe, output_dir=temp_output_dir, overwrite=True
         )
 
         assert len(created_files) == 3
 
-
-# =============================================================================
-# Tests for update_paper_review_status function
-# =============================================================================
-
-
-class TestUpdatePaperReviewStatus:
-    """Tests for the update_paper_review_status function."""
-
-    def test_updates_status_keep(self, temp_output_dir, sample_paper_dict):
-        """Test updating status to keep."""
-        # Create a file
-        filepath = write_paper_to_markdown(
-            sample_paper_dict, output_dir=temp_output_dir
-        )
-
-        # Update status
-        result = update_paper_review_status(filepath, "keep")
-        assert result is True
-
-        # Check file - status is now only in frontmatter
-        with open(filepath, "r", encoding="utf-8") as f:
-            content = f.read()
-
-        assert "manual_review: keep" in content
-
-    def test_updates_status_removed(self, temp_output_dir, sample_paper_dict):
-        """Test updating status to removed."""
-        filepath = write_paper_to_markdown(
-            sample_paper_dict, output_dir=temp_output_dir
-        )
-
-        result = update_paper_review_status(filepath, "removed")
-        assert result is True
-
-        with open(filepath, "r", encoding="utf-8") as f:
-            content = f.read()
-
-        assert "manual_review: removed" in content
-
-    def test_updates_status_not_sure(self, temp_output_dir, sample_paper_dict):
-        """Test updating status to not-sure."""
-        filepath = write_paper_to_markdown(
-            sample_paper_dict, output_dir=temp_output_dir
-        )
-
-        result = update_paper_review_status(filepath, "not-sure")
-        assert result is True
-
-        with open(filepath, "r", encoding="utf-8") as f:
-            content = f.read()
-
-        assert "manual_review: not-sure" in content
-
-    def test_invalid_status(self):
-        """Test that invalid status raises error."""
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
-            f.write("# Test")
-            f.flush()
-            temp_path = f.name
-
-        try:
-            with pytest.raises(ValueError):
-                update_paper_review_status(temp_path, "invalid")
-        finally:
-            os.unlink(temp_path)
 
 
 # =============================================================================
