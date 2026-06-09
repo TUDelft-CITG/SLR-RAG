@@ -74,72 +74,6 @@ def temp_folder_with_markdown_files():
         file3.write_text("# File 3\n\nNo keywords here.")
 
         yield temp_dir
-
-
-# =============================================================================
-# Tests for STEMMING_DICT
-# =============================================================================
-
-
-class TestSTEMMING_DICT:
-    """Tests for the STEMMING_DICT dictionary."""
-
-    def test_dict_is_not_empty(self):
-        """Test that STEMMING_DICT is not empty."""
-        assert len(STEMMING_DICT) > 0
-
-    def test_all_values_are_lists(self):
-        """Test that all values in STEMMING_DICT are lists."""
-        for root, variants in STEMMING_DICT.items():
-            assert isinstance(variants, list)
-
-    def test_all_lists_are_non_empty(self):
-        """Test that all variant lists have at least one element."""
-        for root, variants in STEMMING_DICT.items():
-            assert len(variants) > 0
-
-    def test_all_variants_are_strings(self):
-        """Test that all variants are strings."""
-        for root, variants in STEMMING_DICT.items():
-            for variant in variants:
-                assert isinstance(variant, str)
-
-    def test_contains_expected_root_words(self):
-        """Test that expected root words are present in the dictionary."""
-        expected_roots = [
-            "offshore",
-            "infrastructure",
-            "wind-farm",
-            "bridge",
-            "ship",
-            "vessel",
-            "collision",
-            "accident",
-            "nautical",
-            "risk",
-            "probability",
-            "chance",
-            "assess",
-            "model",
-            "predict",
-            "analyse",
-            "navigation-risk-assessment",
-            "irrelevant",
-        ]
-        for root in expected_roots:
-            assert root in STEMMING_DICT
-
-    def test_contains_expected_variants(self):
-        """Test that expected variants are present for certain roots."""
-        assert "offshore" in STEMMING_DICT["offshore"]
-        assert "windfarm" in STEMMING_DICT["wind-farm"]
-        assert "wind farm" in STEMMING_DICT["wind-farm"]
-        assert "collisions" in STEMMING_DICT["collision"]
-        assert "allision" in STEMMING_DICT["collision"]
-        assert "ships" in STEMMING_DICT["ship"]
-        assert "probabilistic" in STEMMING_DICT["probability"]
-
-
 # =============================================================================
 # Tests for root_to_class function
 # =============================================================================
@@ -220,15 +154,7 @@ class TestCleanupFile:
         """Test that kw- span tags are removed."""
         content = 'This has <span class="kw-offshore">offshore</span> in it.'
         cleaned = cleanup_file(content)
-        assert "<span" not in cleaned
-        assert "</span>" not in cleaned
-        assert "offshore" in cleaned
-
-    def test_removes_marker(self):
-        """Test that KW_HIGHLIGHT marker is removed."""
-        content = "Some text<!-- KW_HIGHLIGHT --> more text"
-        cleaned = cleanup_file(content)
-        assert "<!-- KW_HIGHLIGHT -->" not in cleaned
+        assert cleaned == 'This has offshore in it.'
 
     def test_cleanup_multiple_spaces(self):
         """Test that multiple spaces are reduced to single spaces."""

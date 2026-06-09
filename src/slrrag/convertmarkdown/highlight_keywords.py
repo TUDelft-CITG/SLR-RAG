@@ -140,8 +140,7 @@ def cleanup_file(content):
     content = re.sub(
         r'<span class="kw-[^"]+">(.*?)</span>', r"\1", content, flags=re.DOTALL
     )
-    # Remove marker
-    content = content.replace("<!-- KW_HIGHLIGHT -->", "")
+
     # Clean up extra spaces
     content = re.sub(r" +", " ", content)
     content = re.sub(r"\n\n+", "\n\n", content)
