@@ -16,7 +16,7 @@ from typing import List, Dict, Any
 from tqdm import tqdm
 
 # Import the keyword highlighting functionality
-from .highlight_keywords import highlight_keywords_in_text
+from slrrag.convertmarkdown.highlight_keywords import highlight_keywords_in_text
 
 
 # Configuration
@@ -159,18 +159,6 @@ def write_paper_to_markdown(
     lines.append(f"# {highlighted_title}")
     lines.append("")
 
-    # Collect topics from all database fields
-    for prefix in ["topic", "keywords", "fields", "relevance_order", "relevance"]:
-        lines.append(f"## {prefix}")
-        for db in ["scopus", "openalex", "lens", "dimensions"]:
-            prefix_db = f"{prefix}_{db}"
-            if prefix_db in paper:
-                lines.append("**" + db + "**:")
-                topics = paper.get(prefix_db, "")
-                if not pd.isna(topics) and topics != "N/A" and isinstance(topics, str):
-                    topic_list = [t.strip() for t in topics.split("|") if t.strip()]
-                    lines.extend(topic_list)
-
     # Add abstract (most important field)
     abstract = paper.get("abstract", "")
     if not pd.isna(abstract) and abstract != "N/A":
@@ -179,6 +167,16 @@ def write_paper_to_markdown(
         highlighted_abstract = highlight_keywords_in_text(abstract)
         lines.append(highlighted_abstract)
         lines.append("")
+
+    # Collect topics from all database fields
+    for prefix in ["topic", "keywords", "fields", "relevance_order", "relevance"]:
+        lines.append(f"## {prefix}")
+        for db in ["scopus", "openalex", "lens", "dimensions"]:
+            prefix_db = f"{prefix}_{db}"
+            if prefix_db in paper:
+                topics = paper.get(prefix_db, "")
+                if not pd.isna(topics) and topics != "N/A" and isinstance(topics, str):
+                    lines.append("**" + db + "**: " + topics)
 
     # Write to file
     with open(output_file, "w", encoding="utf-8") as f:
@@ -279,7 +277,7 @@ if __name__ == "__main__":
     output_dir = sys.argv[2] if len(sys.argv) > 2 else "./papers"
 
     # Read the CSV
-    df = pd.read_csv(input_csv)
+    df = pd.read_csv(input_csv).head(150)
 
     # Create markdown files
     print(f"Processing {len(df)} papers from {input_csv}...")

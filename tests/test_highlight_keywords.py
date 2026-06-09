@@ -20,6 +20,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from slrrag.convertmarkdown.highlight_keywords import (
     STEMMING_DICT,
+    highlight_keywords_in_text,
     root_to_class,
     get_all_keyword_variants,
     cleanup_file,
@@ -74,6 +75,111 @@ def temp_folder_with_markdown_files():
         file3.write_text("# File 3\n\nNo keywords here.")
 
         yield temp_dir
+
+
+# =============================================================================
+# Tests for highlight_keywords_in_text function
+# =============================================================================
+
+
+class TestHighlightKeywordsInText:
+    """Tests for the highlight_keywords_in_text function."""
+
+    def test_empty_string(self):
+        """Test highlighting empty string."""
+        result = highlight_keywords_in_text("")
+        assert result == ""
+
+    def test_none_input(self):
+        """Test highlighting None."""
+        result = highlight_keywords_in_text(None)
+        assert result is None or result == ""
+
+    def test_no_keywords(self):
+        """Test text with no keywords."""
+        text = "This is just regular text with no special words."
+        result = highlight_keywords_in_text(text)
+        assert result == text
+        assert "<span" not in result
+
+    def test_single_keyword(self):
+        """Test text with a single keyword."""
+        text = "This mentions offshore in the text."
+        result = highlight_keywords_in_text(text)
+        assert '<span class="kw-offshore">offshore</span>' in result
+
+    def test_multiple_keywords(self):
+        """Test text with multiple keywords."""
+        text = "offshore wind farm collision risk assessment"
+        result = highlight_keywords_in_text(text)
+        assert '<span class="kw-offshore">offshore</span>' in result
+        assert '<span class="kw-wind-farm">wind farm</span>' in result
+        assert '<span class="kw-collision">collision</span>' in result
+        assert '<span class="kw-risk">risk</span>' in result
+        assert '<span class="kw-assess">assessment</span>' in result
+
+    def test_case_insensitive(self):
+        """Test case-insensitive matching."""
+        text = "OFFSHORE Wind Farm COLLISION"
+        result = highlight_keywords_in_text(text)
+        assert '<span class="kw-offshore">OFFSHORE</span>' in result
+        assert '<span class="kw-wind-farm">Wind Farm</span>' in result
+        assert '<span class="kw-collision">COLLISION</span>' in result
+
+    def test_multiline_text(self):
+        """Test multiline text."""
+        text = "Line 1: offshore\nLine 2: wind farm"
+        result = highlight_keywords_in_text(text)
+        assert '<span class="kw-offshore">offshore</span>' in result
+        assert '<span class="kw-wind-farm">wind farm</span>' in result
+
+    def test_already_highlighted(self):
+        """Test text with already highlighted keywords."""
+        text = 'This has <span class="kw-offshore">offshore</span> already.'
+        result = highlight_keywords_in_text(text)
+        # Should not double-wrap
+        assert '<span class="kw-offshore"><span class="kw-offshore">' not in result
+        # Should still highlight other keywords
+        text_with_new = text + " collision"
+        result = highlight_keywords_in_text(text_with_new)
+        assert '<span class="kw-collision">collision</span>' in result
+
+    def test_partial_words_not_matched(self):
+        """Test that partial words are not matched."""
+        text = "This is offshoring and collisionless."
+        result = highlight_keywords_in_text(text)
+        # These should NOT be highlighted as they're not exact matches
+        assert "offshoring" not in result or '<span class="kw-offshore">' not in result
+
+    def test_multi_word_phrases(self):
+        """Test multi-word phrase matching."""
+        text = "navigation risk assessment is important"
+        result = highlight_keywords_in_text(text)
+        assert (
+            '<span class="kw-navigation-risk-assessment">navigation risk assessment</span>'
+            in result
+        )
+
+    def test_words_in_parentheses(self):
+        """Test that words inside parentheses are properly highlighted."""
+        text = "This mentions (offshore) and (wind farm) keywords."
+        result = highlight_keywords_in_text(text)
+        assert '<span class="kw-offshore">offshore</span>' in result
+        assert '<span class="kw-wind-farm">wind farm</span>' in result
+
+    def test_words_in_brackets(self):
+        """Test that words inside square brackets are properly highlighted."""
+        text = "This mentions [offshore] and [collision] keywords."
+        result = highlight_keywords_in_text(text)
+        assert '<span class="kw-offshore">offshore</span>' in result
+        assert '<span class="kw-collision">collision</span>' in result
+
+    def test_words_incurly_braces(self):
+        """Test that words inside curly braces are properly highlighted."""
+        text = "This mentions {offshore} and {risk} keywords."
+        result = highlight_keywords_in_text(text)
+        assert '<span class="kw-offshore">offshore</span>' in result
+        assert '<span class="kw-risk">risk</span>' in result
 
 
 # =============================================================================
