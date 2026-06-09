@@ -11,15 +11,12 @@ using Obsidian hotkeys.
 
 import pandas as pd
 import os
-import regex as re
 from pathlib import Path
 from typing import List, Dict, Any
 from tqdm import tqdm
 
 # Import the keyword highlighting functionality
-from slrrag.convertmarkdown.highlight_keywords import (
-    get_all_keyword_variants,
-)
+from .highlight_keywords import highlight_keywords_in_text
 
 
 # Configuration
@@ -91,46 +88,6 @@ def slugify(title: str, limit: int = None) -> str:
         return "untitled"
 
     return slug
-
-
-def highlight_keywords_in_text(text: str) -> str:
-    """
-    Apply keyword highlighting to a text string using the STEMMING_DICT.
-    Only highlights whole words that are not already inside kw- spans.
-
-    Args:
-        text: The text to highlight
-
-    Returns:
-        The text with keywords wrapped in appropriate kw- class spans
-    """
-    if not text or not isinstance(text, str):
-        return text
-
-    all_variants = get_all_keyword_variants()
-
-    # Sort by length (longest first) to avoid partial matches
-    all_variants.sort(key=lambda x: len(x["variant"]), reverse=True)
-
-    for item in all_variants:
-        variant = item["variant"]
-        class_name = item["class_name"]
-
-        # Regex pattern: match whole word NOT already inside a kw- span
-        pattern = (
-            r'(?<!class="kw-[^"]*">[^<]*\b)(\b'
-            + re.escape(variant)
-            + r"\b)(?![^<]*</span>)"
-        )
-
-        new_text = re.sub(
-            pattern, rf'<span class="{class_name}">\1</span>', text, flags=re.IGNORECASE
-        )
-
-        if new_text != text:
-            text = new_text
-
-    return text
 
 
 def write_paper_to_markdown(

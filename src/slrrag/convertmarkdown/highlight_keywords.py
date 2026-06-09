@@ -134,6 +134,48 @@ def get_all_keyword_variants():
     return result
 
 
+def highlight_keywords_in_text(text: str) -> str:
+    """
+    Apply keyword highlighting to a text string using the STEMMING_DICT.
+    Only highlights whole words that are not already inside kw- spans.
+
+    Args:
+        text: The text to highlight
+
+    Returns:
+        The text with keywords wrapped in appropriate kw- class spans
+    """
+    if not text or not isinstance(text, str):
+        return text
+
+    all_variants = get_all_keyword_variants()
+
+    # Sort by length (longest first) to avoid partial matches
+    all_variants.sort(key=lambda x: len(x["variant"]), reverse=True)
+
+    for item in all_variants:
+        variant = item["variant"]
+        class_name = item["class_name"]
+
+        # Regex pattern: match whole word NOT already inside a kw- span
+        # (?<!class="kw-[^"]*">[^<]*\b) = not preceded by kw- class
+        # (?![^<]*</span>) = not followed by </span> (safety)
+        pattern = (
+            r'(?<!class="kw-[^"]*">[^<]*\b)(\b'
+            + re.escape(variant)
+            + r"\b)(?![^<]*</span>)"
+        )
+
+        new_text = re.sub(
+            pattern, rf'<span class="{class_name}">\1</span>', text, flags=re.IGNORECASE
+        )
+
+        if new_text != text:
+            text = new_text
+
+    return text
+
+
 def cleanup_file(content):
     """Remove all existing KW highlights and markers"""
     # Remove all kw- spans
@@ -155,40 +197,12 @@ def process_file(filepath):
     # Clean up any existing highlights
     content = cleanup_file(content)
 
-    modified = False
-    all_variants = get_all_keyword_variants()
+    # Apply keyword highlighting
+    highlighted_content = highlight_keywords_in_text(content)
 
-    # Sort by length (longest first) to avoid partial matches
-    all_variants.sort(key=lambda x: len(x["variant"]), reverse=True)
-
-    for item in all_variants:
-        variant = item["variant"]
-        class_name = item["class_name"]
-
-        # Regex pattern: match whole word NOT already inside a kw- span
-        # (?<!class="kw-[^"]*">[^<]*\b) = not preceded by kw- class
-        # (?![^<]*</span>) = not followed by </span> (safety)
-        pattern = (
-            r'(?<!class="kw-[^"]*">[^<]*\b)(\b'
-            + re.escape(variant)
-            + r"\b)(?![^<]*</span>)"
-        )
-
-        new_content = re.sub(
-            pattern,
-            rf'<span class="{class_name}">\1</span>',
-            content,
-            flags=re.IGNORECASE,
-        )
-
-        if new_content != content:
-            content = new_content
-            modified = True
-
-    if modified:
-        # Add marker at the top
+    if highlighted_content != content:
         with open(filepath, "w", encoding="utf-8") as f:
-            f.write(content)
+            f.write(highlighted_content)
         print(f"✓ Processed: {filepath}")
         return True
 
