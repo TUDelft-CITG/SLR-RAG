@@ -85,7 +85,7 @@ def sanitize_filename(title: str) -> str:
     return filename
 
 
-def slugify(title: str) -> str:
+def slugify(title: str,limit:int =None) -> str:
     """
     Convert a paper title to a URL-friendly slug.
 
@@ -116,8 +116,9 @@ def slugify(title: str) -> str:
     # Remove trailing/leading hyphens
     slug = slug.rstrip('-').lstrip('-')
     
-    # Limit length to 100 characters
-    slug = slug[:100]
+    # Limit length
+    if limit is not None:
+        slug = slug[:limit]
     
     # If empty after all processing, return untitled
     if not slug:
@@ -266,8 +267,7 @@ def write_paper_to_markdown(
     
     # Get title and create filename
     title = paper.get("title", "Untitled")
-    slug = slugify(title)
-    filename = slug + ".md"
+    filename = slugify(title,limit=100) + ".md"
     filepath = os.path.join(output_dir, filename)
     
     # Ensure manual_review field exists
@@ -280,7 +280,7 @@ def write_paper_to_markdown(
     # Add YAML frontmatter with metadata
     if add_yaml_frontmatter:
         lines.append("---")
-        lines.append(f"title: \"{slug}\"")
+        lines.append(f"title: \"{slugify(title)}\"")
         
         # Add DOI
         doi = paper.get("doi", "")
@@ -469,7 +469,7 @@ def write_paper_into_markdown(
             
             # Create filename from title
             title = paper_dict.get("title", f"paper_{idx}")
-            slug = slugify(title)
+            slug = slugify(title,limit=100)
             filename = slug + ".md"
             filepath = os.path.join(batch_dir, filename)
             

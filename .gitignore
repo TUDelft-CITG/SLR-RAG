@@ -12,3 +12,5 @@ data/export_databases/
 *.html
 *.egg-info/
 uv.lock
+
+notebooks/*.png
