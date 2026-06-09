@@ -74,6 +74,8 @@ def temp_folder_with_markdown_files():
         file3.write_text("# File 3\n\nNo keywords here.")
 
         yield temp_dir
+
+
 # =============================================================================
 # Tests for root_to_class function
 # =============================================================================
@@ -154,7 +156,7 @@ class TestCleanupFile:
         """Test that kw- span tags are removed."""
         content = 'This has <span class="kw-offshore">offshore</span> in it.'
         cleaned = cleanup_file(content)
-        assert cleaned == 'This has offshore in it.'
+        assert cleaned == "This has offshore in it."
 
     def test_cleanup_multiple_spaces(self):
         """Test that multiple spaces are reduced to single spaces."""

@@ -24,7 +24,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 from slrrag.convertmarkdown.paper_review_tools import (
     MANUAL_REVIEW_FIELD,
     slugify,
-    format_field_value,
     highlight_keywords_in_text,
     write_series_papers_into_markdown,
     write_paper_to_markdown,
@@ -41,6 +40,7 @@ def temp_output_file():
     """Create a temporary output directory."""
     with tempfile.NamedTemporaryFile() as temp_file:
         yield temp_file.name
+
 
 @pytest.fixture
 def temp_output_dir():
@@ -231,72 +231,6 @@ class TestSlugify:
         result = slugify("Test Title")
         filename = result + ".md"
         assert filename == "test-title.md"
-
-
-# ==========================================================================================================================================================
-# Tests for format_field_value function
-# =============================================================================
-
-
-class TestFormatFieldValue:
-    """Tests for the format_field_value function."""
-
-    def test_na_values(self):
-        """Test formatting of NA/None/empty values."""
-        assert format_field_value("any_field", None) == "N/A"
-        assert format_field_value("any_field", "") == "N/A"
-        assert format_field_value("any_field", pd.NA) == "N/A"
-
-    def test_pdf_link(self):
-        """Test formatting of PDF field with URL."""
-        result = format_field_value("pdf", "https://example.com/paper.pdf")
-        assert "[PDF]" in result
-        assert "https://example.com/paper.pdf" in result
-
-    def test_pdf_plain_text(self):
-        """Test formatting of PDF field without URL."""
-        result = format_field_value("pdf", "paper.pdf")
-        assert result == "paper.pdf"
-
-    def test_keywords_formatting(self):
-        """Test formatting of keyword fields."""
-        result = format_field_value("keywords_scopus", "offshore|wind farm|risk")
-        assert "#offshore" in result
-        assert "#wind_farm" in result
-        assert "#risk" in result
-
-    def test_topics_formatting(self):
-        """Test formatting of topic fields."""
-        result = format_field_value("topic_openalex", "Engineering|Energy|Safety")
-        assert "Engineering, Energy, Safety" in result
-
-    def test_boolean_checkmarks(self):
-        """Test formatting of boolean fields."""
-        assert format_field_value("in_scopus", True) == "✓"
-        assert format_field_value("in_scopus", False) == "✗"
-        assert format_field_value("is_found", True) == "✓"
-        assert format_field_value("is_reference", False) == "✗"
-
-    def test_manual_review_formatting(self):
-        """Test formatting of manual review field."""
-        assert "👍" in format_field_value(MANUAL_REVIEW_FIELD, "keep")
-        assert "👎" in format_field_value(MANUAL_REVIEW_FIELD, "removed")
-        assert "🤔" in format_field_value(MANUAL_REVIEW_FIELD, "not-sure")
-        # None returns "N/A" due to the initial NA check in the function
-        assert format_field_value(MANUAL_REVIEW_FIELD, None) == "N/A"
-
-    def test_relevance_scopus_formatting(self):
-        """Test formatting of Scopus relevance score."""
-        result = format_field_value("relevance_order_scopus", "0.95")
-        assert result == "0.95"
-
-        result = format_field_value("relevance_order_scopus", "0.8")
-        assert result == "0.80"
-
-    def test_relevance_openalex_formatting(self):
-        """Test formatting of OpenAlex relevance score."""
-        result = format_field_value("relevance_openalex", "0.87654321")
-        assert result == "0.8765"
 
 
 # =============================================================================
@@ -577,7 +511,6 @@ class TestWriteSeriesPapersIntoMarkdown:
         )
 
         assert len(created_files) == 3
-
 
 
 # =============================================================================

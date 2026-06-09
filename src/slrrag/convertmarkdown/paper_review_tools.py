@@ -13,7 +13,7 @@ import pandas as pd
 import os
 import regex as re
 from pathlib import Path
-from typing import Optional, List, Dict, Any
+from typing import List, Dict, Any
 from tqdm import tqdm
 
 # Import the keyword highlighting functionality
@@ -27,7 +27,6 @@ MANUAL_REVIEW_FIELD = "manual_review"
 DEFAULT_REVIEW_STATUS = None  # Can be "keep", "removed", "not-sure", or None
 
 # Field groupings for better organization in markdown
-
 
 
 def slugify(title: str, limit: int = None) -> str:
@@ -92,85 +91,6 @@ def slugify(title: str, limit: int = None) -> str:
         return "untitled"
 
     return slug
-
-
-def format_field_value(field_name: str, value: Any) -> str:
-    """
-    Format a field value for markdown display.
-
-    Args:
-        field_name: Name of the field
-        value: The value to format
-
-    Returns:
-        Formatted string representation
-    """
-    if pd.isna(value) or value is None or value == "":
-        return "N/A"
-
-    # Special formatting for certain fields
-    if field_name == "pdf":
-        if isinstance(value, str) and value.startswith("http"):
-            return f"[PDF]({value})"
-        return str(value)
-
-    if field_name in [
-        "keywords_scopus",
-        "keywords_openalex",
-        "keywords_lens",
-        "keywords_dimensions",
-    ]:
-        if isinstance(value, str):
-            # Format pipe-separated keywords as tags
-            keywords = [k.strip() for k in value.split("|") if k.strip()]
-            if keywords:
-                return ", ".join(f"#{k.replace(' ', '_')}" for k in keywords)
-        return str(value)
-
-    if field_name in [
-        "topic_openalex",
-        "topic_lens",
-        "topic_dimensions",
-        "fields_openalex",
-    ]:
-        if isinstance(value, str):
-            topics = [t.strip() for t in value.split("|") if t.strip()]
-            if topics:
-                return ", ".join(topics)
-        return str(value)
-
-    if field_name in [
-        "in_scopus",
-        "in_openalex",
-        "in_lens",
-        "in_dimensions",
-        "is_found",
-        "is_reference",
-    ]:
-        return "✓" if value else "✗"
-
-    if field_name == MANUAL_REVIEW_FIELD:
-        if value == "keep":
-            return "👍 **Keep**"
-        elif value == "removed":
-            return "👎 **Removed**"
-        elif value == "not-sure":
-            return "🤔 **Not Sure**"
-        return "❓ Not Reviewed"
-
-    if field_name == "relevance_order_scopus":
-        try:
-            return f"{float(value):.2f}"
-        except (ValueError, TypeError):
-            return str(value)
-
-    if field_name == "relevance_openalex":
-        try:
-            return f"{float(value):.4f}"
-        except (ValueError, TypeError):
-            return str(value)
-
-    return str(value)
 
 
 def highlight_keywords_in_text(text: str) -> str:
