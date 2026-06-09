@@ -283,41 +283,16 @@ def write_paper_to_markdown(
     lines.append("")
 
     # Collect topics from all database fields
-    db_topics = {}
-    db_keywords = {}
-        
-
-    for db in ["scopus", "openalex", "lens", "dimensions"]:
-        db_topics[db] = []
-        db_keywords[db] = []
-        topics_field = f"topic_{db}"
-        if topics_field in paper:
-            topics = paper.get(topics_field, "")
-            if topics and topics != "N/A" and isinstance(topics, str):
-                topic_list = [t.strip() for t in topics.split("|") if t.strip()]
-                db_topics[db].extend(topic_list)
-
-        keywords_field = f"keywords_{db}"
-        if keywords_field in paper:
-            keywords = paper.get(keywords_field, "")
-            if keywords and keywords != "N/A" and isinstance(keywords, str):
-                kw_list = [k.strip() for k in keywords.split("|") if k.strip()]
-                db_keywords[db].extend(kw_list)
-
-    # Add topics (Openalex, Lens, Dimensions) - skip Scopus as per requirement
-    topics_has_content = False
-    for db in ["openalex", "lens", "dimensions"]:
-        if db_topics[db]:
-            topics_has_content = True
-            break
-
-    if topics_has_content:
-        for db in ["openalex", "lens", "dimensions"]:
-            if db_topics[db]:
-                lines.append(
-                    f"**Topic {db.capitalize()}** : {', '.join(db_topics[db])}"
-                )
-        lines.append("")
+    for prefix in ["topic", "keywords", "fields", "relevance_order", "relevance"]:
+        lines.append(f"## {prefix}")
+        for db in ["scopus", "openalex", "lens", "dimensions"]:
+            prefix_db = f"{prefix}_{db}"
+            if prefix_db in paper:
+                lines.append("**" + db + "**:")
+                topics = paper.get(prefix_db, "")
+                if not pd.isna(topics) and topics != "N/A" and isinstance(topics, str):
+                    topic_list = [t.strip() for t in topics.split("|") if t.strip()]
+                    lines.extend(topic_list)
 
     # Add abstract (most important field)
     abstract = paper.get("abstract", "")
@@ -328,23 +303,6 @@ def write_paper_to_markdown(
         lines.append(highlighted_abstract)
         lines.append("")
 
-    # Add keywords from all databases
-    keywords_has_content = False
-    for db in ["scopus", "openalex", "lens", "dimensions"]:
-        if db_keywords[db]:
-            keywords_has_content = True
-            break
-
-    if keywords_has_content:
-        lines.append("## Keywords")
-        lines.append("")
-        for db in ["scopus", "openalex", "lens", "dimensions"]:
-            if db_keywords[db]:
-                keywords_as_tags = [
-                    f"#{kw.replace(' ', '_')}" for kw in db_keywords[db]
-                ]
-                lines.append(f"**{db.capitalize()}** : {', '.join(keywords_as_tags)}")
-        lines.append("")
     # Write to file
     with open(output_file, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
@@ -429,54 +387,6 @@ def write_series_papers_into_markdown(
 
     print(f"\nTotal files created: {len(created_files)} in {num_batches} batch folders")
     return created_files
-
-
-def get_next_paper_file(current_file: str, output_dir: str) -> Optional[str]:
-    """
-    Get the next paper file in alphabetical order.
-
-    Args:
-        current_file: Current markdown file path
-        output_dir: Directory containing the markdown files
-
-    Returns:
-        Path to next paper file, or None if at the end
-    """
-    files = sorted([f for f in os.listdir(output_dir) if f.endswith(".md")])
-    current_name = os.path.basename(current_file)
-
-    try:
-        current_idx = files.index(current_name)
-        if current_idx < len(files) - 1:
-            return os.path.join(output_dir, files[current_idx + 1])
-    except ValueError:
-        pass
-
-    return None
-
-
-def get_previous_paper_file(current_file: str, output_dir: str) -> Optional[str]:
-    """
-    Get the previous paper file in alphabetical order.
-
-    Args:
-        current_file: Current markdown file path
-        output_dir: Directory containing the markdown files
-
-    Returns:
-        Path to previous paper file, or None if at the beginning
-    """
-    files = sorted([f for f in os.listdir(output_dir) if f.endswith(".md")])
-    current_name = os.path.basename(current_file)
-
-    try:
-        current_idx = files.index(current_name)
-        if current_idx > 0:
-            return os.path.join(output_dir, files[current_idx - 1])
-    except ValueError:
-        pass
-
-    return None
 
 
 # Example usage
