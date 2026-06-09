@@ -27,16 +27,7 @@ MANUAL_REVIEW_FIELD = "manual_review"
 DEFAULT_REVIEW_STATUS = None  # Can be "keep", "removed", "not-sure", or None
 
 # Field groupings for better organization in markdown
-FIELD_GROUPS = {
-    "Identifiers": ["title"],
-    "Publication Info": ["type", "year"],
-    "Content": ["abstract"],
-    "Scopus": ["relevance_order_scopus", "in_scopus"],
-    "OpenAlex": ["relevance_openalex", "in_openalex"],
-    "Lens": ["in_lens"],
-    "Dimensions": ["in_dimensions"],
-    "Status": ["is_found", "is_reference", MANUAL_REVIEW_FIELD],
-}
+
 
 
 def slugify(title: str, limit: int = None) -> str:
@@ -294,12 +285,11 @@ def write_paper_to_markdown(
     # Collect topics from all database fields
     db_topics = {}
     db_keywords = {}
+        
 
     for db in ["scopus", "openalex", "lens", "dimensions"]:
         db_topics[db] = []
         db_keywords[db] = []
-
-    for db in ["scopus", "openalex", "lens", "dimensions"]:
         topics_field = f"topic_{db}"
         if topics_field in paper:
             topics = paper.get(topics_field, "")
@@ -355,47 +345,6 @@ def write_paper_to_markdown(
                 ]
                 lines.append(f"**{db.capitalize()}** : {', '.join(keywords_as_tags)}")
         lines.append("")
-
-    # Group remaining fields by category
-    lines.append("")
-    lines.append("## Metadata")
-    lines.append("")
-
-    # Process fields in groups - exclude fields already in frontmatter
-    excluded_fields = {
-        "title",
-        "abstract",
-        "pdf",
-        "doi",
-        "date",
-        "manual_review_field",
-        "id_scopus",
-        "id_openalex",
-        "id_lens",
-        "id_dimensions",
-        "keywords_scopus",
-        "keywords_openalex",
-        "keywords_lens",
-        "keywords_dimensions",
-        "topic_scopus",
-        "topic_openalex",
-        "topic_lens",
-        "topic_dimensions",
-        "fields_openalex",
-    }
-
-    for group_name, fields in FIELD_GROUPS.items():
-        group_fields = [f for f in fields if f in paper and f not in excluded_fields]
-        if group_fields:
-            lines.append(f"### {group_name}")
-            lines.append("")
-            for field in sorted(group_fields):
-                value = paper[field]
-                formatted_value = format_field_value(field, value)
-                field_display = field.replace("_", " ").title()
-                lines.append(f"- **{field_display}:** {formatted_value}")
-            lines.append("")
-
     # Write to file
     with open(output_file, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
