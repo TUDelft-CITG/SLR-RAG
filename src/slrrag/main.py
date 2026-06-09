@@ -9,7 +9,6 @@ from slrrag.querier_scopus import query_scopus
 from slrrag.query_converter import convert_query_to_lens
 from slrrag.query_converter import query_to_dimensions_url
 from slrrag.ollama_analysis import (
-    setup_chat_agent,
     analyze_papers_with_agent,
 )
 from slrrag.querier_dimensions import read_dimensions_export
@@ -548,8 +547,8 @@ def main():
             return
     print(f"Analyzing papers with agent : {OLLAMA_MODELS}")
     results_df = analyze_papers_with_agent(
-            OLLAMA_MODELS, papers_df, FIRST_ROUND_QUESTIONS
-        )
+        OLLAMA_MODELS, papers_df, FIRST_ROUND_QUESTIONS
+    )
 
     print(f"Saving results to {OUTPUT_CSV_AGENTS_PATH}")
     save_dataframe_to_csv(results_df, OUTPUT_CSV_AGENTS_PATH)

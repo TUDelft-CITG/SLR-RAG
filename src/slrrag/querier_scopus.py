@@ -42,10 +42,14 @@ TITLE-ABS-KEY( {query})
         nb_paper = ScopusSearch(
             query=scopus_query, download=False, subscriber=SCOPUS_IS_SUBSCRIBER
         ).get_results_size()
-        
+
         if input(f"{nb_paper} found in Scopus. Continue? (y/n)").lower() == "y":
             scopus_search = ScopusSearch(
-                query=scopus_query, verbose=True, subscriber=SCOPUS_IS_SUBSCRIBER, refresh=True, sort="-relevance"
+                query=scopus_query,
+                verbose=True,
+                subscriber=SCOPUS_IS_SUBSCRIBER,
+                refresh=True,
+                sort="-relevance",
             )
             return scopus_to_dict_list(scopus_search)
         else:

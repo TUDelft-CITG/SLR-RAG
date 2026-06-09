@@ -217,7 +217,7 @@ class SchemaScopusPapers(SchemaPapers):
         nullable=True, alias=NAME_COL_KEYWORDS_SCOPUS
     )
     # Order of the paper after being sort by relevance
-    relevance_order_scopus : Series[Int64] =  pa.Field(
+    relevance_order_scopus: Series[Int64] = pa.Field(
         nullable=True, alias=NAME_COL_RELEVANCE_ORDER_SCOPUS
     )
 
@@ -242,9 +242,8 @@ class SchemaOpenAlexPapers(SchemaPapers):
     keywords_openalex: Series[String] = pa.Field(
         nullable=True, alias=NAME_COL_KEYWORDS_OPENALEX
     )
-    relevance_openale: Series[float] =  pa.Field(
+    relevance_openale: Series[float] = pa.Field(
         nullable=True, alias=NAME_COL_RELEVANCE_OPENALEX
-
     )
 
 

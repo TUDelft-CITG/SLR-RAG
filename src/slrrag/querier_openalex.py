@@ -27,6 +27,7 @@ def check_doi_in_openalex(doi: str) -> bool:
     except Exception:
         return False
 
+
 def query_openalex(query: str, ask_input=True, n_paper_max=None):
     works = Works().search_filter(title_and_abstract=query)
     nb_paper = works.count()
@@ -42,13 +43,15 @@ def query_openalex(query: str, ask_input=True, n_paper_max=None):
         if n_paper_max and len(list_ret) > n_paper_max:
             break
     return list_ret
+
+
 # --- OpenAlex functions ---
 def query_openalex_and_standardize(
     query: str, ask_input=True, n_paper_max=None
 ) -> DataFrame[SchemaPapers]:
     """Query OpenAlex and return results as a pandas DataFrame."""
     print("Query :", query)
-    list_ret = query_openalex(query,ask_input,n_paper_max)
+    list_ret = query_openalex(query, ask_input, n_paper_max)
     input_openalex_columns_name = [
         "doi",
         "id",
@@ -56,7 +59,7 @@ def query_openalex_and_standardize(
         "publication_date",
         "abstract",
         "type",
-        "relevance_score"
+        "relevance_score",
     ]
 
     # Due to legal reasons, we have to extract the abstract manually : https://pypi.org/project/pyalex/#get-abstract:~:text=Get%20abstract
@@ -106,7 +109,11 @@ def query_openalex_and_standardize(
         ],
     )
     return_df = return_df.rename(
-        columns={"publication_date": NAME_COL_DATE, "id": "id_openalex", "relevance_score" : NAME_COL_RELEVANCE_OPENALEX}
+        columns={
+            "publication_date": NAME_COL_DATE,
+            "id": "id_openalex",
+            "relevance_score": NAME_COL_RELEVANCE_OPENALEX,
+        }
     )
     return_df["doi"] = return_df["doi"].str.removeprefix("https://doi.org/")
     return SchemaOpenAlexPapers.validate(return_df, lazy=PANDERA_LAZY_VALIDATION)

@@ -14,10 +14,9 @@ import os
 import tempfile
 from pathlib import Path
 import sys
-import os
 
 # Add the src directory to the Python path so we can import the module
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from slrrag.convertmarkdown.highlight_keywords import (
     STEMMING_DICT,
@@ -32,10 +31,11 @@ from slrrag.convertmarkdown.highlight_keywords import (
 # Fixtures
 # =============================================================================
 
+
 @pytest.fixture
 def temp_markdown_file():
     """Create a temporary markdown file for testing."""
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
         f.write("# Test Document\n\nThis is a test offshore wind farm document.\n")
         f.flush()
         yield f.name
@@ -46,7 +46,7 @@ def temp_markdown_file():
 @pytest.fixture
 def temp_markdown_file_with_existing_highlights():
     """Create a temporary markdown file with existing highlights."""
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
         content = """# Test Document
 
 This has <span class="kw-offshore">offshore</span> already highlighted.
@@ -66,13 +66,13 @@ def temp_folder_with_markdown_files():
         # Create test files
         file1 = Path(temp_dir) / "test1.md"
         file1.write_text("# File 1\n\nThis mentions offshore wind farm.")
-        
+
         file2 = Path(temp_dir) / "test2.md"
         file2.write_text("# File 2\n\nThis has collision and accident keywords.")
-        
+
         file3 = Path(temp_dir) / "test3.md"
         file3.write_text("# File 3\n\nNo keywords here.")
-        
+
         yield temp_dir
 
 
@@ -80,40 +80,55 @@ def temp_folder_with_markdown_files():
 # Tests for STEMMING_DICT
 # =============================================================================
 
+
 class TestSTEMMING_DICT:
     """Tests for the STEMMING_DICT dictionary."""
-    
+
     def test_dict_is_not_empty(self):
         """Test that STEMMING_DICT is not empty."""
         assert len(STEMMING_DICT) > 0
-    
+
     def test_all_values_are_lists(self):
         """Test that all values in STEMMING_DICT are lists."""
         for root, variants in STEMMING_DICT.items():
             assert isinstance(variants, list)
-    
+
     def test_all_lists_are_non_empty(self):
         """Test that all variant lists have at least one element."""
         for root, variants in STEMMING_DICT.items():
             assert len(variants) > 0
-    
+
     def test_all_variants_are_strings(self):
         """Test that all variants are strings."""
         for root, variants in STEMMING_DICT.items():
             for variant in variants:
                 assert isinstance(variant, str)
-    
+
     def test_contains_expected_root_words(self):
         """Test that expected root words are present in the dictionary."""
         expected_roots = [
-            "offshore", "infrastructure", "wind-farm", "bridge",
-            "ship", "vessel", "collision", "accident", "nautical",
-            "risk", "probability", "chance", "assess", "model",
-            "predict", "analyse", "navigation-risk-assessment", "irrelevant"
+            "offshore",
+            "infrastructure",
+            "wind-farm",
+            "bridge",
+            "ship",
+            "vessel",
+            "collision",
+            "accident",
+            "nautical",
+            "risk",
+            "probability",
+            "chance",
+            "assess",
+            "model",
+            "predict",
+            "analyse",
+            "navigation-risk-assessment",
+            "irrelevant",
         ]
         for root in expected_roots:
             assert root in STEMMING_DICT
-    
+
     def test_contains_expected_variants(self):
         """Test that expected variants are present for certain roots."""
         assert "offshore" in STEMMING_DICT["offshore"]
@@ -129,19 +144,23 @@ class TestSTEMMING_DICT:
 # Tests for root_to_class function
 # =============================================================================
 
+
 class TestRootToClass:
     """Tests for the root_to_class function."""
-    
+
     def test_basic_conversion(self):
         """Test basic root to class conversion."""
         assert root_to_class("offshore") == "kw-offshore"
         assert root_to_class("collision") == "kw-collision"
-    
+
     def test_hyphenated_root(self):
         """Test that hyphenated roots are preserved."""
         assert root_to_class("wind-farm") == "kw-wind-farm"
-        assert root_to_class("navigation-risk-assessment") == "kw-navigation-risk-assessment"
-    
+        assert (
+            root_to_class("navigation-risk-assessment")
+            == "kw-navigation-risk-assessment"
+        )
+
     def test_empty_string(self):
         """Test with empty string."""
         assert root_to_class("") == "kw-"
@@ -151,38 +170,39 @@ class TestRootToClass:
 # Tests for get_all_keyword_variants function
 # =============================================================================
 
+
 class TestGetAllKeywordVariants:
     """Tests for the get_all_keyword_variants function."""
-    
+
     def test_returns_list(self):
         """Test that the function returns a list."""
         variants = get_all_keyword_variants()
         assert isinstance(variants, list)
-    
+
     def test_list_not_empty(self):
         """Test that the returned list is not empty."""
         variants = get_all_keyword_variants()
         assert len(variants) > 0
-    
+
     def test_each_item_has_required_keys(self):
         """Test that each item has 'variant', 'class_name', and 'root' keys."""
         variants = get_all_keyword_variants()
         for item in variants:
-            assert 'variant' in item
-            assert 'class_name' in item
-            assert 'root' in item
-    
+            assert "variant" in item
+            assert "class_name" in item
+            assert "root" in item
+
     def test_class_name_format(self):
         """Test that class names follow the kw-{root} format."""
         variants = get_all_keyword_variants()
         for item in variants:
-            assert item['class_name'].startswith('kw-')
-    
+            assert item["class_name"].startswith("kw-")
+
     def test_all_variants_included(self):
         """Test that all variants from STEMMING_DICT are included."""
         variants = get_all_keyword_variants()
-        variant_strings = [v['variant'] for v in variants]
-        
+        variant_strings = [v["variant"] for v in variants]
+
         for root, expected_variants in STEMMING_DICT.items():
             for variant in expected_variants:
                 assert variant in variant_strings
@@ -192,41 +212,42 @@ class TestGetAllKeywordVariants:
 # Tests for cleanup_file function
 # =============================================================================
 
+
 class TestCleanupFile:
     """Tests for the cleanup_file function."""
-    
+
     def test_removes_span_tags(self):
         """Test that kw- span tags are removed."""
-        content = "This has <span class=\"kw-offshore\">offshore</span> in it."
+        content = 'This has <span class="kw-offshore">offshore</span> in it.'
         cleaned = cleanup_file(content)
         assert "<span" not in cleaned
         assert "</span>" not in cleaned
         assert "offshore" in cleaned
-    
+
     def test_removes_marker(self):
         """Test that KW_HIGHLIGHT marker is removed."""
         content = "Some text<!-- KW_HIGHLIGHT --> more text"
         cleaned = cleanup_file(content)
         assert "<!-- KW_HIGHLIGHT -->" not in cleaned
-    
+
     def test_cleanup_multiple_spaces(self):
         """Test that multiple spaces are reduced to single spaces."""
         content = "This   has    multiple   spaces."
         cleaned = cleanup_file(content)
         assert "  " not in cleaned
-    
+
     def test_cleanup_multiple_newlines(self):
         """Test that multiple newlines are reduced."""
         content = "Line 1\n\n\n\nLine 2"
         cleaned = cleanup_file(content)
         assert "\n\n\n" not in cleaned
-    
+
     def test_preserves_normal_text(self):
         """Test that normal text is preserved."""
         content = "This is normal text with offshore keyword."
         cleaned = cleanup_file(content)
         assert cleaned == "This is normal text with offshore keyword."
-    
+
     def test_strips_content(self):
         """Test that content is stripped of leading/trailing whitespace."""
         content = "\n\n  Some content  \n\n"
@@ -238,92 +259,94 @@ class TestCleanupFile:
 # Tests for process_file function
 # =============================================================================
 
+
 class TestProcessFile:
     """Tests for the process_file function."""
-    
+
     def test_processes_file_with_keywords(self, temp_markdown_file):
         """Test that a file with keywords gets processed and highlighted."""
         # Process the file
         result = process_file(temp_markdown_file)
-        
+
         # Check that the file was modified
         assert result is True
-        
+
         # Read the file and check for highlights
-        with open(temp_markdown_file, 'r', encoding='utf-8') as f:
+        with open(temp_markdown_file, "r", encoding="utf-8") as f:
             content = f.read()
-        
+
         assert '<span class="kw-offshore">offshore</span>' in content
         assert '<span class="kw-wind-farm">wind farm</span>' in content
-    
+
     def test_processes_file_without_keywords(self):
         """Test that a file without keywords is not modified."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
             f.write("# No Keywords Here\n\nJust regular text.")
             f.flush()
             temp_path = f.name
-        
+
         try:
             # Process the file
             result = process_file(temp_path)
-            
+
             # Check that the file was not modified
             assert result is False
-            
+
             # Read the file and check no highlights were added
-            with open(temp_path, 'r', encoding='utf-8') as f:
+            with open(temp_path, "r", encoding="utf-8") as f:
                 content = f.read()
-            
+
             assert "<span" not in content
         finally:
             os.unlink(temp_path)
-    
+
     def test_case_insensitive_matching(self, temp_markdown_file):
         """Test that keyword matching is case insensitive."""
         # Read the current content
-        with open(temp_markdown_file, 'r', encoding='utf-8') as f:
-            content = f.read()
-        
         # Process the file
         process_file(temp_markdown_file)
-        
+
         # Read back and check
-        with open(temp_markdown_file, 'r', encoding='utf-8') as f:
+        with open(temp_markdown_file, "r", encoding="utf-8") as f:
             highlighted = f.read()
-        
+
         # The keyword 'offshore' should be highlighted regardless of case
         assert '<span class="kw-offshore">offshore</span>' in highlighted
-    
-    def test_skips_already_highlighted_content(self, temp_markdown_file_with_existing_highlights):
+
+    def test_skips_already_highlighted_content(
+        self, temp_markdown_file_with_existing_highlights
+    ):
         """Test that already highlighted content is not double-wrapped."""
         # Process the file
-        result = process_file(temp_markdown_file_with_existing_highlights)
-        
+        process_file(temp_markdown_file_with_existing_highlights)
+
         # Read the file
-        with open(temp_markdown_file_with_existing_highlights, 'r', encoding='utf-8') as f:
+        with open(
+            temp_markdown_file_with_existing_highlights, "r", encoding="utf-8"
+        ) as f:
             content = f.read()
-        
+
         # Check that offshore is not double-wrapped
         assert '<span class="kw-offshore"><span class="kw-offshore">' not in content
-        
+
         # Check that collision is now highlighted
         assert '<span class="kw-collision">collision</span>' in content
-    
+
     def test_handles_special_characters(self):
         """Test that special characters in text are handled correctly."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
             f.write("# Test\n\nThis has offshore and wind farm and risk assessment.")
             f.flush()
             temp_path = f.name
-        
+
         try:
             # Process the file
-            result = process_file(temp_path)
-            
+            process_file(temp_path)
+
             # Read the file
-            with open(temp_path, 'r', encoding='utf-8') as f:
+            with open(temp_path, "r", encoding="utf-8") as f:
                 content = f.read()
-            
+
             # Check highlights
             assert '<span class="kw-offshore">offshore</span>' in content
             assert '<span class="kw-wind-farm">wind farm</span>' in content
@@ -335,39 +358,40 @@ class TestProcessFile:
 # Edge Cases and Error Handling
 # =============================================================================
 
+
 class TestEdgeCases:
     """Tests for edge cases and error handling."""
-    
+
     def test_empty_file(self):
         """Test processing an empty file."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
             f.write("")
             f.flush()
             temp_path = f.name
-        
+
         try:
             result = process_file(temp_path)
             assert result is False
         finally:
             os.unlink(temp_path)
-    
+
     def test_file_with_only_whitespace(self):
         """Test processing a file with only whitespace."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
             f.write("   \n\n   \t  ")
             f.flush()
             temp_path = f.name
-        
+
         try:
             result = process_file(temp_path)
             assert result is False
         finally:
             os.unlink(temp_path)
-    
+
     def test_cleanup_empty_string(self):
         """Test cleanup_file with empty string."""
         assert cleanup_file("") == ""
-    
+
     def test_cleanup_none(self):
         """Test cleanup_file with None."""
         # This might raise an error depending on implementation
@@ -379,20 +403,20 @@ class TestEdgeCases:
         except (AttributeError, TypeError):
             # Expected behavior for None input
             pass
-    
+
     def test_highlighting_preserves_punctuation(self):
         """Test that highlighting preserves punctuation around keywords."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
             f.write("The offshore, wind-farm: risk assessment!")
             f.flush()
             temp_path = f.name
-        
+
         try:
             process_file(temp_path)
-            
-            with open(temp_path, 'r', encoding='utf-8') as f:
+
+            with open(temp_path, "r", encoding="utf-8") as f:
                 content = f.read()
-            
+
             # Check that punctuation is preserved
             assert '<span class="kw-offshore">offshore</span>,' in content
         finally:
@@ -403,65 +427,66 @@ class TestEdgeCases:
 # Integration Tests
 # =============================================================================
 
+
 class TestIntegration:
     """Integration tests for the module."""
-    
+
     def test_full_workflow(self, temp_folder_with_markdown_files):
         """Test the full workflow of finding and processing multiple files."""
         from pathlib import Path
         import sys
         from io import StringIO
-        
+
         # Save original stdout
         old_stdout = sys.stdout
-        
+
         try:
             # Redirect stdout to capture output
             sys.stdout = StringIO()
-            
+
             # Call main with the temp folder
             # Note: main() calls sys.exit(), so we need to handle that
             temp_path = Path(temp_folder_with_markdown_files)
-            
+
             # Manually process files instead of calling main
-            md_files = list(temp_path.rglob('*.md'))
+            md_files = list(temp_path.rglob("*.md"))
             processed_count = 0
             for md_file in md_files:
                 if process_file(md_file):
                     processed_count += 1
-            
+
             # Check that at least some files were processed
             assert processed_count >= 2  # test1.md and test2.md should be processed
-            
+
             # Check that files contain highlights
             for md_file in md_files:
-                with open(md_file, 'r', encoding='utf-8') as f:
+                with open(md_file, "r", encoding="utf-8") as f:
                     content = f.read()
-                
+
                 # test1.md should have offshore and wind-farm
                 if "test1.md" in str(md_file):
                     assert '<span class="kw-offshore">offshore</span>' in content
                     assert '<span class="kw-wind-farm">wind farm</span>' in content
-                
+
                 # test2.md should have collision and accident
                 elif "test2.md" in str(md_file):
                     assert '<span class="kw-collision">collision</span>' in content
                     assert '<span class="kw-accident">accident</span>' in content
-                
+
                 # test3.md should have no highlights
                 elif "test3.md" in str(md_file):
                     assert '<span class="kw-' not in content
-                    
+
         finally:
             # Restore stdout
             sys.stdout = old_stdout
-    
+
     def test_all_variants_are_unique(self):
         """Test that there are no duplicate variants across different roots."""
         all_variants = []
         for root, variants in STEMMING_DICT.items():
             all_variants.extend(variants)
-        
+
         # Check for duplicates (case-sensitive)
         seen = set()
         duplicates = []
@@ -469,7 +494,7 @@ class TestIntegration:
             if variant in seen:
                 duplicates.append(variant)
             seen.add(variant)
-        
+
         # Note: Some duplicates might be intentional (e.g., "bridge" appears in both
         # the bridge root and might be a variant of another word)
         # For now, just report if there are duplicates
