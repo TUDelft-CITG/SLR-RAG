@@ -378,9 +378,7 @@ class TestWritePaperToMarkdown:
             "relevance_order_scopus": "5",
             MANUAL_REVIEW_FIELD: None,
         }
-        filepath = write_paper_to_markdown(
-            paper, output_file=temp_output_file
-        )
+        filepath = write_paper_to_markdown(paper, output_file=temp_output_file)
 
         with open(filepath, "r", encoding="utf-8") as f:
             content = f.read()
@@ -395,9 +393,7 @@ class TestWritePaperToMarkdown:
             "relevance_order_scopus": 5.0,
             MANUAL_REVIEW_FIELD: None,
         }
-        filepath = write_paper_to_markdown(
-            paper, output_file=temp_output_file
-        )
+        filepath = write_paper_to_markdown(paper, output_file=temp_output_file)
 
         with open(filepath, "r", encoding="utf-8") as f:
             content = f.read()
@@ -412,9 +408,7 @@ class TestWritePaperToMarkdown:
             "relevance_openalex": "300",
             MANUAL_REVIEW_FIELD: None,
         }
-        filepath = write_paper_to_markdown(
-            paper, output_file=temp_output_file
-        )
+        filepath = write_paper_to_markdown(paper, output_file=temp_output_file)
 
         with open(filepath, "r", encoding="utf-8") as f:
             content = f.read()
@@ -429,9 +423,7 @@ class TestWritePaperToMarkdown:
             "relevance_openalex": 300.0,
             MANUAL_REVIEW_FIELD: None,
         }
-        filepath = write_paper_to_markdown(
-            paper, output_file=temp_output_file
-        )
+        filepath = write_paper_to_markdown(paper, output_file=temp_output_file)
 
         with open(filepath, "r", encoding="utf-8") as f:
             content = f.read()

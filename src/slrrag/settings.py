@@ -52,6 +52,8 @@ NAME_COL_PRESENT_LENS = "present_lens"
 NAME_COL_PRESENT_DIMENSIONS = "present_dimensions"
 NAME_COL_PRIMARY_TOPIC_OPENALEX = "topic_openalex"
 NAME_COL_PRIMARY_FIELD_OPENALEX = "fields_openalex"
+NAME_COL_PRIMARY_SUBFIELD_OPENALEX = "subfields_openalex"
+NAME_COL_PRIMARY_DOMAIN_OPENALEX = "domain_openalex"
 
 NAME_COL_TOPIC_LENS = "topic_lens"
 NAME_COL_TOPIC_DIMENSIONS = "topic_dimensions"
@@ -234,9 +236,14 @@ class SchemaOpenAlexPapers(SchemaPapers):
 
     # Field fields : https://developers.openalex.org/api-reference/fields
     fields_openalex: Series[String] = pa.Field(
-        nullable=True, alias=NAME_COL_PRIMARY_TOPIC_OPENALEX
+        nullable=True, alias=NAME_COL_PRIMARY_FIELD_OPENALEX
     )
-
+    subfields_openalex: Series[String] = pa.Field(
+        nullable=True, alias=NAME_COL_PRIMARY_SUBFIELD_OPENALEX
+    )
+    domain_openalex: Series[String] = pa.Field(
+        nullable=True, alias=NAME_COL_PRIMARY_DOMAIN_OPENALEX
+    )
     pdf: Series[String] = pa.Field(nullable=True, alias=NAME_COL_PDF)
 
     keywords_openalex: Series[String] = pa.Field(

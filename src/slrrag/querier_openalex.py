@@ -6,7 +6,9 @@ from tqdm import tqdm
 from slrrag.settings import (
     DEFAULT_OPEN_ALEX_PAGING,
     NAME_COL_KEYWORDS_OPENALEX,
+    NAME_COL_PRIMARY_DOMAIN_OPENALEX,
     NAME_COL_PRIMARY_FIELD_OPENALEX,
+    NAME_COL_PRIMARY_SUBFIELD_OPENALEX,
     NAME_COL_PRIMARY_TOPIC_OPENALEX,
     NAME_COL_RELEVANCE_OPENALEX,
     PANDERA_LAZY_VALIDATION,
@@ -76,10 +78,24 @@ def query_openalex_and_standardize(
             return None
 
     def get_primary_field(paper):
-        if (paper["primary_topic"] is not None) and (
-            "display_name" in paper["primary_topic"]
-        ):
+        if (paper["primary_topic"] is not None) and ("field" in paper["primary_topic"]):
             return paper["primary_topic"]["field"]["display_name"]
+        else:
+            return None
+
+    def get_primary_subfield(paper):
+        if (paper["primary_topic"] is not None) and (
+            "subfield" in paper["primary_topic"]
+        ):
+            return paper["primary_topic"]["subfield"]["display_name"]
+        else:
+            return None
+
+    def get_primary_domain(paper):
+        if (paper["primary_topic"] is not None) and (
+            "domain" in paper["primary_topic"]
+        ):
+            return paper["primary_topic"]["domain"]["display_name"]
         else:
             return None
 
@@ -97,6 +113,8 @@ def query_openalex_and_standardize(
             + [x.pdf.url]
             + [get_primary_topic(x)]
             + [get_primary_field(x)]
+            + [get_primary_subfield(x)]
+            + [get_primary_domain(x)]
             + [get_keywords(x)]
             for x in list_ret
         ],
@@ -105,6 +123,8 @@ def query_openalex_and_standardize(
             "pdf",
             NAME_COL_PRIMARY_TOPIC_OPENALEX,
             NAME_COL_PRIMARY_FIELD_OPENALEX,
+            NAME_COL_PRIMARY_SUBFIELD_OPENALEX,
+            NAME_COL_PRIMARY_DOMAIN_OPENALEX,
             NAME_COL_KEYWORDS_OPENALEX,
         ],
     )

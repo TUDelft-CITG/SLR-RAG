@@ -14,7 +14,7 @@ import os
 from pathlib import Path
 from typing import List, Dict, Any
 from tqdm import tqdm
-
+from slrrag.settings import NAME_COL_RELEVANCE_OPENALEX,NAME_COL_RELEVANCE_ORDER_SCOPUS
 # Import the keyword highlighting functionality
 from slrrag.convertmarkdown.highlight_keywords import highlight_keywords_in_text
 
@@ -124,7 +124,11 @@ def write_paper_to_markdown(
 
         # Add DOI
         doi = paper.get("doi", "")
-        if not pd.isna(doi) and doi != "N/A" and str(doi).lower() not in ["nan", "none", ""]:
+        if (
+            not pd.isna(doi)
+            and doi != "N/A"
+            and str(doi).lower() not in ["nan", "none", ""]
+        ):
             lines.append(f'doi: "{doi}"')
 
         # Add tags field (placeholder)
@@ -149,7 +153,11 @@ def write_paper_to_markdown(
 
         # Add manual review status
         review_status = paper.get(MANUAL_REVIEW_FIELD)
-        if not pd.isna(review_status) and review_status != "None" and not pd.isna(review_status):
+        if (
+            not pd.isna(review_status)
+            and review_status != "None"
+            and not pd.isna(review_status)
+        ):
             lines.append(f"manual_review: {review_status}")
 
         lines.append("---")
@@ -238,7 +246,6 @@ def write_series_papers_into_markdown(
         for idx, row in tqdm(
             batch_df.iterrows(),
             desc=f"Batch {batch_num + 1}",
-            unit="paper",
             leave=False,
         ):
             paper_dict = row.to_dict()
@@ -278,8 +285,17 @@ if __name__ == "__main__":
     output_dir = sys.argv[2] if len(sys.argv) > 2 else "./papers"
 
     # Read the CSV
-    df = pd.read_csv(input_csv).head(150)
-
+    df = pd.read_csv(input_csv)
+    # Sort if relevance in columns, first openalex and then scopus
+    # The boolean indicates if it is ascending or not
+    dict_sort_relevance = {
+        NAME_COL_RELEVANCE_OPENALEX : False,
+        NAME_COL_RELEVANCE_ORDER_SCOPUS : True
+    }
+    list_col_sort= [x for x in dict_sort_relevance.keys() if x in df.columns]
+    list_ascending= [dict_sort_relevance[x] for x in dict_sort_relevance.keys() if x in df.columns]
+    if len(list_col_sort) > 0:
+        df = df.sort_values(by=list_col_sort,ascending=list_ascending)
     # Create markdown files
     print(f"Processing {len(df)} papers from {input_csv}...")
     created_files = write_series_papers_into_markdown(df, output_dir=output_dir)
