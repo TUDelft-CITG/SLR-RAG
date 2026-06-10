@@ -108,7 +108,8 @@ def write_paper_to_markdown(
     """
     # Get title and create filename
     title = paper.get("title", "Untitled")
-
+    if pd.isna(title):
+        title = "Untitled"
     # Ensure manual_review field exists
     if MANUAL_REVIEW_FIELD not in paper:
         paper[MANUAL_REVIEW_FIELD] = DEFAULT_REVIEW_STATUS
@@ -123,7 +124,7 @@ def write_paper_to_markdown(
 
         # Add DOI
         doi = paper.get("doi", "")
-        if doi and doi != "N/A" and str(doi).lower() not in ["nan", "none", ""]:
+        if not pd.isna(doi) and doi != "N/A" and str(doi).lower() not in ["nan", "none", ""]:
             lines.append(f'doi: "{doi}"')
 
         # Add tags field (placeholder)
@@ -131,24 +132,24 @@ def write_paper_to_markdown(
 
         # Add PDF link
         pdf = paper.get("pdf", "")
-        if pdf and pdf != "N/A":
+        if not pd.isna(pdf) and pdf != "N/A":
             lines.append(f'pdf: "{pdf}"')
 
         # Add date of publication
         date = paper.get("date", "")
-        if date and date != "N/A":
+        if not pd.isna(date) and date != "N/A":
             lines.append(f'date: "{date}"')
 
         # Add database IDs
         for db in ["scopus", "openalex", "lens", "dimensions"]:
             id_field = f"id_{db}"
             id_value = paper.get(id_field, "")
-            if id_value and id_value != "N/A":
+            if not pd.isna(id_value) and id_value != "N/A":
                 lines.append(f'{id_field}: "{id_value}"')
 
         # Add manual review status
         review_status = paper.get(MANUAL_REVIEW_FIELD)
-        if review_status and review_status != "None" and not pd.isna(review_status):
+        if not pd.isna(review_status) and review_status != "None" and not pd.isna(review_status):
             lines.append(f"manual_review: {review_status}")
 
         lines.append("---")
@@ -175,7 +176,7 @@ def write_paper_to_markdown(
             prefix_db = f"{prefix}_{db}"
             if prefix_db in paper:
                 topics = paper.get(prefix_db, "")
-                if not pd.isna(topics) and topics != "N/A" and isinstance(topics, str):
+                if not pd.isna(topics):
                     lines.append("**" + db + "**: " + topics)
 
     # Write to file
