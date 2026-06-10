@@ -177,7 +177,7 @@ def write_paper_to_markdown(
             if prefix_db in paper:
                 topics = paper.get(prefix_db, "")
                 if not pd.isna(topics):
-                    lines.append("**" + db + "**: " + topics)
+                    lines.append("**" + db + "**: " + str(topics))
 
     # Write to file
     with open(output_file, "w", encoding="utf-8") as f:

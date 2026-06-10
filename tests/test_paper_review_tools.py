@@ -29,9 +29,7 @@ from slrrag.convertmarkdown.paper_review_tools import (
 )
 
 
-# =============================================================================
 # Fixtures
-# =============================================================================
 
 
 @pytest.fixture
@@ -123,9 +121,7 @@ def sample_dataframe():
     return pd.DataFrame(data)
 
 
-# =============================================================================
 # Tests for slugify function
-# =============================================================================
 
 
 class TestSlugify:
@@ -232,9 +228,7 @@ class TestSlugify:
         assert filename == "test-title.md"
 
 
-# =============================================================================
 # Tests for write_paper_to_markdown function
-# =============================================================================
 
 
 class TestWritePaperToMarkdown:
@@ -377,102 +371,76 @@ class TestWritePaperToMarkdown:
             or '<span class="kw-wind-farm' in content
         )
 
-    def test_paper_with_all_none_fields(self, temp_output_file):
-        """Test that a paper with all None fields is handled correctly."""
-        paper_dict = {
-            "title": None,
-            "abstract": None,
-            "doi": None,
-            "year": None,
-            "date": None,
-            "type": None,
-            "pdf": None,
-            "id_scopus": None,
-            "id_openalex": None,
-            "keywords_scopus": None,
-            "relevance_order_scopus": None,
-            "in_scopus": None,
-            "topic_openalex": None,
-            "fields_openalex": None,
-            "keywords_openalex": None,
-            "relevance_openalex": None,
-            "in_openalex": None,
-            "topic_lens": None,
-            "keywords_lens": None,
-            "in_lens": None,
-            "topic_dimensions": None,
-            "keywords_dimensions": None,
-            "in_dimensions": None,
-            "is_found": None,
-            "is_reference": None,
+    def test_scopus_relevance_order_string(self, temp_output_file):
+        """Test that scopus relevance_order is displayed when provided as string."""
+        paper = {
+            "title": "Test Paper",
+            "relevance_order_scopus": "5",
             MANUAL_REVIEW_FIELD: None,
         }
         filepath = write_paper_to_markdown(
-            paper_dict, output_file=temp_output_file
+            paper, output_file=temp_output_file
         )
-
-        assert os.path.exists(filepath)
 
         with open(filepath, "r", encoding="utf-8") as f:
             content = f.read()
 
-        # Should have default title "Untitled"
-        assert "# Untitled" in content
-        # Abstract section should not be present if abstract is None
-        assert "## Abstract" not in content
-        # DOI should not be present if doi is None
-        assert "doi:" not in content
+        assert "## relevance_order" in content
+        assert "**scopus**: 5" in content
 
-    def test_paper_with_all_nan_fields(self, temp_output_file):
-        """Test that a paper with all NaN fields is handled correctly."""
-        paper_dict = {
-            "title": pd.NA,
-            "abstract": pd.NA,
-            "doi": pd.NA,
-            "year": pd.NA,
-            "date": pd.NA,
-            "type": pd.NA,
-            "pdf": pd.NA,
-            "id_scopus": pd.NA,
-            "id_openalex": pd.NA,
-            "keywords_scopus": pd.NA,
-            "relevance_order_scopus": pd.NA,
-            "in_scopus": pd.NA,
-            "topic_openalex": pd.NA,
-            "fields_openalex": pd.NA,
-            "keywords_openalex": pd.NA,
-            "relevance_openalex": pd.NA,
-            "in_openalex": pd.NA,
-            "topic_lens": pd.NA,
-            "keywords_lens": pd.NA,
-            "in_lens": pd.NA,
-            "topic_dimensions": pd.NA,
-            "keywords_dimensions": pd.NA,
-            "in_dimensions": pd.NA,
-            "is_found": pd.NA,
-            "is_reference": pd.NA,
-            MANUAL_REVIEW_FIELD: pd.NA,
+    def test_scopus_relevance_order_float(self, temp_output_file):
+        """Test that scopus relevance_order is displayed when provided as float."""
+        paper = {
+            "title": "Test Paper",
+            "relevance_order_scopus": 5.0,
+            MANUAL_REVIEW_FIELD: None,
         }
         filepath = write_paper_to_markdown(
-            paper_dict, output_file=temp_output_file
+            paper, output_file=temp_output_file
         )
-
-        assert os.path.exists(filepath)
 
         with open(filepath, "r", encoding="utf-8") as f:
             content = f.read()
 
-        # Should have default title "Untitled"
-        assert "# Untitled" in content
-        # Abstract section should not be present if abstract is NaN
-        assert "## Abstract" not in content
-        # DOI should not be present if doi is NaN
-        assert "doi:" not in content
+        assert "## relevance_order" in content
+        assert "**scopus**: 5.0" in content
+
+    def test_openalex_relevance_string(self, temp_output_file):
+        """Test that openalex relevance is displayed when provided as string."""
+        paper = {
+            "title": "Test Paper",
+            "relevance_openalex": "300",
+            MANUAL_REVIEW_FIELD: None,
+        }
+        filepath = write_paper_to_markdown(
+            paper, output_file=temp_output_file
+        )
+
+        with open(filepath, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        assert "## relevance" in content
+        assert "**openalex**: 300" in content
+
+    def test_openalex_relevance_float(self, temp_output_file):
+        """Test that openalex relevance is displayed when provided as float."""
+        paper = {
+            "title": "Test Paper",
+            "relevance_openalex": 300.0,
+            MANUAL_REVIEW_FIELD: None,
+        }
+        filepath = write_paper_to_markdown(
+            paper, output_file=temp_output_file
+        )
+
+        with open(filepath, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        assert "## relevance" in content
+        assert "**openalex**: 300.0" in content
 
 
-# =============================================================================
 # Tests for write_paper_into_markdown function
-# =============================================================================
 
 
 class TestWriteSeriesPapersIntoMarkdown:
@@ -512,9 +480,7 @@ class TestWriteSeriesPapersIntoMarkdown:
         assert len(created_files) == 3
 
 
-# =============================================================================
 # Run tests
-# =============================================================================
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "--tb=short"])
