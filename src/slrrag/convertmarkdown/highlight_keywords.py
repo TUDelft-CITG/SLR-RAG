@@ -58,7 +58,7 @@ STEMMING_DICT = {
         "synthetic island",
         "synthetic islands",
     ],
-    "bridge": ["bridge", "bridges"],
+    "bridge": ["bridge", "bridges", "bridging"],
     # === 2. MARITIME VESSELS & STRUCTURES ===
     "ship": ["ship", "ships", "shipping", "shipped"],
     "vessel": ["vessel", "vessels"],

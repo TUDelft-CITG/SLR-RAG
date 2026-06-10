@@ -76,6 +76,7 @@
 .kw-offshore,
 .kw-infrastructure,
 .kw-wind-farm,
+.kw-bridge,
 .kw-other-offshore-infrastructures {
     color: var(--kw-blue-fg) !important;
     font-weight: 600 !important;
@@ -85,7 +86,6 @@
 }
 
 /* === TOPIC 2: MARITIME VESSELS & STRUCTURES (Cyan) === */
-.kw-bridge,
 .kw-ship,
 .kw-vessel {
     color: var(--kw-cyan-fg) !important;
@@ -97,7 +97,6 @@
 
 /* === TOPIC 3: SAFETY & INCIDENTS (Red) === */
 .kw-collision,
-.kw-safety,
 .kw-accident {
     color: var(--kw-red-fg) !important;
     font-weight: 600 !important;
@@ -118,8 +117,6 @@
 /* === TOPIC 5: RISK ASSESSMENT (Green) === */
 .kw-risk,
 .kw-safety,
-.kw-probability,
-.kw-chance,
 .kw-assess,
 .kw-navigation-risk-assessment {
     color: var(--kw-green-fg) !important;
@@ -131,7 +128,9 @@
 
 /* === TOPIC 6: ANALYSIS & PREDICTION (Orange) === */
 .kw-model,
+.kw-probability,
 .kw-predict,
+.kw-chance,
 .kw-analyse {
     color: var(--kw-orange-fg) !important;
     font-weight: 600 !important;
