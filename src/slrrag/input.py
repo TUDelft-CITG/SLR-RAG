@@ -258,4 +258,4 @@ SECOND_ROUND_QUESTIONS = {
     "": {},
 }
 
-OLLAMA_MODELS = ["llama3.1", "ministral-3:3b", "granite4.1:3b"]
+OLLAMA_MODELS = ["ministral-3:3b", "granite4.1:3b"]

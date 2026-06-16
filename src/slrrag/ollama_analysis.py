@@ -11,7 +11,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables.base import RunnableSequence
 from langchain_ollama import ChatOllama
 from tqdm import tqdm
-
+tqdm.pandas()
 from slrrag.input import OLLAMA_MODELS
 from slrrag.settings import SchemaPapers
 
@@ -64,23 +64,11 @@ def analyze_papers_with_agent(
     questions: Dict[str, str],
 ) -> pd.DataFrame:
     """Analyze papers using agent and return DataFrame with answers."""
-    list_agents = []
+    def apply_func(paper_input:pd.Series, agent_input:ChatOllama):
+        answers : dict = analyze_paper(agent_input, paper_input["title"], paper_input["abstract"], questions)
+        return pd.Series(answers)
     for agent_model in list_agents_name:
-        list_agents.append(ChatOllama(model=agent_model))
-    results = []
-    for paper in tqdm(papers_df.to_dict("records")):
-        paper_with_answers = {
-            "doi": paper["doi"],
-            "title": paper["title"],
-            "date": paper["date"],
-            "abstract": paper["abstract"],
-        }
-
-        for agent in list_agents:
-            answers = analyze_paper(agent, paper["title"], paper["abstract"], questions)
-            paper_with_answers = {
-                **paper_with_answers,
-                **answers,
-            }
-        results.append(paper_with_answers)
-    return pd.DataFrame(results)
+        agent = ChatOllama(model=agent_model)
+        outputs_questions = papers_df.head(2).progress_apply(lambda x : apply_func(x, agent_input=agent), axis=1)
+        papers_df = pd.concat(papers_df,outputs_questions,axis=1)
+    return papers_df
