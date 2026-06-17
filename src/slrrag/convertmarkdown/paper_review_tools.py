@@ -14,7 +14,8 @@ import os
 from pathlib import Path
 from typing import List, Dict, Any
 from tqdm import tqdm
-from slrrag.settings import NAME_COL_RELEVANCE_OPENALEX,NAME_COL_RELEVANCE_ORDER_SCOPUS
+from slrrag.settings import NAME_COL_RELEVANCE_OPENALEX, NAME_COL_RELEVANCE_ORDER_SCOPUS
+
 # Import the keyword highlighting functionality
 from slrrag.convertmarkdown.highlight_keywords import highlight_keywords_in_text
 
@@ -289,13 +290,15 @@ if __name__ == "__main__":
     # Sort if relevance in columns, first openalex and then scopus
     # The boolean indicates if it is ascending or not
     dict_sort_relevance = {
-        NAME_COL_RELEVANCE_OPENALEX : False,
-        NAME_COL_RELEVANCE_ORDER_SCOPUS : True
+        NAME_COL_RELEVANCE_OPENALEX: False,
+        NAME_COL_RELEVANCE_ORDER_SCOPUS: True,
     }
-    list_col_sort= [x for x in dict_sort_relevance.keys() if x in df.columns]
-    list_ascending= [dict_sort_relevance[x] for x in dict_sort_relevance.keys() if x in df.columns]
+    list_col_sort = [x for x in dict_sort_relevance.keys() if x in df.columns]
+    list_ascending = [
+        dict_sort_relevance[x] for x in dict_sort_relevance.keys() if x in df.columns
+    ]
     if len(list_col_sort) > 0:
-        df = df.sort_values(by=list_col_sort,ascending=list_ascending)
+        df = df.sort_values(by=list_col_sort, ascending=list_ascending)
     # Create markdown files
     print(f"Processing {len(df)} papers from {input_csv}...")
     created_files = write_series_papers_into_markdown(df, output_dir=output_dir)

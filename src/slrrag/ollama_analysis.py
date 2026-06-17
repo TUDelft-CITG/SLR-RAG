@@ -11,9 +11,11 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables.base import RunnableSequence
 from langchain_ollama import ChatOllama
 from tqdm import tqdm
-tqdm.pandas()
+
 from slrrag.input import OLLAMA_MODELS
 from slrrag.settings import SchemaPapers
+
+tqdm.pandas()
 
 # Model configuration
 MISTRAL_MODEL = "ministral-3b-2512"
@@ -64,11 +66,39 @@ def analyze_papers_with_agent(
     questions: Dict[str, str],
 ) -> pd.DataFrame:
     """Analyze papers using agent and return DataFrame with answers."""
-    def apply_func(paper_input:pd.Series, agent_input:ChatOllama):
-        answers : dict = analyze_paper(agent_input, paper_input["title"], paper_input["abstract"], questions)
+    papers_df = papers_df.sample(2)
+
+    def apply_func(paper_input: pd.Series, agent_input: ChatOllama):
+        answers: dict = analyze_paper(
+            agent_input, paper_input["title"], paper_input["abstract"], questions
+        )
         return pd.Series(answers)
+
     for agent_model in list_agents_name:
         agent = ChatOllama(model=agent_model)
-        outputs_questions = papers_df.head(2).progress_apply(lambda x : apply_func(x, agent_input=agent), axis=1)
-        papers_df = pd.concat(papers_df,outputs_questions,axis=1)
+        outputs_questions = papers_df.progress_apply(
+            lambda x: apply_func(x, agent_input=agent), axis=1
+        )
+        papers_df = pd.concat((papers_df, outputs_questions), axis=1)
     return papers_df
+
+
+if __name__ == "__main__":
+    import sys
+    from pathlib import Path
+    from slrrag.input import FIRST_ROUND_QUESTIONS
+    from slrrag.toolbox.files import save_dataframe_to_csv
+
+    print(f"Analyzing papers with agent : {OLLAMA_MODELS}")
+    if len(sys.argv) < 2:
+        print("Usage: uv run src/slrrag/ollama_analysis.py <input_csv> <output_csv>")
+    input_csv = Path(sys.argv[1])
+    output_csv = Path(sys.argv[2])
+    input_df = pd.read_csv(input_csv)
+    results_df = analyze_papers_with_agent(
+        OLLAMA_MODELS, input_df, FIRST_ROUND_QUESTIONS
+    )
+
+    print(f"Saving results to {output_csv}")
+    save_dataframe_to_csv(results_df, output_csv)
+    print(f"Analysis complete. Results saved to {output_csv}")

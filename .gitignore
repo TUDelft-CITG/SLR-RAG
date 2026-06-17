@@ -14,3 +14,10 @@ data/export_databases/
 uv.lock
 
 notebooks/*.png
+
+# Snellius files
+logs/
+*.out
+*.err
+*.log
+*.logs

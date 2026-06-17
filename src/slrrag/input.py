@@ -258,4 +258,11 @@ SECOND_ROUND_QUESTIONS = {
     "": {},
 }
 
-OLLAMA_MODELS = ["ministral-3:3b", "granite4.1:3b"]
+OLLAMA_MODELS = [
+    "granite4.1:3b",
+    "qwen3.5:4b",
+    "ministral-3:3b",
+    "deepseek-r1:1.5b",
+    "qwen3:4b",
+    "llama3.2:3b",
+]
