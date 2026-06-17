@@ -14,7 +14,7 @@ data/export_databases/
 uv.lock
 
 notebooks/*.png
-
+.ipynb_checkpoints/
 # Snellius files
 logs/
 *.out
