@@ -12,6 +12,7 @@ data/export_databases/
 *.html
 *.egg-info/
 uv.lock
+data/
 
 notebooks/*.png
 .ipynb_checkpoints/
