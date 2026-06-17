@@ -25,12 +25,12 @@ from slrrag.input import (
 from slrrag.settings import (
     AUTOMATICALLY_OVERWRITE,
     NAME_COL_YEAR,
-    OUTPUT_CSV_AGENTS_PATH,
-    OUTPUT_CSV_QUERY_RESULTS,
-    OUTPUT_CSV_SCOPUS,
-    OUTPUT_CSV_OPENALEX,
-    OUTPUT_PATH,
-    OUTPUT_UPSET,
+    PATH_CSV_03_AGENTS_ANWSERS,
+    PATH_CSV_01_QUERY_RESULTS,
+    PATH_CSV_SCOPUS_QUERY_RESULTS,
+    PATH_CSV_OPENALEX_QUERY_RESULTS,
+    PATH_OUTPUT,
+    PATH_UPSET,
     PANDERA_LAZY_VALIDATION,
     PATH_DIMENSIONS_EXPORT,
     PATH_LENS_EXPORT,
@@ -98,7 +98,7 @@ def add_scopus_papers(
     input_papers: DataFrame[SchemaPapers], database_names: List[str]
 ) -> tuple[DataFrame[SchemaPapers], List[str]]:
 
-    results_scopus = load_or_query_database("Scopus", OUTPUT_CSV_SCOPUS, query_scopus)
+    results_scopus = load_or_query_database("Scopus", PATH_CSV_SCOPUS_QUERY_RESULTS, query_scopus)
     if results_scopus is not None:
         input_papers, database_names = merge_papers(
             input_papers, results_scopus, database_names, "scopus"
@@ -111,7 +111,7 @@ def add_openalex_papers(
     input_papers: DataFrame[SchemaPapers], database_names: List[str]
 ) -> tuple[DataFrame[SchemaPapers], List[str]]:
     results_openalex = load_or_query_database(
-        "OpenAlex", OUTPUT_CSV_OPENALEX, query_openalex_and_standardize
+        "OpenAlex", PATH_CSV_OPENALEX_QUERY_RESULTS, query_openalex_and_standardize
     )
     if results_openalex is not None:
         input_papers, database_names = merge_papers(
@@ -203,8 +203,8 @@ def add_lens_papers(
     print(lens_query)
 
     # Save to file
-    query_lens_path = OUTPUT_PATH / "query_lens.txt"
-    os.makedirs(OUTPUT_PATH, exist_ok=True)
+    query_lens_path = PATH_OUTPUT / "query_lens.txt"
+    os.makedirs(PATH_OUTPUT, exist_ok=True)
     with open(query_lens_path, "w") as f:
         f.write(lens_query + "\n")
     print(f"\nQuery saved to {query_lens_path}")
@@ -413,7 +413,7 @@ def prompt_user_for_action_before_querying() -> str:
     """Prompt the user for action: continue, print papers, or exit."""
     while True:
         user_input = input(
-            f"Choose an option:\n  's' to query the databases\n  'i' to import fron {OUTPUT_CSV_AGENTS_PATH}\n> "
+            f"Choose an option:\n  's' to query the databases\n  'i' to import fron {PATH_CSV_03_AGENTS_ANWSERS}\n> "
         ).lower()
         if user_input in ["s", "i"]:
             return user_input
@@ -424,7 +424,7 @@ def prompt_user_for_action_after_querying() -> str:
     """Prompt the user for action: continue, print papers, or exit."""
     while True:
         user_input = input(
-            f"Choose an option:\n  'c' to continue with the agents\n  'p' to print papers' names\n  'r' to see references papers \n  'e' to exit\n  's' to save to '{OUTPUT_CSV_QUERY_RESULTS}'\n  'u' to plot upset plot at '{OUTPUT_UPSET}'\n> "
+            f"Choose an option:\n  'c' to continue with the agents\n  'p' to print papers' names\n  'r' to see references papers \n  'e' to exit\n  's' to save to '{PATH_CSV_01_QUERY_RESULTS}'\n  'u' to plot upset plot at '{PATH_UPSET}'\n> "
         ).lower()
         if user_input in ["c", "p", "e", "s", "u", "r"]:
             return user_input
@@ -451,13 +451,13 @@ def handle_user_actions_after_querying(
                 ]
             )
         elif action == "s":  # Save merged papers as CSV
-            save_dataframe_to_csv(papers_df, OUTPUT_CSV_QUERY_RESULTS)
+            save_dataframe_to_csv(papers_df, PATH_CSV_01_QUERY_RESULTS)
         elif action == "u":
-            if check_overwrite(OUTPUT_UPSET, AUTOMATICALLY_OVERWRITE):
-                plot_and_save_upset(papers_df, OUTPUT_UPSET)
-                print(f"Upset plot saved to {OUTPUT_UPSET}")
+            if check_overwrite(PATH_UPSET, AUTOMATICALLY_OVERWRITE):
+                plot_and_save_upset(papers_df, PATH_UPSET)
+                print(f"Upset plot saved to {PATH_UPSET}")
         elif action == "c":  # continue
-            os.makedirs(OUTPUT_CSV_AGENTS_PATH.parent, exist_ok=True)
+            os.makedirs(PATH_CSV_03_AGENTS_ANWSERS.parent, exist_ok=True)
             return True
         elif action == "r":
             print(
@@ -500,7 +500,7 @@ def main():
     if prompt_user_for_action_before_querying() == "s":
         papers_df, database_names = get_all_papers_from_databases()
     else:
-        papers_df = SchemaPapers.validate(pd.read_csv(OUTPUT_CSV_QUERY_RESULTS))
+        papers_df = SchemaPapers.validate(pd.read_csv(PATH_CSV_01_QUERY_RESULTS))
 
         database_names = [
             c.removeprefix("id_") for c in papers_df.columns if c.startswith("id_")
@@ -514,9 +514,9 @@ def main():
         return
 
     # Check if file exists and prompt user for overwrite
-    if OUTPUT_CSV_AGENTS_PATH.exists() and not AUTOMATICALLY_OVERWRITE:
+    if PATH_CSV_03_AGENTS_ANWSERS.exists() and not AUTOMATICALLY_OVERWRITE:
         user_input = input(
-            f"File {OUTPUT_CSV_AGENTS_PATH} already exists. Overwrite? (y/n): "
+            f"File {PATH_CSV_03_AGENTS_ANWSERS} already exists. Overwrite? (y/n): "
         ).lower()
         if user_input != "y":
             print("Operation cancelled by user.")
@@ -526,10 +526,10 @@ def main():
         OLLAMA_MODELS, papers_df, FIRST_ROUND_QUESTIONS
     )
 
-    print(f"Saving results to {OUTPUT_CSV_AGENTS_PATH}")
-    save_dataframe_to_csv(results_df, OUTPUT_CSV_AGENTS_PATH)
+    print(f"Saving results to {PATH_CSV_03_AGENTS_ANWSERS}")
+    save_dataframe_to_csv(results_df, PATH_CSV_03_AGENTS_ANWSERS)
 
-    print(f"Analysis complete. Results saved to {OUTPUT_CSV_AGENTS_PATH}")
+    print(f"Analysis complete. Results saved to {PATH_CSV_03_AGENTS_ANWSERS}")
 
 
 if __name__ == "__main__":

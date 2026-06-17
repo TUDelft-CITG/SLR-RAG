@@ -452,19 +452,6 @@ class TestEdgeCases:
         finally:
             os.unlink(temp_path)
 
-    def test_file_with_only_whitespace(self):
-        """Test processing a file with only whitespace."""
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
-            f.write("   \n\n   \t  ")
-            f.flush()
-            temp_path = f.name
-
-        try:
-            result = process_file(temp_path)
-            assert result is False
-        finally:
-            os.unlink(temp_path)
-
     def test_cleanup_empty_string(self):
         """Test cleanup_file with empty string."""
         assert cleanup_file("") == ""

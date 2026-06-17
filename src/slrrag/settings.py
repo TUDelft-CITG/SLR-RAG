@@ -9,22 +9,35 @@ from pandera.typing import Series
 AUTOMATICALLY_OVERWRITE = True
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent
-PATH_INPUT = PROJECT_ROOT / Path("data/export_databases/")
-PATH_LENS_EXPORT = PATH_INPUT / "lens-export.csv"
-PATH_DIMENSIONS_EXPORT = PATH_INPUT / "dimensions-export.csv"
+PATH_DATA = PROJECT_ROOT / Path("data/export_databases/")
+PATH_INPUT = PATH_DATA
+PATH_LENS_EXPORT = PATH_DATA / "lens-export.csv"
+PATH_DIMENSIONS_EXPORT = PATH_DATA / "dimensions-export.csv"
 
-OUTPUT_PATH = PATH_INPUT  # Convenient when backuping the results
-OUTPUT_CSV_QUERY_RESULTS = OUTPUT_PATH / "papers_selected.csv"
-OUTPUT_CSV_AGENTS_PATH = OUTPUT_PATH / "paper_analysis.csv"
-OUTPUT_CSV_FILTERED_TOPIC_PAPERS = OUTPUT_PATH / "papers_topic_filtered.csv"
-OUTPUT_CSV_TO_MANUAL_FILTER = OUTPUT_PATH / "papers_manual_filter.csv"
-OUTPUT_UPSET = OUTPUT_PATH / "upset.html"
-OUTPUT_CSV_SCOPUS = OUTPUT_PATH / "scopus_results.csv"
-OUTPUT_CSV_OPENALEX = OUTPUT_PATH / "openalex_results.csv"
 
-SCOPUS_IS_SUBSCRIBER = True
-THRESHOLD_BIG_COUNT_PAPER = 1
-DEFAULT_OPEN_ALEX_PAGING = 50
+# --- Outputs variables ---
+
+PATH_OUTPUT = PATH_DATA  # Convenient when backuping the results
+
+# Output of all papers without filtering
+PATH_CSV_01_QUERY_RESULTS = PATH_OUTPUT / "01_papers_query_results.csv"
+PATH_CSV_SCOPUS_QUERY_RESULTS = PATH_OUTPUT / "scopus_query_results.csv"
+PATH_CSV_OPENALEX_QUERY_RESULTS = PATH_OUTPUT / "openalex_query_results.csv"
+
+# Output of papers with manual filter (topic, date, type...)
+PATH_CSV_02_FILTERED_TOPIC = PATH_OUTPUT / "02_papers_filtered_topic.csv"
+
+# Outputs of papers with first_round_question answerd by the agents.
+PATH_CSV_03_AGENTS_ANWSERS = PATH_OUTPUT / "03_papers_agent_anwsers.csv"
+
+# Outputs of papers with manual_filters
+PATH_CSV_04_MANUAL_FILTER = PATH_OUTPUT / "04_papers_manual_filter.csv"
+
+# Output of upset plot
+PATH_UPSET = PATH_OUTPUT / "upset.html"
+
+
+
 
 # Globl variables column names in dataframes
 
@@ -297,3 +310,6 @@ DEFAULT_DF_COLUMNS = [
     NAME_COL_ABSTRACT,
     NAME_COL_TYPE,
 ]
+SCOPUS_IS_SUBSCRIBER = True
+THRESHOLD_BIG_COUNT_PAPER = 1
+DEFAULT_OPEN_ALEX_PAGING = 50

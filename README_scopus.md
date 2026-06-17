@@ -14,7 +14,7 @@ The system uses local Large Language Models (LLMs) via Ollama to analyze and cat
 
 ### With uv (Recommended)
 
-1. Install uv from [here](https://docs.astral.sh/uv/getting-started/installation/)
+1. Install uv [here](https://docs.astral.sh/uv/getting-started/installation/)
 2. Install dependencies using uv:
    ```bash
    uv sync
@@ -26,8 +26,6 @@ The system uses local Large Language Models (LLMs) via Ollama to analyze and cat
    ```bash
    pip install -r requirements.txt
    ```
-### With conda
-(Coming soon)
 
 ---
 
