@@ -415,18 +415,18 @@ lorem ipsum offshore wind farm
             assert "---" in result
             assert "title: this-is-my-title-offshore-wind-farm" in result
             assert "date: 2026" in result
-            
+
             # Check that the header section does NOT contain any span tags
             # Extract header (first --- to second ---)
-            header_end = result.find('---', 3)
+            header_end = result.find("---", 3)
             if header_end != -1:
-                header_section = result[:header_end + 3]
+                header_section = result[: header_end + 3]
                 assert '<span class="kw-' not in header_section
-            
+
             # Check that body has highlights
             assert '<span class="kw-offshore">offshore</span>' in result
             assert '<span class="kw-wind-farm">wind farm</span>' in result
-            
+
         finally:
             os.unlink(temp_path)
 

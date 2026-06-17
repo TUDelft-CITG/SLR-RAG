@@ -98,7 +98,9 @@ def add_scopus_papers(
     input_papers: DataFrame[SchemaPapers], database_names: List[str]
 ) -> tuple[DataFrame[SchemaPapers], List[str]]:
 
-    results_scopus = load_or_query_database("Scopus", PATH_CSV_SCOPUS_QUERY_RESULTS, query_scopus)
+    results_scopus = load_or_query_database(
+        "Scopus", PATH_CSV_SCOPUS_QUERY_RESULTS, query_scopus
+    )
     if results_scopus is not None:
         input_papers, database_names = merge_papers(
             input_papers, results_scopus, database_names, "scopus"

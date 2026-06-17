@@ -37,8 +37,6 @@ PATH_CSV_04_MANUAL_FILTER = PATH_OUTPUT / "04_papers_manual_filter.csv"
 PATH_UPSET = PATH_OUTPUT / "upset.html"
 
 
-
-
 # Globl variables column names in dataframes
 
 NAME_COL_DOI = "doi"

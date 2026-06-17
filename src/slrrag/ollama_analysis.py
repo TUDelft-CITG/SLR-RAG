@@ -66,6 +66,7 @@ def analyze_papers_with_agent(
     questions: Dict[str, str],
 ) -> pd.DataFrame:
     """Analyze papers using agent and return DataFrame with answers."""
+
     def apply_func(paper_input: pd.Series, agent_input: ChatOllama):
         answers: dict = analyze_paper(
             agent_input, paper_input["title"], paper_input["abstract"], questions
