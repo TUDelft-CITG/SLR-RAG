@@ -91,7 +91,6 @@ Or directly via vscode.
 Default output file :  `data/papers_selection/02_papers_filtered_topic.csv`
 
 
-
 ### Phase 4 : Agent with ollama
 You can either call the agent directly from the `main.py`.
 But usually, you want to analyse your papers with a good notebooks first, and call the agents after, by calling directly `src/slrrag/ollama_analysis.py`.
@@ -110,7 +109,10 @@ sbatch scripts/run_snellius.sh
 ```
 You can modify the SBATCH settings directly in the script.
 
-#### Phase 5 : Systematic Literature Reviews (SLR) using Retrieval-Augmented Generation (RAG) 
+#### Phase 5 : manual review with obsidian
+*Coming soon*
+
+#### Phase 6 : Systematic Literature Reviews (SLR) using Retrieval-Augmented Generation (RAG) 
 *Coming soon, see below*.
 
 ## 🔍 Configuration Files
