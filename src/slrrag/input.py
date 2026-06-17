@@ -6,122 +6,12 @@ from slrrag.settings import (
     CONFERENCE_PROCEEDING_N,
 )
 
-
-### FIRST QUERY
-
-# MAIN_QUERY = """
-# ("collision" OR "allision" OR "accident" OR "safety" OR "risk assessment" OR "risk analysis") AND
-# ("Offshore infrastructure" OR "Offshore construction"
-# 	OR "Offshore windfarm" OR "Offshore windmill" OR "Offshore wind turbine" OR "Offshore wind park" OR "OWF"
-# 	OR "Offshore platform" OR "Oil platform" OR "Hydrogen platforms"
-# 	OR "Offshore quay" OR "Offshore wharf"
-# 	OR "Artificial Island" OR "Synthetic Island"
-# 	OR "Bridge"
-# 	OR "Flotel"
-# 	OR "Aquaculture Farms"
-# 	OR "Offshore Lidar"
-# 	OR "Storm surge barrier" OR  "Flood Barrier"
-# ) AND
-# ("Strategic" OR "Static" OR "Long-term" OR "Marine spatial planning" OR "Large scale") AND
-# ("maritime" OR  "navigational" OR "nautical")
-# """
-
-### SECOND QUERY
-
 MAIN_QUERY = """
 ("risk assessment" OR "risk analysis") AND
 ("Offshore windfarm" OR "Offshore windmill" OR "Offshore wind turbine" OR "Offshore wind park" OR "OWF") AND
 ("Strategic" OR "Static" OR "Long-term" OR "Marine spatial planning" OR "Large scale") AND
 ("maritime" OR  "navigational" OR "nautical")
 """
-
-### THIRD QUERY
-
-# MAIN_QUERY = """
-# ("risk assessment" OR "risk analysis") AND
-# ("Offshore windfarm" OR "Offshore windmill" OR "Offshore wind turbine" OR "Offshore wind park" OR "OWF") AND
-# ("maritime" OR "navigational" OR "nautical")
-# """
-
-### FOURTH QUERY
-
-# MAIN_QUERY = """
-# ("ship collision" OR "ship-object collision" OR "allision" OR "maritime accident" OR "ship encounter" OR "safety" OR "risk assessments" OR "risk analysis" OR "risk model" OR "hazards") AND
-# ("Offshore windfarms" OR "Offshore wind farms" OR "Offshore windmill" OR "Offshore wind turbine" OR "Offshore wind park" OR "OWF") AND
-# ("maritime" OR  "navigational" OR "nautical" OR "marine" OR "shipping")
-# """
-
-
-### FIFTH QUERY
-
-
-# MAIN_QUERY = """
-# ("ship collision" OR "ship-object collision" OR "allision" OR "maritime accident" OR "ship encounter" OR "safety" OR "risk assessments" OR "risk analysis" OR "risk model" OR "hazards") AND
-# ("Offshore windfarms" OR "Offshore wind farms" OR "Offshore windmill" OR "Offshore wind turbine" OR "Offshore wind park" OR "OWF" OR "Offshore wind energy" OR "Offshore infrastructure" OR "Offshore construction" OR "Offshore installation" OR "offshore marine platforms") AND
-# ("maritime" OR  "navigational" OR "nautical" OR "marine" OR "shipping")
-# """
-
-
-### SIXTH QUERY
-
-
-# MAIN_QUERY = """
-# ("collision" OR "allision") AND
-# ("Offshore infrastructure" OR "Offshore construction" OR "Offshore installation" OR "Offshore windfarm" OR "Offshore windfarms" OR "Offshore wind farm" OR "Offshore wind farms" OR "Offshore windmill" OR "Offshore wind turbine" OR "Offshore wind park" OR "OWF" OR "Offshore platform" OR "Oil platform" OR "Hydrogen platforms" OR "Bridge" OR "offshore marine platform") AND
-# ("maritime" OR "navigational" OR "nautical" OR "marine" OR "shipping" OR "vessel" OR "ship")
-# """
-
-### 7th QUERY
-
-# MAIN_QUERY = """
-# ("collision" OR "allision" OR "accident" OR "ship encounter" OR "safety" OR "hazards" OR "risk") AND
-# ("Offshore infrastructure" OR "Offshore construction" OR "Offshore installation" OR "Offshore windfarm" OR "Offshore windfarms" OR "Offshore wind farm" OR "Offshore wind farms" OR "Offshore windmill" OR "Offshore wind turbine" OR "Offshore wind park" OR "OWF" OR "Offshore platform" OR "Oil platform" OR "Hydrogen platforms" OR "Bridge" OR "offshore marine platform") AND
-# ("maritime" OR "navigational" OR "nautical" OR "marine" OR "shipping" OR "vessel" OR "ship")
-# """
-
-### 8th QUERY
-
-# MAIN_QUERY = """
-# ("Navigational Risk assessment" OR "Navigation Risk assessment")
-# """
-
-### 9th QUERY
-
-# MAIN_QUERY = """
-# ("offshore") AND ("infrastructure" OR "construction" OR "installation" OR "windfarm" OR "windfarms" OR "wind farm" OR "wind farms" OR "windmill" OR "wind turbine" OR "wind park" OR "wind energy") AND
-# (("Navigation risk assessment" OR "Navigational risk assessment") OR
-# (("collision" OR "allision") AND ("ship" OR "vessel") AND ("Probabily" OR "likelihood" OR "model")) OR
-# ("risk" AND ("assess" OR "model" OR "predict") AND ("ship" OR "vessel" OR "maritime traffic")))
-# """
-
-### 10th QUERY
-
-# MAIN_QUERY = """
-# ("offshore") AND ("infrastructure*" OR "construction*" OR "installation*" OR "windfarm*" OR "wind farm*" OR "windmill*" OR "wind turbine*" OR "wind park*" OR "wind energy") AND
-# (("Navigation risk assessment*" OR "Navigational risk assessment*") OR
-# (("collision*" OR "allision*") AND ("ship*" OR "vessel*") AND ("probabi*" OR "likelihood*" OR "model*")) OR
-# ("risk*" AND ("assess*" OR "model*" OR "predict*" OR "analy*") AND ("ship*" OR "vessel*" OR "maritime traffic*" OR "navigation*")))
-# """
-
-
-### 11th QUERY
-
-# MAIN_QUERY = """
-# ("offshore") AND ("infrastructure*" OR "construction*" OR "installation*" OR "windfarm*" OR "wind farm*" OR "windmill*" OR "wind turbine*" OR "wind park*" OR "wind energy") AND
-# (("Navigation risk assessment*" OR "Navigational risk assessment*") OR
-# (("collision*" OR "allision*") AND ("ship*" OR "vessel*") AND ("probabi*" OR "likelihood*" OR "model*")) OR
-# (("risk*" OR "safety") AND ("assess*" OR "model*" OR "predict*" OR "analy*" OR "study" OR "studies") AND ("ship*" OR "vessel*" OR "maritime traffic*" OR "navigation*")))
-# """
-
-### 12th QUERY
-
-
-# MAIN_QUERY = """
-# ((("offshore") AND ("infrastructure" OR "construction" OR "installation" OR "windfarm" OR "wind farm" OR "windmill" OR "wind turbine" OR "wind park" OR "wind energy" OR "platform" OR "quay" OR "wharf" OR "lidar")) OR ("bridge" OR "flotel" OR "Aquaculture farm" OR "Artificial Island" OR "Synthetic Island")) AND
-# (("Navigation risk assessment" OR "Navigational risk assessment" OR "Navigation risk assessments" OR "Navigational risk assessments") OR
-# (("collision" OR "allision") AND ("ship" OR "vessel") AND ("probability" OR "probabilistic" OR "likelihood" OR "chance")) OR
-# (("risk" OR "safe" OR "safety") AND ("assess" OR "assessing" OR "assessment" OR "model" OR "modeling" OR "modelisation" OR "predict" OR "predicting" OR "prediction" OR "analyse" OR "analysing" OR "analyze" OR "analyzing" OR "study" OR "studies" OR "studying") AND ("ship" OR "vessel" OR "maritime traffic" OR "navigation" OR "navigational" OR "nautical")))
-# """
 
 MINIMUM_YEAR_NAME = "minimum_year"
 LIST_TYPE_TO_KEEP_NAME = "type_paper_to_keep"
