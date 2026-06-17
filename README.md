@@ -109,10 +109,10 @@ sbatch scripts/run_snellius.sh
 ```
 You can modify the SBATCH settings directly in the script.
 
-#### Phase 5 : manual review with obsidian
+### Phase 5 : manual review with obsidian
 *Coming soon*
 
-#### Phase 6 : Systematic Literature Reviews (SLR) using Retrieval-Augmented Generation (RAG) 
+### Phase 6 : Systematic Literature Reviews (SLR) using Retrieval-Augmented Generation (RAG) 
 *Coming soon, see below*.
 
 ## 🔍 Configuration Files
