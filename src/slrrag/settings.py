@@ -9,7 +9,7 @@ from pandera.typing import Series
 AUTOMATICALLY_OVERWRITE = True
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent
-PATH_DATA = PROJECT_ROOT / Path("data/export_databases/")
+PATH_DATA = PROJECT_ROOT / Path("data/papers_selection/")
 PATH_INPUT = PATH_DATA
 PATH_LENS_EXPORT = PATH_DATA / "lens-export.csv"
 PATH_DIMENSIONS_EXPORT = PATH_DATA / "dimensions-export.csv"

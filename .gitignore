@@ -1,18 +1,22 @@
-output/
-vectorstore_chroma/
 .env
-results.json
 .vscode/
 
 .zed
 __pycache__/
-output/
-outputs/
-data/export_databases/
+
 *.html
 *.egg-info/
 uv.lock
-data/
+
+#data files
+data/papers_selection
+data/export_databases/
+data/backup_exports
+output/
+vectorstore_chroma/
+results.json
+output/
+outputs/
 
 notebooks/*.png
 .ipynb_checkpoints/
