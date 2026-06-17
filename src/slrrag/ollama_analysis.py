@@ -66,8 +66,6 @@ def analyze_papers_with_agent(
     questions: Dict[str, str],
 ) -> pd.DataFrame:
     """Analyze papers using agent and return DataFrame with answers."""
-    papers_df = papers_df.sample(2)
-
     def apply_func(paper_input: pd.Series, agent_input: ChatOllama):
         answers: dict = analyze_paper(
             agent_input, paper_input["title"], paper_input["abstract"], questions
@@ -100,5 +98,6 @@ if __name__ == "__main__":
     )
 
     print(f"Saving results to {output_csv}")
+    # TODO : automatically say "yes"
     save_dataframe_to_csv(results_df, output_csv)
     print(f"Analysis complete. Results saved to {output_csv}")
