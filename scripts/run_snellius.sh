@@ -12,5 +12,5 @@ set -e
 mkdir logs
 ollama serve &> logs_ollama.out & # run ollama serve in background, and overwritte  logs.
 sleep 5 # wait for ollama server to start
-uv run src/slrrag/ollama_analysis.py data/export_databases/papers_topic_filtered.csv data/outputs_agents.csv
+uv run src/slrrag/ollama_analysis.py data/papers_selection/02_papers_filtered_topic.csv data/papers_selection/03_papers_agent_anwsers.csv
 echo "Done : $(date)"

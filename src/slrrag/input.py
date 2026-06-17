@@ -1,9 +1,9 @@
 from slrrag.settings import (
-    NAME_DOCUMENT_TYPE_ARTICLE,
-    NAME_DOCUMENT_TYPE_BOOK,
-    NAME_DOCUMENT_TYPE_BOOK_CHAPTER,
-    NAME_DOCUMENT_TYPE_CONFERENCE_PAPER,
-    NAME_DOCUMENT_TYPE_CONFERENCE_PROCEEDING,
+    ARTICLE_N,
+    BOOK_N,
+    BOOK_CHAPTER_N,
+    CONFERENCE_PAPER_N,
+    CONFERENCE_PROCEEDING_N,
 )
 
 
@@ -129,11 +129,11 @@ LIST_TYPE_TO_KEEP_NAME = "type_paper_to_keep"
 ADDITIONAL_PARAMETERS = {
     MINIMUM_YEAR_NAME: 2010,  # Comment this line if no date filtering
     LIST_TYPE_TO_KEEP_NAME: [  # Comment a line if you do not want to include a specific type of paper, or all of them if no type filtering
-        NAME_DOCUMENT_TYPE_ARTICLE,
-        NAME_DOCUMENT_TYPE_CONFERENCE_PAPER,
-        NAME_DOCUMENT_TYPE_BOOK_CHAPTER,
-        NAME_DOCUMENT_TYPE_BOOK,
-        NAME_DOCUMENT_TYPE_CONFERENCE_PROCEEDING,
+        ARTICLE_N,
+        CONFERENCE_PAPER_N,
+        BOOK_CHAPTER_N,
+        BOOK_N,
+        CONFERENCE_PROCEEDING_N,
     ],
 }
 
@@ -234,7 +234,6 @@ FIRST_ROUND_QUESTIONS = {
 }
 
 
-# TODO : make global name (ASK an LLM)
 SECOND_ROUND_QUESTIONS = {
     "strategic": {
         "frequency": "This paper estimates the frequency / return periods of collisions of ships with another object in a certain area.",

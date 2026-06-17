@@ -81,31 +81,31 @@ NAME_COL_KEYWORDS_DIMENSIONS = "keywords_dimensions"
 
 # Type categories
 
-NAME_DOCUMENT_TYPE_ARTICLE = "article"
-NAME_DOCUMENT_TYPE_BOOK_CHAPTER = "book-chapter"
-NAME_DOCUMENT_TYPE_DISSERTATION = "dissertation"
-NAME_DOCUMENT_TYPE_CONFERENCE_PAPER = "conference-paper"
-NAME_DOCUMENT_TYPE_CONFERENCE_PROCEEDING = "conference-proceeding"
-NAME_DOCUMENT_TYPE_SEMINAR = "seminar"
-NAME_DOCUMENT_TYPE_PREPRINT = "preprint"
-NAME_DOCUMENT_TYPE_BOOK = "book"
-NAME_DOCUMENT_TYPE_REPORT = "report"
-NAME_DOCUMENT_TYPE_SOFTWARE = "software"
-NAME_DOCUMENT_TYPE_OTHER = "other"
+ARTICLE_N = "article"
+BOOK_CHAPTER_N = "book-chapter"
+DISSERTATION_N = "dissertation"
+CONFERENCE_PAPER_N = "conference-paper"
+CONFERENCE_PROCEEDING_N = "conference-proceeding"
+SEMINAR_N = "seminar"
+PREPRINT_N = "preprint"
+BOOK_N = "book"
+REPORT_N = "report"
+SOFTWARE_N = "software"
+OTHER_N = "other"
 
 
 ALL_ARTICLE_TYPES = [
-    NAME_DOCUMENT_TYPE_ARTICLE,
-    NAME_DOCUMENT_TYPE_BOOK_CHAPTER,
-    NAME_DOCUMENT_TYPE_DISSERTATION,
-    NAME_DOCUMENT_TYPE_CONFERENCE_PAPER,
-    NAME_DOCUMENT_TYPE_PREPRINT,
-    NAME_DOCUMENT_TYPE_BOOK,
-    NAME_DOCUMENT_TYPE_REPORT,
-    NAME_DOCUMENT_TYPE_OTHER,
-    NAME_DOCUMENT_TYPE_CONFERENCE_PROCEEDING,
-    NAME_DOCUMENT_TYPE_SEMINAR,
-    NAME_DOCUMENT_TYPE_SOFTWARE,
+    ARTICLE_N,
+    BOOK_CHAPTER_N,
+    DISSERTATION_N,
+    CONFERENCE_PAPER_N,
+    CONFERENCE_PROCEEDING_N,
+    SEMINAR_N,
+    PREPRINT_N,
+    BOOK_N,
+    REPORT_N,
+    SOFTWARE_N,
+    OTHER_N,
     None,
     pd.NA,
 ]
@@ -114,51 +114,51 @@ ALL_ARTICLE_TYPES = [
 
 ARTICLE_TYPE_MAPPING = {
     # NAME_DOCUMENT_TYPE_ARTICLE
-    "article": NAME_DOCUMENT_TYPE_ARTICLE,
-    "journal article": NAME_DOCUMENT_TYPE_ARTICLE,
-    "short survey": NAME_DOCUMENT_TYPE_ARTICLE,
-    "review": NAME_DOCUMENT_TYPE_ARTICLE,
+    "article": ARTICLE_N,
+    "journal article": ARTICLE_N,
+    "short survey": ARTICLE_N,
+    "review": ARTICLE_N,
     # NAME_DOCUMENT_TYPE_BOOK_CHAPTER
-    "book chapter": NAME_DOCUMENT_TYPE_BOOK_CHAPTER,
-    "chapter": NAME_DOCUMENT_TYPE_BOOK_CHAPTER,
-    "book-chapter": NAME_DOCUMENT_TYPE_BOOK_CHAPTER,
+    "book chapter": BOOK_CHAPTER_N,
+    "chapter": BOOK_CHAPTER_N,
+    "book-chapter": BOOK_CHAPTER_N,
     # NAME_DOCUMENT_TYPE_PREPRINT
-    "preprint": NAME_DOCUMENT_TYPE_PREPRINT,
+    "preprint": PREPRINT_N,
     # NAME_DOCUMENT_TYPE_BOOK
-    "book": NAME_DOCUMENT_TYPE_BOOK,
-    "edited book": NAME_DOCUMENT_TYPE_BOOK,
-    "monograph": NAME_DOCUMENT_TYPE_BOOK,
+    "book": BOOK_N,
+    "edited book": BOOK_N,
+    "monograph": BOOK_N,
     # NAME_DOCUMENT_TYPE_REPORT
-    "report": NAME_DOCUMENT_TYPE_REPORT,
+    "report": REPORT_N,
     # NAME_ARTICLE_CONFERENCE_PAPER
-    "conference paper": NAME_DOCUMENT_TYPE_CONFERENCE_PAPER,
+    "conference paper": CONFERENCE_PAPER_N,
     # NAME_ARTICLE_CONFERENCE_PROCEEDING
-    "proceeding": NAME_DOCUMENT_TYPE_CONFERENCE_PROCEEDING,
-    "conference proceedings": NAME_DOCUMENT_TYPE_CONFERENCE_PROCEEDING,
-    "conference proceedings article": NAME_DOCUMENT_TYPE_CONFERENCE_PROCEEDING,
+    "proceeding": CONFERENCE_PROCEEDING_N,
+    "conference proceedings": CONFERENCE_PROCEEDING_N,
+    "conference proceedings article": CONFERENCE_PROCEEDING_N,
     # NAME_DOCUMENT_TYPE_DISSERTATION
-    "dissertation": NAME_DOCUMENT_TYPE_DISSERTATION,
+    "dissertation": DISSERTATION_N,
     # NAME_ARTICLE_SEMINAR
-    "seminar": NAME_DOCUMENT_TYPE_SEMINAR,
+    "seminar": SEMINAR_N,
     # NAME_DOCUMENT_TYPE_SOFTWARE
-    "software": NAME_DOCUMENT_TYPE_SOFTWARE,
+    "software": SOFTWARE_N,
     # Other
-    "other": NAME_DOCUMENT_TYPE_OTHER,
-    "conference review": NAME_DOCUMENT_TYPE_OTHER,
-    "news": NAME_DOCUMENT_TYPE_OTHER,
-    "dataset": NAME_DOCUMENT_TYPE_OTHER,
-    "letter": NAME_DOCUMENT_TYPE_OTHER,
-    "editorial": NAME_DOCUMENT_TYPE_OTHER,
-    "journal volume": NAME_DOCUMENT_TYPE_OTHER,
-    "component": NAME_DOCUMENT_TYPE_OTHER,
-    "journal": NAME_DOCUMENT_TYPE_OTHER,
-    "clinical trial": NAME_DOCUMENT_TYPE_OTHER,
-    "journal issue": NAME_DOCUMENT_TYPE_OTHER,
-    "erratum": NAME_DOCUMENT_TYPE_OTHER,
-    "note": NAME_DOCUMENT_TYPE_OTHER,
-    "retracted": NAME_DOCUMENT_TYPE_OTHER,
-    "paratext": NAME_DOCUMENT_TYPE_OTHER,
-    "peer-review": NAME_DOCUMENT_TYPE_OTHER,
+    "other": OTHER_N,
+    "conference review": OTHER_N,
+    "news": OTHER_N,
+    "dataset": OTHER_N,
+    "letter": OTHER_N,
+    "editorial": OTHER_N,
+    "journal volume": OTHER_N,
+    "component": OTHER_N,
+    "journal": OTHER_N,
+    "clinical trial": OTHER_N,
+    "journal issue": OTHER_N,
+    "erratum": OTHER_N,
+    "note": OTHER_N,
+    "retracted": OTHER_N,
+    "paratext": OTHER_N,
+    "peer-review": OTHER_N,
 }
 
 
