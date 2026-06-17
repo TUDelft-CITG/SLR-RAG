@@ -74,6 +74,7 @@ STEMMING_DICT = {
         "allides",
     ],
     "accident": ["accident", "accidents"],
+    "impact": ["impact", "impacts"],
     # === 4. NAUTICAL & NAVIGATION ===
     "nautical": ["nautical", "maritime", "navigation", "navigational", "navigate"],
     # === 5. RISK ASSESSMENT ===
@@ -85,6 +86,10 @@ STEMMING_DICT = {
         "probable",
         "probably",
         "probabilistic",
+    ],
+    "frequency": [
+        "frequency",
+        "frequencies",
     ],
     "chance": ["chance", "chances", "likelihood", "likely", "unlikely"],
     "assess": ["assess", "assessment", "assessments", "assessing", "assessed"],
@@ -194,11 +199,42 @@ def process_file(filepath):
     with open(filepath, "r", encoding="utf-8") as f:
         content = f.read()
 
-    # Clean up any existing highlights
-    content = cleanup_file(content)
+    # Split content into header (between ---) and body
+    # Check if there's a frontmatter header
+    header = None
+    body = content
+    
+    if content.strip().startswith('---'):
+        # Find the closing ---
+        second_dash_pos = content.find('---', 3)  # Start after first ---
+        if second_dash_pos != -1:
+            # Extract header (including the --- delimiters)
+            header_end = second_dash_pos + 3
+            header = content[:header_end]
+            body = content[header_end:]
 
-    # Apply keyword highlighting
-    highlighted_content = highlight_keywords_in_text(content)
+    # Clean up any existing highlights from body only (preserve leading/trailing whitespace)
+    # We need to be careful not to strip the body if there's a header
+    if header is not None:
+        # Don't strip leading whitespace from body if there's a header
+        # Remove only kw- spans from body
+        body = re.sub(
+            r'<span class="kw-[^"]+">(.*?)</span>', r"\1", body, flags=re.DOTALL
+        )
+        # Clean up extra spaces but preserve structure
+        body = re.sub(r" +", " ", body)
+        body = re.sub(r"\n\n+", "\n\n", body)
+    else:
+        body = cleanup_file(body)
+
+    # Apply keyword highlighting to body only
+    highlighted_body = highlight_keywords_in_text(body)
+
+    # Recombine content
+    if header is not None:
+        highlighted_content = header + highlighted_body
+    else:
+        highlighted_content = highlighted_body
 
     if highlighted_content != content:
         with open(filepath, "w", encoding="utf-8") as f:

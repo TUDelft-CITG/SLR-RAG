@@ -387,6 +387,49 @@ class TestProcessFile:
         finally:
             os.unlink(temp_path)
 
+    def test_preserves_frontmatter_header(self):
+        """Test that frontmatter header (between ---) is not modified."""
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
+            content = """---
+title: this-is-my-title-offshore-wind-farm
+keywords: ship | vessels
+date: 2026
+---
+
+## Abstract
+lorem ipsum offshore wind farm
+"""
+            f.write(content)
+            f.flush()
+            temp_path = f.name
+
+        try:
+            # Process the file
+            process_file(temp_path)
+
+            # Read the file
+            with open(temp_path, "r", encoding="utf-8") as f:
+                result = f.read()
+
+            # Check that header is preserved exactly
+            assert "---" in result
+            assert "title: this-is-my-title-offshore-wind-farm" in result
+            assert "date: 2026" in result
+            
+            # Check that the header section does NOT contain any span tags
+            # Extract header (first --- to second ---)
+            header_end = result.find('---', 3)
+            if header_end != -1:
+                header_section = result[:header_end + 3]
+                assert '<span class="kw-' not in header_section
+            
+            # Check that body has highlights
+            assert '<span class="kw-offshore">offshore</span>' in result
+            assert '<span class="kw-wind-farm">wind farm</span>' in result
+            
+        finally:
+            os.unlink(temp_path)
+
 
 # =============================================================================
 # Edge Cases and Error Handling
