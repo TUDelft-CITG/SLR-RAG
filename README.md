@@ -12,18 +12,16 @@ The system uses local Large Language Models (LLMs) via Ollama to analyze and cat
 ---
 
 ## 📦 Installation
-First clone the repository 
 
+1. First clone the repository 
 ```bash
 git clone git@github.com:TUDelft-CITG/SLR-RAG.git
 ```
 Note : a ssh key may be required. 
 More information here : https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent
 
-### With uv (Recommended)
-
-1. Install uv [here](https://docs.astral.sh/uv/getting-started/installation/)
-2. Install dependencies using uv:
+2. Install uv [here](https://docs.astral.sh/uv/getting-started/installation/)
+3. Install dependencies using uv:
    ```bash
    uv sync
    ```
@@ -60,7 +58,7 @@ More information here : https://docs.github.com/en/authentication/connecting-to-
 
 ### Phase 1 : query to databases
 
-Simply run at the root of the project after cloning. (uv will autotically create the environment.)
+Simply run at the root of the project after cloning. 
 ```bash
 uv run src/slrrag/main.py
 ```
@@ -131,7 +129,7 @@ All query configurations is done in `src/slrrag/input.py`:
 | SECOND_ROUND_QUESTIONS | Detailed categorization questions helping classification of retained papers.                            | Dict[name_group:Dict[name_question:question]] |
 
 
-### Additional parameters
+#### Additional parameters
 Additional parameters for filtering papers automatically.
 You can comment the parameter if you do not want to include the filter.
 
@@ -154,7 +152,32 @@ You can find the list of type of documents in this table.
 | BOOK_N                  | book                  | book; edited book; monograph                                                                                                                                                             |
 | REPORT_N                | report                | report                                                                                                                                                                                   |
 | SOFTWARE_N              | software              | software                                                                                                                                                                                 |
-| OTHER_N                 | other                 | other; conference review; news; dataset; letter; <br>editorial; journal volume;<br>component; journal; clinical trial; journal issue;<br>erratum; note; retracted; paratext; peer-review |
+| OTHER_N                 | other                 | other; conference review; news; dataset; letter; <br>editorial; journal volume;<br>component; journal; clinical trial; journal issue;<br>erratum; note; retracted; paratext; peer-review 
+
+
+#### First Round Questions
+
+List of binary (Yes/No) questions for initial paper screening. Example questions:
+- "This paper discusses about risk assessment or risk analysis in the context of nautical safety for ships or vessels."
+- "This paper talks about nautical safety around offshore infrastructures, like offshore windfarms."
+
+#### Second Round Questions
+The second round questions are a list of categorized questions, in order to categorize the papers. It is in a dictionary to help categorize and labellize the questions. For example : 
+
+```json
+{
+    "quantitative": {
+        "quantitative-model": "This paper includes a quantitative model to calculate the likehood of the risks in a mathematical way. (such as probability, risk index, frequency, or return period.",
+        "empirical-data": "This paper relies on empirical data to estimate the risks",
+    },
+    "qualitative": {
+        "expert-judgment": "This paper makes use of experts judgements to estimate the risks.",
+        "visualisation": "This paper only makes conclusion of the risks by visualizing the traffic, without calculating the risk in a mathematical way (like probability or frequency)."
+    }
+}
+```
+
+|
 ### settings.py
 `src/slrrag/settings.py` is for any configuation of the script, like Input / Output paths, the names of the columns and schemas of Dataframes.
 
@@ -163,6 +186,7 @@ You can find the list of type of documents in this table.
 | PATH_DATA     | Default path for processing all data | <PROJECT_ROOT> / data / papers_selection |
 | PATH_INPUT    | Input path for all files             | PATH_DATA                                |
 | PATH_OUTPUT   | Outputs path for all files           | PATH_DATA                                |
+
 
 
 
@@ -188,7 +212,7 @@ You can find the list of type of documents in this table.
 | fields_openalex        | [Primary field of study](https://developers.openalex.org/api-reference/fields)                                                                                                                                       | str               | OpenAlex        | Engineering                                                                           |
 | subfields_openalex     | [Primary subfield of study](https://developers.openalex.org/api-reference/subfields)                                                                                                                                    | str               | OpenAlex        | Ocean Engineering                                                                     |
 | domain_openalex        | [Primary domain classification](https://developers.openalex.org/api-reference/domains)                                                                                                                                | str               | OpenAlex        | Physical Sciences                                                                     |
-| pdf                    | Direct link to PDF document                                                                                                                                  | str               | OpenAlex        | https://content.openalex.org/works/W1902656482.pdf                                    |
+| pdf                    | Direct Openalex link to PDF(may need the API key) document                                                                                                                                  | str               | OpenAlex        | https://content.openalex.org/works/W1902656482.pdf                                    |
 | keywords_openalex      | Keywords/tags from OpenAlex                                                                                                                                  | str               | OpenAlex        | Towing\|Marine engineering\|Offshore wind power\|Automatic Identification System...   |
 | relevance_openalex     | [Relevance score from OpenAlex search](https://developers.openalex.org/guides/searching#relevance-score). (High score = relevant)                            | float             | OpenAlex        | 230.3748                                                                              |
 | id_lens                | Lens database identifier                                                                                                                                     | str               | Lens            | 070-792-548-861-437                                                                   |
@@ -198,46 +222,7 @@ You can find the list of type of documents in this table.
 | topic_dimensions       | Research category/topic from Dimensions                                                                                                                      | str               | Dimensions      | B12 Engineering                                                                       |
 | keywords_dimensions    | Keywords from Dimensions                                                                                                                                     | str               | Dimensions      | Risk; Offshore wind farms                                                             |
 
-Note, for the field with "ANY" field, the field will take the first non NAN value in this order :  SCOPUS -> OPENALEX -> LENS -> DIMENSIONS.
-
-### Questions Configuration
-
-#### First Round Questions
-List of binary (Yes/No) questions for initial paper screening. Example questions:
-- "This paper discusses about risk assessment or risk analysis in the context of nautical safety for ships or vessels."
-- "This paper talks about nautical safety around offshore infrastructures, like offshore windfarms."
-
-#### Second Round Questions
-The second round questions are a list of categorized questions, in order to categorize the papers. It is in a dictionary to help categorize and labellize the questions. For example : 
-
-```json
-{
-    "quantitative": {
-        "quantitative-model": "This paper includes a quantitative model to calculate the likehood of the risks in a mathematical way. (such as probability, risk index, frequency, or return period.",
-        "empirical-data": "This paper relies on empirical data to estimate the risks",
-    },
-    "qualitative": {
-        "expert-judgment": "This paper makes use of experts judgements to estimate the risks.",
-        "visualisation": "This paper only makes conclusion of the risks by visualizing the traffic, without calculating the risk in a mathematical way (like probability or frequency)."
-    }
-}
-```
-
-### LLM Configuration
-- **OLLAMA_MODELS**: List of model names to use (must be available in your local Ollama installation)
-- Models are run locally via Ollama - ensure Ollama is running and models are pulled before execution
-
----
-
-## 📊 Output
-
-The system generates:
-1. Merged results from all databases
-2. CSV files with LLM analysis results
-3. Statistics about the retrieved and analyzed papers
-4. Categorization of papers based on your defined questions
-
-All outputs are saved to the configured export directory (`data/export_databases/` by default).
+Note, for the field with "ANY" field, the field will take the first non-NaN value in this order :  SCOPUS -> OPENALEX -> LENS -> DIMENSIONS.
 
 ## Run tests
 ```bash
