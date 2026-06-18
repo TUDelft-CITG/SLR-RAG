@@ -162,6 +162,8 @@ ARTICLE_TYPE_MAPPING = {
 
 #  -----Pandera specifications-----
 PANDERA_LAZY_VALIDATION = True
+
+
 class SchemaPapers(pa.DataFrameModel):
     """Pandera schema for the papers DataFrame.
 
@@ -273,7 +275,9 @@ class SchemaLensPapers(SchemaPapers):
     id_lens: Series[String] = pa.Field(nullable=True, alias=NAME_COL_ID_LENS)
 
     # Topic fields
-    topic_lens: Series[String] = pa.Field(nullable=True, alias=NAME_COL_TOPIC_LENS,coerce=True)
+    topic_lens: Series[String] = pa.Field(
+        nullable=True, alias=NAME_COL_TOPIC_LENS, coerce=True
+    )
     keywords_lens: Series[String] = pa.Field(
         nullable=True, alias=NAME_COL_KEYWORDS_LENS, coerce=True
     )
@@ -302,7 +306,6 @@ class SchemaAnalysisPapers(SchemaPapers):
     is_found: Series[bool] = pa.Field(nullable=True, alias=NAME_COL_IS_FOUND)
 
 
-
 DEFAULT_DF_COLUMNS = [
     NAME_COL_DOI,
     NAME_COL_TITLE,
@@ -313,4 +316,3 @@ DEFAULT_DF_COLUMNS = [
 SCOPUS_IS_SUBSCRIBER = True
 THRESHOLD_BIG_COUNT_PAPER = 1
 DEFAULT_OPEN_ALEX_PAGING = 50
-

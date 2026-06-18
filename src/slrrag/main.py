@@ -4,7 +4,7 @@ from typing import List
 from pandera.typing.pandas import DataFrame
 import pandera.pandas as pa
 import pandas as pd
-from slrrag.querier_openalex import query_openalex_and_standardize
+from slrrag.querier_openalex import query_openalex
 from slrrag.querier_scopus import query_scopus
 from slrrag.query_converter import convert_query_to_lens
 from slrrag.query_converter import query_to_dimensions_url
@@ -61,10 +61,7 @@ def get_new_reference_df() -> DataFrame[SchemaPapers]:
 
 
 def load_or_query_database(
-    db_name: str,
-    csv_path: Path,
-    query_func,
-    query_input :str
+    db_name: str, csv_path: Path, query_func, query_input: str
 ) -> DataFrame[SchemaPapers] | None:
     """Helper function to load database results from CSV or query the database.
 
@@ -76,13 +73,6 @@ def load_or_query_database(
     Returns:
         DataFrame with results or None if no results
     """
-    if csv_path.exists():
-        user_choice = input(f"{db_name}: Load from {csv_path}? (y/n): ").strip().lower()
-        if user_choice == "y":
-            print(f"---- Loading {db_name} results from {csv_path} ---")
-            return SchemaPapers.validate(
-                pd.read_csv(csv_path), lazy=PANDERA_LAZY_VALIDATION
-            )
 
     # Query the database
     print(f"---- Getting query on {db_name} ---")
@@ -96,11 +86,11 @@ def load_or_query_database(
 
 @pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
 def add_scopus_papers(
-    input_papers: DataFrame[SchemaPapers], database_names: List[str], query_input : str
+    input_papers: DataFrame[SchemaPapers], database_names: List[str], query_input: str
 ) -> tuple[DataFrame[SchemaPapers], List[str]]:
 
     results_scopus = load_or_query_database(
-        "Scopus", PATH_CSV_SCOPUS_QUERY_RESULTS, query_scopus,query_input
+        "Scopus", PATH_CSV_SCOPUS_QUERY_RESULTS, query_scopus, query_input
     )
     if results_scopus is not None:
         input_papers, database_names = merge_papers(
@@ -111,10 +101,10 @@ def add_scopus_papers(
 
 @pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
 def add_openalex_papers(
-    input_papers: DataFrame[SchemaPapers], database_names: List[str], query_input : str
+    input_papers: DataFrame[SchemaPapers], database_names: List[str], query_input: str
 ) -> tuple[DataFrame[SchemaPapers], List[str]]:
     results_openalex = load_or_query_database(
-        "OpenAlex", PATH_CSV_OPENALEX_QUERY_RESULTS, query_openalex_and_standardize,query_input
+        "OpenAlex", PATH_CSV_OPENALEX_QUERY_RESULTS, query_openalex, query_input
     )
     if results_openalex is not None:
         input_papers, database_names = merge_papers(
@@ -182,7 +172,7 @@ def add_dimensions_papers(
 
 @pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
 def add_lens_papers(
-    merged_papers: DataFrame[SchemaPapers], database_names: List[str], query_input:str
+    merged_papers: DataFrame[SchemaPapers], database_names: List[str], query_input: str
 ) -> tuple[DataFrame[SchemaPapers], List[str]]:
     """Add Lens papers to the merged DataFrame.
 
@@ -248,7 +238,6 @@ def add_lens_papers(
 def merge_papers(
     left_df: DataFrame[SchemaPapers],
     right_df: DataFrame[SchemaPapers],
-    database_names: List[str],
     right_db_name: str,
 ) -> DataFrame[SchemaPapers]:
     """Merge two paper DataFrames by DOI/title, keeping only specified fields.
@@ -297,8 +286,7 @@ def merge_papers(
         # Remove useless column
         merged_df = merged_df.drop(columns=f"{col}_{right_db_name}")
 
-    database_names += [right_db_name]
-    return merged_df, database_names
+    return merged_df
 
 
 @pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
@@ -468,29 +456,76 @@ def handle_user_actions_after_querying(
             )
 
 
+def ask_user_binary(msg: str) -> bool:
+
+    user_input = input(msg + "(y/n)").lower()
+    if user_input == "y":
+        return True
+    elif user_input == "n":
+        return False
+    else:
+        return ask_user_binary(msg)
+
+
+def load_csv_results_if_exist_user_okay(csv_path: Path):
+    if csv_path.exists():
+        if ask_user_binary(f"Load from {csv_path}? (y/n): "):
+            print(f"---- Loading from {csv_path.name} ---")
+            return SchemaPapers.validate(
+                pd.read_csv(csv_path), lazy=PANDERA_LAZY_VALIDATION
+            )
+    return None
+
+
 @pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
-def get_all_papers_from_databases(query_input: str) -> tuple[DataFrame[SchemaPapers], List[str]]:
+def interactive_get_all_papers_from_databases(
+    query_input: str,
+) -> tuple[DataFrame[SchemaPapers], List[str]]:
     papers_df = get_new_reference_df()
     database_names = []
     # Step 1: Query Scopus
-
-    papers_df, database_names = add_scopus_papers(papers_df, database_names,query_input)
+    if ask_user_binary("Search for Scopus paper?"):
+        scopus_df = load_csv_results_if_exist_user_okay(PATH_CSV_SCOPUS_QUERY_RESULTS)
+        if scopus_df is None:
+            scopus_df = query_scopus(query_input)
+            save_dataframe_to_csv(scopus_df, PATH_CSV_SCOPUS_QUERY_RESULTS)
+        if scopus_df is None:
+            print("scopus_df is None. Skipping Scoppus")
+        else:
+            papers_df, database_names = merge_papers(
+                papers_df, scopus_df, database_names, "scopus"
+            )
 
     # Step 2: Query OpenAlex
-    papers_df, database_names = add_openalex_papers(papers_df, database_names,query_input)
+    if ask_user_binary("Search for Openalex papers?"):
+        openalex_df = load_csv_results_if_exist_user_okay(
+            PATH_CSV_OPENALEX_QUERY_RESULTS
+        )
+        if openalex_df is None:
+            openalex_df = query_openalex(query_input)
+            save_dataframe_to_csv(openalex_df, PATH_CSV_OPENALEX_QUERY_RESULTS)
+        if openalex_df is None:
+            print("openalex_df is None. Skipping OpenAlex")
+        else:
+            papers_df, database_names = merge_papers(
+                papers_df, openalex_df, database_names, "openalex"
+            )
 
     # Step 3: Merge papers from Scopus and OpenAlex
     print("---- Merging papers ---")
 
     # Step 3b: Ask if user wants to add lens.database
-    user_input = input("Search for Lens papers? (y/n): ").lower()
-    if user_input == "y":
-        papers_df, database_names = add_lens_papers(papers_df, database_names,query_input)
+    if ask_user_binary("Search for Lens papers?"):
+        papers_df, database_names = add_lens_papers(
+            papers_df, database_names, query_input
+        )
 
     # Step 3c: Ask if user wants to add dimensions.ai papers
-    user_input = input("Search for Dimensions.ai papers? (y/n): ").lower()
-    if user_input == "y":
-        papers_df, database_names = add_dimensions_papers(papers_df, database_names,query_input)
+
+    if ask_user_binary("Search for Dimensions papers?"):
+        papers_df, database_names = add_dimensions_papers(
+            papers_df, database_names, query_input
+        )
 
     # Add reference papers in the final dataframe.
     return papers_df, database_names
@@ -499,7 +534,9 @@ def get_all_papers_from_databases(query_input: str) -> tuple[DataFrame[SchemaPap
 # --- Main workflow ---
 def main():
     if prompt_user_for_action_before_querying() == "s":
-        papers_df, database_names = get_all_papers_from_databases(MAIN_QUERY)
+        papers_df, database_names = interactive_get_all_papers_from_databases(
+            MAIN_QUERY
+        )
     else:
         papers_df = SchemaPapers.validate(pd.read_csv(PATH_CSV_01_QUERY_RESULTS))
 

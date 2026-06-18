@@ -12,7 +12,6 @@ from slrrag.settings import (
     NAME_COL_PRIMARY_TOPIC_OPENALEX,
     NAME_COL_RELEVANCE_OPENALEX,
     PANDERA_LAZY_VALIDATION,
-    THRESHOLD_BIG_COUNT_PAPER,
     SchemaOpenAlexPapers,
     SchemaPapers,
 )
@@ -30,30 +29,22 @@ def check_doi_in_openalex(doi: str) -> bool:
         return False
 
 
-def query_openalex(query: str, ask_input=True, n_paper_max=None):
+def query_openalex_to_list(query: str):
     works = Works().search_filter(title_and_abstract=query)
-    nb_paper = works.count()
-    if nb_paper > THRESHOLD_BIG_COUNT_PAPER and ask_input:
-        user_input = input(f"{nb_paper} found in OpenAlex. Continue? (y/n)").lower()
-        if user_input != "y":
-            return None
-    print(f"{nb_paper} found in OpenAlex. Downloading.")
+    nb_papers_openalex = works.count()
+    print(f"{nb_papers_openalex} found in Scopus.")
     list_ret = []
     pager = works.paginate(per_page=DEFAULT_OPEN_ALEX_PAGING)
-    for page in tqdm(pager, total=nb_paper / DEFAULT_OPEN_ALEX_PAGING):
+    for page in tqdm(pager, total=nb_papers_openalex / DEFAULT_OPEN_ALEX_PAGING):
         list_ret += page
-        if n_paper_max and len(list_ret) > n_paper_max:
-            break
     return list_ret
 
 
 # --- OpenAlex functions ---
-def query_openalex_and_standardize(
-    query: str, ask_input=True, n_paper_max=None
-) -> DataFrame[SchemaPapers]:
+def query_openalex(query: str) -> DataFrame[SchemaPapers]:
     """Query OpenAlex and return results as a pandas DataFrame."""
     print("Query :", query)
-    list_ret = query_openalex(query, ask_input, n_paper_max)
+    list_ret = query_openalex_to_list(query)
     input_openalex_columns_name = [
         "doi",
         "id",
