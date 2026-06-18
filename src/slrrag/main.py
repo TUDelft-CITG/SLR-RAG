@@ -112,7 +112,6 @@ def add_openalex_papers(
         )
     return input_papers, database_names
 
-
 @pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
 def add_dimensions_papers(
     merged_papers: DataFrame[SchemaPapers], database_names: List[str], query_input: str
@@ -152,8 +151,9 @@ def add_dimensions_papers(
                 )
                 print(f"Found {len(dimensions_df)} papers in Dimensions export")
                 print("---- Merging with Dimensions ---")
-                merged_papers, database_names = merge_papers(
-                    merged_papers, dimensions_df, database_names, "dimensions"
+                database_names += ["dimensions"]
+                merged_papers = merge_papers(
+                    merged_papers, dimensions_df, "dimensions"
                 )
                 break
             else:
@@ -170,8 +170,17 @@ def add_dimensions_papers(
     return merged_papers, database_names
 
 
+def print_lens_export_info(lens_query: str, path_lens_export_input : Path):
+    path_lens_export_input.parent.mkdir(exist_ok=True, parents=True)
+    print("\nLens query:")
+    print(lens_query)
+    print("\nPlease copy the query above and paste it into the query editor at:")
+    print("https://www.lens.org/lens/search/scholar/structured")
+    print("Export the results as CSV and save to:")
+    print(f"{path_lens_export_input}")
+
 @pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
-def add_lens_papers(
+def interactive_add_lens_papers(
     merged_papers: DataFrame[SchemaPapers], database_names: List[str], query_input: str
 ) -> tuple[DataFrame[SchemaPapers], List[str]]:
     """Add Lens papers to the merged DataFrame.
@@ -190,9 +199,7 @@ def add_lens_papers(
         Tuple of (updated merged_papers, updated database_names)
     """
     lens_query = convert_query_to_lens(query_input)
-    print("\nLens query:")
-    print(lens_query)
-
+    print_lens_export_info(lens_query,PATH_LENS_EXPORT)
     # Save to file
     query_lens_path = PATH_OUTPUT / "query_lens.txt"
     os.makedirs(PATH_OUTPUT, exist_ok=True)
@@ -200,36 +207,21 @@ def add_lens_papers(
         f.write(lens_query + "\n")
     print(f"\nQuery saved to {query_lens_path}")
 
-    # Instruct user
-    print("\nPlease copy the query above and paste it into the query editor at:")
-    print("https://www.lens.org/lens/search/scholar/structured")
-    print("Export the results as CSV and save to:")
-    print(f"{PATH_LENS_EXPORT}")
-
     # Ask user what to do next
-    PATH_LENS_EXPORT.parent.mkdir(exist_ok=True, parents=True)
-    while True:
-        user_choice = input("Add Lens papers? (y/n):").strip()
-        if user_choice == "y":
-            if PATH_LENS_EXPORT.exists():
-                print("---- Reading Lens export ---")
-                lens_df = SchemaPapers.validate(read_lens_export(PATH_LENS_EXPORT))
-                print(f"Found {len(lens_df)} papers in Lens export")
-                print("---- Merging with Lens ---")
-                merged_papers, database_names = merge_papers(
-                    merged_papers, lens_df, database_names, "lens"
-                )
-
-                break
-            else:
-                print(f"File {PATH_LENS_EXPORT} does not exist. Lens papers not added.")
-                continue
-        elif user_choice == "n":
-            print("Lens inclusion cancelled.")
-            break
+    if ask_user_binary("Add Lens papers?"): 
+        if PATH_LENS_EXPORT.exists():
+            print("---- Reading Lens export ---")
+            lens_df = read_lens_export(PATH_LENS_EXPORT)
+            print(f"Found {len(lens_df)} papers in Lens export")
+            print("---- Merging with Lens ---")
+            database_names += ["lens"]
+            merged_papers = merge_papers(
+                merged_papers, lens_df, "lens"
+            )
         else:
-            print("Invalid choice. Please enter y or n.")
-
+            print(f"File {PATH_LENS_EXPORT} does not exist. Lens papers not added.")
+    else:
+        print("Lens inclusion cancelled.")
     return merged_papers, database_names
 
 
@@ -492,8 +484,9 @@ def interactive_get_all_papers_from_databases(
         if scopus_df is None:
             print("scopus_df is None. Skipping Scoppus")
         else:
-            papers_df, database_names = merge_papers(
-                papers_df, scopus_df, database_names, "scopus"
+            database_names += ["scopus"]
+            papers_df = merge_papers(
+                papers_df, scopus_df, "scopus"
             )
 
     # Step 2: Query OpenAlex
@@ -507,8 +500,9 @@ def interactive_get_all_papers_from_databases(
         if openalex_df is None:
             print("openalex_df is None. Skipping OpenAlex")
         else:
-            papers_df, database_names = merge_papers(
-                papers_df, openalex_df, database_names, "openalex"
+            database_names += ["openalex"]
+            papers_df = merge_papers(
+                papers_df, openalex_df, "openalex"
             )
 
     # Step 3: Merge papers from Scopus and OpenAlex
@@ -516,7 +510,7 @@ def interactive_get_all_papers_from_databases(
 
     # Step 3b: Ask if user wants to add lens.database
     if ask_user_binary("Search for Lens papers?"):
-        papers_df, database_names = add_lens_papers(
+        papers_df, database_names = interactive_add_lens_papers(
             papers_df, database_names, query_input
         )
 
