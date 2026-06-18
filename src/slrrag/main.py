@@ -64,6 +64,7 @@ def load_or_query_database(
     db_name: str,
     csv_path: Path,
     query_func,
+    query_input :str
 ) -> DataFrame[SchemaPapers] | None:
     """Helper function to load database results from CSV or query the database.
 
@@ -85,7 +86,7 @@ def load_or_query_database(
 
     # Query the database
     print(f"---- Getting query on {db_name} ---")
-    results = query_func(MAIN_QUERY)
+    results = query_func(query_input)
     if results is not None:
         results = SchemaPapers.validate(results, lazy=PANDERA_LAZY_VALIDATION)
         # Save results to CSV
@@ -95,11 +96,11 @@ def load_or_query_database(
 
 @pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
 def add_scopus_papers(
-    input_papers: DataFrame[SchemaPapers], database_names: List[str]
+    input_papers: DataFrame[SchemaPapers], database_names: List[str], query_input : str
 ) -> tuple[DataFrame[SchemaPapers], List[str]]:
 
     results_scopus = load_or_query_database(
-        "Scopus", PATH_CSV_SCOPUS_QUERY_RESULTS, query_scopus
+        "Scopus", PATH_CSV_SCOPUS_QUERY_RESULTS, query_scopus,query_input
     )
     if results_scopus is not None:
         input_papers, database_names = merge_papers(
@@ -110,10 +111,10 @@ def add_scopus_papers(
 
 @pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
 def add_openalex_papers(
-    input_papers: DataFrame[SchemaPapers], database_names: List[str]
+    input_papers: DataFrame[SchemaPapers], database_names: List[str], query_input : str
 ) -> tuple[DataFrame[SchemaPapers], List[str]]:
     results_openalex = load_or_query_database(
-        "OpenAlex", PATH_CSV_OPENALEX_QUERY_RESULTS, query_openalex_and_standardize
+        "OpenAlex", PATH_CSV_OPENALEX_QUERY_RESULTS, query_openalex_and_standardize,query_input
     )
     if results_openalex is not None:
         input_papers, database_names = merge_papers(
@@ -124,12 +125,12 @@ def add_openalex_papers(
 
 @pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
 def add_dimensions_papers(
-    merged_papers: DataFrame[SchemaPapers], database_names: List[str]
+    merged_papers: DataFrame[SchemaPapers], database_names: List[str], query_input: str
 ) -> tuple[DataFrame[SchemaPapers], List[str]]:
     """Add Dimensions.ai papers to the merged DataFrame.
 
     This function guides the user through the process of adding Dimensions papers:
-    1. Converts MAIN_QUERY to Dimensions URL
+    1. Converts query_input to Dimensions URL
     2. Instructs user to execute the query on dimensions.ai and export results
     3. Optionally reads the export and merges the papers
 
@@ -140,8 +141,7 @@ def add_dimensions_papers(
     Returns:
         Tuple of (updated merged_papers, updated database_names)
     """
-    # Convert MAIN_QUERY to dimensions URL
-    dimensions_url = query_to_dimensions_url(MAIN_QUERY)
+    dimensions_url = query_to_dimensions_url(query_input)
     print("\nDimensions.ai URL:")
     print(dimensions_url)
 
@@ -182,12 +182,12 @@ def add_dimensions_papers(
 
 @pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
 def add_lens_papers(
-    merged_papers: DataFrame[SchemaPapers], database_names: List[str]
+    merged_papers: DataFrame[SchemaPapers], database_names: List[str], query_input:str
 ) -> tuple[DataFrame[SchemaPapers], List[str]]:
     """Add Lens papers to the merged DataFrame.
 
     This function guides the user through the process of adding Lens papers:
-    1. Converts MAIN_QUERY to Lens query format
+    1. Converts query_input to Lens query format
     2. Saves the query to a file
     3. Instructs user to execute the query on lens.org and export results
     4. Optionally reads the export and merges the papers
@@ -199,8 +199,7 @@ def add_lens_papers(
     Returns:
         Tuple of (updated merged_papers, updated database_names)
     """
-    # Convert MAIN_QUERY to lens format
-    lens_query = convert_query_to_lens(MAIN_QUERY)
+    lens_query = convert_query_to_lens(query_input)
     print("\nLens query:")
     print(lens_query)
 
@@ -470,15 +469,15 @@ def handle_user_actions_after_querying(
 
 
 @pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
-def get_all_papers_from_databases() -> tuple[DataFrame[SchemaPapers], List[str]]:
+def get_all_papers_from_databases(query_input: str) -> tuple[DataFrame[SchemaPapers], List[str]]:
     papers_df = get_new_reference_df()
     database_names = []
     # Step 1: Query Scopus
 
-    papers_df, database_names = add_scopus_papers(papers_df, database_names)
+    papers_df, database_names = add_scopus_papers(papers_df, database_names,query_input)
 
     # Step 2: Query OpenAlex
-    papers_df, database_names = add_openalex_papers(papers_df, database_names)
+    papers_df, database_names = add_openalex_papers(papers_df, database_names,query_input)
 
     # Step 3: Merge papers from Scopus and OpenAlex
     print("---- Merging papers ---")
@@ -486,12 +485,12 @@ def get_all_papers_from_databases() -> tuple[DataFrame[SchemaPapers], List[str]]
     # Step 3b: Ask if user wants to add lens.database
     user_input = input("Search for Lens papers? (y/n): ").lower()
     if user_input == "y":
-        papers_df, database_names = add_lens_papers(papers_df, database_names)
+        papers_df, database_names = add_lens_papers(papers_df, database_names,query_input)
 
     # Step 3c: Ask if user wants to add dimensions.ai papers
     user_input = input("Search for Dimensions.ai papers? (y/n): ").lower()
     if user_input == "y":
-        papers_df, database_names = add_dimensions_papers(papers_df, database_names)
+        papers_df, database_names = add_dimensions_papers(papers_df, database_names,query_input)
 
     # Add reference papers in the final dataframe.
     return papers_df, database_names
@@ -500,7 +499,7 @@ def get_all_papers_from_databases() -> tuple[DataFrame[SchemaPapers], List[str]]
 # --- Main workflow ---
 def main():
     if prompt_user_for_action_before_querying() == "s":
-        papers_df, database_names = get_all_papers_from_databases()
+        papers_df, database_names = get_all_papers_from_databases(MAIN_QUERY)
     else:
         papers_df = SchemaPapers.validate(pd.read_csv(PATH_CSV_01_QUERY_RESULTS))
 

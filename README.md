@@ -22,9 +22,9 @@ More information here : https://docs.github.com/en/authentication/connecting-to-
 
 2. Install uv [here](https://docs.astral.sh/uv/getting-started/installation/)
 3. Install dependencies using uv:
-   ```bash
-   uv sync
-   ```
+```bash
+uv sync
+```
 ## Available Databases
 
 | Database   | Link | Connection |
@@ -42,6 +42,7 @@ More information here : https://docs.github.com/en/authentication/connecting-to-
    - You need a Scopus API key. Get yours [here](http://dev.elsevier.com/myapikey.html).
    - When running the first time, pybliometrics will ask for your API key. If you have problems, check the [pybliometrics documentation](https://pybliometrics.readthedocs.io/en/stable/configuration.html).
    - If you work remotely, you might encounter the error: "The requestor is not authorized to access the requested view or fields of the resource. Returning empty DataFrame". There is currently no solution other than working on campus.
+   - You can edit your scopus API key in ~/.config/pybliometrics.cfg
 
 2. **OpenAlex API Key (Optional)**
    - The OpenAlex API key is not mandatory but may be needed in the future. See [OpenAlex API documentation](https://developers.openalex.org/api-reference/introduction).
@@ -95,12 +96,30 @@ But usually, you want to analyse your papers with a good notebooks first, and ca
 (I advise you to test with a smll sample of papers first to test if everything is alright, especially if you run it on snellius).
 
 Default output file :  `data/papers_selection/03_papers_agent_anwsers`
-#### Locally
-```uv 
+
+#### Install ollama
+Normally, ollama requires you to be root in order to install it : https://ollama.com/download/
+
+But you can follow these instructions to install it locally (Linux).
+```bash
+# Download the pre-compiled binaries
+curl -L https://ollama.com/download/ollama-linux-amd64.tar.zst -o ollama-linux-amd64.tar.zst
+
+# Extract the directory, and install it locally.
+tar -C ~/.local --zstd -xvf ollama-linux-amd64.tar.zst
+```
+More info : https://copdips.com/2025/03/installing-ollama-without-root.html
+
+#### Run locally
+First run the ollama server
+```bash
+ollama serve.
+```
+Once the server is running, you can ask to the agents the first round of questions.
+```bash
 uv run src/slrrag/ollama_analysis.py data/papers_selection/02_papers_filtered_topic.csv data/papers_selection/03_papers_agent_anwsers.csv
 ```
-
-#### On Snellius
+#### Run On Snellius
 
 ```bash
 sbatch scripts/run_snellius.sh
