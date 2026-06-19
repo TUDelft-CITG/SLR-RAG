@@ -112,8 +112,17 @@ def add_openalex_papers(
         )
     return input_papers, database_names
 
+
+def print_dimensions_export(dimensions_url: str, path_lens_dimensions: str):
+    print("\nDimensions.ai URL:")
+    print(dimensions_url)
+    # Instruct user
+    print("\nPlease go to the URL above on Dimensions.ai")
+    print(f"Export the results as CSV and save to: {path_lens_dimensions}")
+
+
 @pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
-def add_dimensions_papers(
+def interactive_add_dimensions_papers(
     merged_papers: DataFrame[SchemaPapers], database_names: List[str], query_input: str
 ) -> tuple[DataFrame[SchemaPapers], List[str]]:
     """Add Dimensions.ai papers to the merged DataFrame.
@@ -131,46 +140,26 @@ def add_dimensions_papers(
         Tuple of (updated merged_papers, updated database_names)
     """
     dimensions_url = query_to_dimensions_url(query_input)
-    print("\nDimensions.ai URL:")
-    print(dimensions_url)
-
-    # Instruct user
-    print("\nPlease go to the URL above on Dimensions.ai")
-    print("Export the results as CSV and save to:")
-    print(f"{PATH_DIMENSIONS_EXPORT}")
-
+    print_lens_export_info(dimensions_url, PATH_DIMENSIONS_EXPORT)
+    # Save to file
     # Ask user what to do next
-    PATH_DIMENSIONS_EXPORT.parent.mkdir(exist_ok=True, parents=True)
-    while True:
-        user_choice = input("Add Dimensions papers? (y/n):").strip()
-        if user_choice == "y":
-            if PATH_DIMENSIONS_EXPORT.exists():
-                print("---- Reading Dimensions export ---")
-                dimensions_df = SchemaPapers.validate(
-                    read_dimensions_export(PATH_DIMENSIONS_EXPORT)
-                )
-                print(f"Found {len(dimensions_df)} papers in Dimensions export")
-                print("---- Merging with Dimensions ---")
-                database_names += ["dimensions"]
-                merged_papers = merge_papers(
-                    merged_papers, dimensions_df, "dimensions"
-                )
-                break
-            else:
-                print(
-                    f"File {PATH_DIMENSIONS_EXPORT} does not exist. Dimensions papers not added."
-                )
-                continue
-        elif user_choice == "n":
-            print("Dimensions inclusion cancelled.")
-            break
+    if ask_user_binary("Add Dimensions papers?"):
+        if PATH_DIMENSIONS_EXPORT.exists():
+            print("---- Reading Dimensions export ---")
+            lens_df = read_dimensions_export(PATH_DIMENSIONS_EXPORT)
+            print(f"Found {len(lens_df)} papers in Dimensions export")
+            database_names += ["dimensions"]
+            merged_papers = merge_papers(merged_papers, lens_df, "dimensions")
         else:
-            print("Invalid choice. Please enter y or n.")
-
+            print(
+                f"File {PATH_DIMENSIONS_EXPORT} does not exist. Dimensions papers not added."
+            )
+    else:
+        print("Dimensions inclusion cancelled.")
     return merged_papers, database_names
 
 
-def print_lens_export_info(lens_query: str, path_lens_export_input : Path):
+def print_lens_export_info(lens_query: str, path_lens_export_input: Path):
     path_lens_export_input.parent.mkdir(exist_ok=True, parents=True)
     print("\nLens query:")
     print(lens_query)
@@ -178,6 +167,7 @@ def print_lens_export_info(lens_query: str, path_lens_export_input : Path):
     print("https://www.lens.org/lens/search/scholar/structured")
     print("Export the results as CSV and save to:")
     print(f"{path_lens_export_input}")
+
 
 @pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
 def interactive_add_lens_papers(
@@ -199,7 +189,7 @@ def interactive_add_lens_papers(
         Tuple of (updated merged_papers, updated database_names)
     """
     lens_query = convert_query_to_lens(query_input)
-    print_lens_export_info(lens_query,PATH_LENS_EXPORT)
+    print_lens_export_info(lens_query, PATH_LENS_EXPORT)
     # Save to file
     query_lens_path = PATH_OUTPUT / "query_lens.txt"
     os.makedirs(PATH_OUTPUT, exist_ok=True)
@@ -208,16 +198,14 @@ def interactive_add_lens_papers(
     print(f"\nQuery saved to {query_lens_path}")
 
     # Ask user what to do next
-    if ask_user_binary("Add Lens papers?"): 
+    if ask_user_binary("Add Lens papers?"):
         if PATH_LENS_EXPORT.exists():
             print("---- Reading Lens export ---")
             lens_df = read_lens_export(PATH_LENS_EXPORT)
             print(f"Found {len(lens_df)} papers in Lens export")
             print("---- Merging with Lens ---")
             database_names += ["lens"]
-            merged_papers = merge_papers(
-                merged_papers, lens_df, "lens"
-            )
+            merged_papers = merge_papers(merged_papers, lens_df, "lens")
         else:
             print(f"File {PATH_LENS_EXPORT} does not exist. Lens papers not added.")
     else:
@@ -282,7 +270,9 @@ def merge_papers(
 
 
 @pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
-def clean_merged_df(merged_papers: DataFrame[SchemaPapers], database_names: List[str]):
+def complete_papers_df(
+    merged_papers: DataFrame[SchemaPapers], database_names: List[str]
+):
     """
     Make the clean of the datafram before further processing, and apply filters
     setup in ADDITIONAL_PARAMETERS
@@ -387,7 +377,6 @@ def show_merged_stats(
         in_db = merged_papers[f"in_{db}"].sum()
         print(f"Number of papers in {db}: {in_db}")
         print(f"Number of reference papers in {db}: {ref_in_db}")
-    return merged_papers
 
 
 def prompt_user_for_action_before_querying() -> str:
@@ -485,9 +474,7 @@ def interactive_get_all_papers_from_databases(
             print("scopus_df is None. Skipping Scoppus")
         else:
             database_names += ["scopus"]
-            papers_df = merge_papers(
-                papers_df, scopus_df, "scopus"
-            )
+            papers_df = merge_papers(papers_df, scopus_df, "scopus")
 
     # Step 2: Query OpenAlex
     if ask_user_binary("Search for Openalex papers?"):
@@ -501,9 +488,8 @@ def interactive_get_all_papers_from_databases(
             print("openalex_df is None. Skipping OpenAlex")
         else:
             database_names += ["openalex"]
-            papers_df = merge_papers(
-                papers_df, openalex_df, "openalex"
-            )
+            papers_df = merge_papers(papers_df, openalex_df, "openalex")
+    # Step 2: Lens
 
     # Step 3: Merge papers from Scopus and OpenAlex
     print("---- Merging papers ---")
@@ -517,7 +503,7 @@ def interactive_get_all_papers_from_databases(
     # Step 3c: Ask if user wants to add dimensions.ai papers
 
     if ask_user_binary("Search for Dimensions papers?"):
-        papers_df, database_names = add_dimensions_papers(
+        papers_df, database_names = interactive_add_dimensions_papers(
             papers_df, database_names, query_input
         )
 
@@ -537,7 +523,7 @@ def main():
         database_names = [
             c.removeprefix("id_") for c in papers_df.columns if c.startswith("id_")
         ]
-    papers_df = clean_merged_df(papers_df, database_names)
+    papers_df = complete_papers_df(papers_df, database_names)
     print(f"Databases used : {database_names}")
     papers_df = show_merged_stats(papers_df, database_names)
 

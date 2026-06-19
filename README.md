@@ -56,46 +56,44 @@ uv sync
 
 ## 🏃‍♂️ Running the Analysis
 
-
-### Phase 1 : query to databases
-
-Simply run at the root of the project after cloning. 
+Simply run at the root of the project after cloning for the Command Line Interface (CLI)
 ```bash
 uv run src/slrrag/main.py
 ```
-
-After running, you will be prompt for query the databases in this order : SCOPUS -> OPENALEX -> LENS -> DIMENSIONS.
-
-You must go directly in Lens's  and Dimensions's website to export.
-The script will automatically create a couple of csv when querying the database to avoid redownload them later.
-
-
-
-### Phase 2 : saving results and basic infos
-Once every databases are queried, you will have multiple options, like creating an upset plot, saving the results into a file, or continuing with ollama agents/
-Automatic filters will be done at this point.
-
-Default output file :  `data/papers_selection/01_papers_query_results`
-
-### Phase 3 : topic_filtering
-You can use `notebooks/topic_filter.ipynb` to analyse your results and plot histograms of topic, keywords, 
-
-You can run your jupyter notebook with uv
+Or, you can use the jupyter notebook
 
 ```bash
 uv run --with jupyter jupyter lab
 ```
 
+### Phase 1 : query to databases
+This phase aims to query all database and do basic analysis.
+
+You must go directly in Lens's  and Dimensions's website to export.
+The script will automatically create a couple of csv when querying the database to avoid redownload them later.
+
+You can do this step with the following notebook `notebooks/01_query_engineering.ipynb`
+
+Once every databases are queried, you will have multiple options, like creating an upset plot, saving the results into a file, or continuing with ollama agents/
+Automatic filters will be done at this point.
+
+Default output file :  `data/papers_selection/01_papers_query_results.csv`
+
+### Phase 2 : topic_filtering
+You can use `notebooks/topic_filter.ipynb` to analyse your results and plot histograms of topic, keywords, 
+
+You can run your jupyter notebook with uv
+
 Or directly via vscode.
 Default output file :  `data/papers_selection/02_papers_filtered_topic.csv`
 
 
-### Phase 4 : Agent with ollama
+### Phase 3 : Agent with ollama
 You can either call the agent directly from the `main.py`.
 But usually, you want to analyse your papers with a good notebooks first, and call the agents after, by calling directly `src/slrrag/ollama_analysis.py`.
 (I advise you to test with a smll sample of papers first to test if everything is alright, especially if you run it on snellius).
 
-Default output file :  `data/papers_selection/03_papers_agent_anwsers`
+Default output file :  `data/papers_selection/03_papers_agent_anwsers.csv`
 
 #### Install ollama
 Normally, ollama requires you to be root in order to install it : https://ollama.com/download/
