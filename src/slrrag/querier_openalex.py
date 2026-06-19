@@ -28,9 +28,11 @@ def check_doi_in_openalex(doi: str) -> bool:
     except Exception:
         return False
 
+def get_openalex_work_from_query(query: str):
+    return Works().search_filter(title_and_abstract=query)
 
-def query_openalex_to_list(query: str):
-    works = Works().search_filter(title_and_abstract=query)
+
+def work_openalex_to_list(works: Works):
     nb_papers_openalex = works.count()
     print(f"{nb_papers_openalex} found in Openalex.")
     list_ret = []
@@ -39,12 +41,7 @@ def query_openalex_to_list(query: str):
         list_ret += page
     return list_ret
 
-
-# --- OpenAlex functions ---
-def query_openalex(query: str) -> DataFrame[SchemaPapers]:
-    """Query OpenAlex and return results as a pandas DataFrame."""
-    print("Query :", query)
-    list_ret = query_openalex_to_list(query)
+def parse_openalex_list_to_dataframe(list_openalex_papers: list)  -> DataFrame[SchemaOpenAlexPapers]:
     input_openalex_columns_name = [
         "doi",
         "id",
@@ -107,7 +104,7 @@ def query_openalex(query: str) -> DataFrame[SchemaPapers]:
             + [get_primary_subfield(x)]
             + [get_primary_domain(x)]
             + [get_keywords(x)]
-            for x in list_ret
+            for x in list_openalex_papers
         ],
         columns=input_openalex_columns_name
         + [
@@ -128,3 +125,14 @@ def query_openalex(query: str) -> DataFrame[SchemaPapers]:
     )
     return_df["doi"] = return_df["doi"].str.removeprefix("https://doi.org/")
     return SchemaOpenAlexPapers.validate(return_df, lazy=PANDERA_LAZY_VALIDATION)
+
+
+# --- OpenAlex functions ---
+def query_openalex(query: str) -> DataFrame[SchemaOpenAlexPapers]:
+    """Query OpenAlex and return results as a pandas DataFrame."""
+    print("Query :", query)
+    works = get_openalex_work_from_query(query)
+    
+    list_ret = work_openalex_to_list(works)
+    return parse_openalex_list_to_dataframe(list_ret)
+    
