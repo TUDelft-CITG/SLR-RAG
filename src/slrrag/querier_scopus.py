@@ -31,12 +31,17 @@ def check_doi_in_scopus(doi: str) -> bool:
 # --- Scopus functions ---
 
 
-def query_scopus(query: str) -> DataFrame[SchemaPapers] | None:
+def to_query_scopus(query: str):
     """Query Scopus and return results."""
     scopus_query = f"""
 TITLE-ABS-KEY( {query})
 """
-    print("Query :", scopus_query)
+    return scopus_query
+
+
+def query_scopus(query: str) -> DataFrame[SchemaPapers] | None:
+    scopus_query = to_query_scopus(query)
+    print("Query :", query)
     try:
         pybliometrics.init()  # Init for scopus
         nb_paper = ScopusSearch(

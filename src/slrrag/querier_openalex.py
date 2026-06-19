@@ -32,7 +32,7 @@ def check_doi_in_openalex(doi: str) -> bool:
 def query_openalex_to_list(query: str):
     works = Works().search_filter(title_and_abstract=query)
     nb_papers_openalex = works.count()
-    print(f"{nb_papers_openalex} found in Scopus.")
+    print(f"{nb_papers_openalex} found in Openalex.")
     list_ret = []
     pager = works.paginate(per_page=DEFAULT_OPEN_ALEX_PAGING)
     for page in tqdm(pager, total=nb_papers_openalex / DEFAULT_OPEN_ALEX_PAGING):
