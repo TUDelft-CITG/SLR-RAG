@@ -1,3 +1,268 @@
+# SLR-RAG: Systematic Literature Review with Local LLM Analysis
+
+This tool allows you to perform a systematic literature review by:
+1. Taking a research query
+2. Retrieving papers from academic databases (Scopus, OpenAlex, Lens, Dimensions)
+3. Merging the results
+4. Evaluating paper quality based on reference papers and LLM analyses using short questions
+5. Use RAG pipeline for systematic literature review.
+
+The system uses local Large Language Models (LLMs) via Ollama to analyze and categorize papers based on your defined criteria.
+
+---
+
+## 📦 Installation
+
+1. First clone the repository 
+```bash
+git clone git@github.com:TUDelft-CITG/SLR-RAG.git
+```
+Note : a ssh key may be required. 
+More information here : https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent
+
+2. Install uv [here](https://docs.astral.sh/uv/getting-started/installation/)
+3. Install dependencies using uv:
+```bash
+uv sync
+```
+## Available Databases
+
+| Database   | Link | Connection |
+|------------|------|------------|
+| Scopus     | [https://www.scopus.com/](https://www.scopus.com/) | [API key](http://dev.elsevier.com/myapikey.html) |
+| OpenAlex   | [https://openalex.org/](https://openalex.org/) | Automatic / [API key](https://developers.openalex.org/api-reference/introduction) |
+| Lens       | [https://www.lens.org/](https://www.lens.org/) | Manual export |
+| Dimensions | [https://app.dimensions.ai/](https://app.dimensions.ai/) | Manual export |
+
+## ⚙️ Configuration
+
+### Requirements
+
+1. **Scopus API Key**
+   - You need a Scopus API key. Get yours [here](http://dev.elsevier.com/myapikey.html).
+   - When running the first time, pybliometrics will ask for your API key. If you have problems, check the [pybliometrics documentation](https://pybliometrics.readthedocs.io/en/stable/configuration.html).
+   - If you work remotely, you might encounter the error: "The requestor is not authorized to access the requested view or fields of the resource. Returning empty DataFrame". There is currently no solution other than working on campus.
+   - You can edit your scopus API key in ~/.config/pybliometrics.cfg
+
+2. **OpenAlex API Key (Optional)**
+   - The OpenAlex API key is not mandatory but may be needed in the future. See [OpenAlex API documentation](https://developers.openalex.org/api-reference/introduction).
+
+3. **Ollama Installation**
+   - You need to have [Ollama](https://ollama.ai/) installed and running locally.
+   - Install Ollama by following the instructions [here](https://ollama.ai/).
+   - Ensure you have at least one model pulled (default: `qwen3.5:0.8b`).
+   - To run a model: `ollama run <model>`
+
+
+## 🏃‍♂️ Running the Analysis
+
+Simply run at the root of the project after cloning for the Command Line Interface (CLI)
+```bash
+uv run src/slrrag/main.py
+```
+Or, you can use the jupyter notebook
+
+```bash
+uv run --with jupyter jupyter lab
+```
+
+### Phase 1 : query to databases
+This phase aims to query all database and do basic analysis.
+
+You must go directly in Lens's  and Dimensions's website to export.
+The script will automatically create a couple of csv when querying the database to avoid redownload them later.
+
+You can do this step with the following notebook `notebooks/01_query_engineering.ipynb`
+
+Once every databases are queried, you will have multiple options, like creating an upset plot, saving the results into a file, or continuing with ollama agents/
+Automatic filters will be done at this point.
+
+Default output file :  `data/papers_selection/01_papers_query_results.csv`
+
+### Phase 2 : topic_filtering
+You can use `notebooks/topic_filter.ipynb` to analyse your results and plot histograms of topic, keywords, 
+
+You can run your jupyter notebook with uv
+
+Or directly via vscode.
+Default output file :  `data/papers_selection/02_papers_filtered_topic.csv`
+
+
+### Phase 3 : Agent with ollama
+You can either call the agent directly from the `main.py`.
+But usually, you want to analyse your papers with a good notebooks first, and call the agents after, by calling directly `src/slrrag/ollama_analysis.py`.
+(I advise you to test with a smll sample of papers first to test if everything is alright, especially if you run it on snellius).
+
+Default output file :  `data/papers_selection/03_papers_agent_anwsers.csv`
+
+#### Install ollama
+Normally, ollama requires you to be root in order to install it : https://ollama.com/download/
+
+But you can follow these instructions to install it locally (Linux).
+```bash
+# Download the pre-compiled binaries
+curl -L https://ollama.com/download/ollama-linux-amd64.tar.zst -o ollama-linux-amd64.tar.zst
+
+# Extract the directory, and install it locally.
+tar -C ~/.local --zstd -xvf ollama-linux-amd64.tar.zst
+```
+More info : https://copdips.com/2025/03/installing-ollama-without-root.html
+
+#### Run locally
+First run the ollama server
+```bash
+ollama serve.
+```
+Once the server is running, you can ask to the agents the first round of questions.
+```bash
+uv run src/slrrag/ollama_analysis.py data/papers_selection/02_papers_filtered_topic.csv data/papers_selection/03_papers_agent_anwsers.csv
+```
+#### Run On Snellius
+
+```bash
+sbatch scripts/run_snellius.sh
+```
+You can modify the SBATCH settings directly in the script.
+
+### Phase 5 : manual review with obsidian
+*Coming soon*
+
+### Phase 6 : Systematic Literature Reviews (SLR) using Retrieval-Augmented Generation (RAG) 
+*Coming soon, see below*.
+
+## 🔍 Configuration Files
+
+### input.py
+All query configurations is done in `src/slrrag/input.py`:
+
+| Variable                 | Description                                                                                             | Type                                          |
+| ------------------------ | ------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| MAIN_QUERY             | The search query string used across all databases. **They will search only on Title/abstract/keywords** | string                                        |
+| MINIMUM_YEAR_NAME      | Parameter name for year filtering                                                                       | int                                           |
+| ADDITIONAL_PARAMETERS  | Dictionary of additional filters (currently supports minimum_year)                                      | Dict[parameter_name:parameter_value]          |
+| REFERENCE_PAPERS       | List of reference papers.                                                                               | List[(title,doi)]                             |
+| OLLAMA_MODELS          | List of Ollama models to use for analysis.                                                              | List[model_name]                              |
+| FIRST_ROUND_QUESTIONS  | Initial screening questions/assessments for selection process (binary Yes/No answers)                   | Dict[name_question:question]                  |
+| SECOND_ROUND_QUESTIONS | Detailed categorization questions helping classification of retained papers.                            | Dict[name_group:Dict[name_question:question]] |
+
+
+#### Additional parameters
+Additional parameters for filtering papers automatically.
+You can comment the parameter if you do not want to include the filter.
+
+| Additional parameter name | Description                       | Type      |
+| ------------------------- | --------------------------------- | --------- |
+| MINIMUM_YEAR_NAME         | Minimum year to keep              | int       |
+| LIST_TYPE_TO_KEEP_NAME    | List of type of documents to keep | List[str] |
+
+You can find the list of type of documents in this table.
+
+| name                    | value                 | mapping from type got.                                                                                                                                                                   |
+| ----------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ARTICLE_N               | article               | article; journal article; short survey; review                                                                                                                                           |
+| BOOK_CHAPTER_N          | book-chapter          | book chapter; chapter; book-chapter                                                                                                                                                      |
+| DISSERTATION_N          | dissertation          | dissertation                                                                                                                                                                             |
+| CONFERENCE_PAPER_N      | conference-paper      | conference paper                                                                                                                                                                         |
+| CONFERENCE_PROCEEDING_N | conference-proceeding | proceeding; conference proceedings; conference proceedings article                                                                                                                       |
+| SEMINAR_N               | seminar               | seminar                                                                                                                                                                                  |
+| PREPRINT_N              | preprint              | preprint                                                                                                                                                                                 |
+| BOOK_N                  | book                  | book; edited book; monograph                                                                                                                                                             |
+| REPORT_N                | report                | report                                                                                                                                                                                   |
+| SOFTWARE_N              | software              | software                                                                                                                                                                                 |
+| OTHER_N                 | other                 | other; conference review; news; dataset; letter; <br>editorial; journal volume;<br>component; journal; clinical trial; journal issue;<br>erratum; note; retracted; paratext; peer-review 
+
+
+#### First Round Questions
+
+List of binary (Yes/No) questions for initial paper screening. Example questions:
+- "This paper discusses about risk assessment or risk analysis in the context of nautical safety for ships or vessels."
+- "This paper talks about nautical safety around offshore infrastructures, like offshore windfarms."
+
+#### Second Round Questions
+The second round questions are a list of categorized questions, in order to categorize the papers. It is in a dictionary to help categorize and labellize the questions. For example : 
+
+```json
+{
+    "quantitative": {
+        "quantitative-model": "This paper includes a quantitative model to calculate the likehood of the risks in a mathematical way. (such as probability, risk index, frequency, or return period.",
+        "empirical-data": "This paper relies on empirical data to estimate the risks",
+    },
+    "qualitative": {
+        "expert-judgment": "This paper makes use of experts judgements to estimate the risks.",
+        "visualisation": "This paper only makes conclusion of the risks by visualizing the traffic, without calculating the risk in a mathematical way (like probability or frequency)."
+    }
+}
+```
+
+|
+### settings.py
+`src/slrrag/settings.py` is for any configuation of the script, like Input / Output paths, the names of the columns and schemas of Dataframes.
+
+| Variable name | value                                | Default                                  |
+| ------------- | ------------------------------------ | ---------------------------------------- |
+| PATH_DATA     | Default path for processing all data | <PROJECT_ROOT> / data / papers_selection |
+| PATH_INPUT    | Input path for all files             | PATH_DATA                                |
+| PATH_OUTPUT   | Outputs path for all files           | PATH_DATA                                |
+
+
+
+
+## 📝 Variables Explanation
+
+### Outputs csv fields
+
+| field name             | small description                                                                                                                                            | type of the value | database needed | example                                                                               |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------- | --------------- | ------------------------------------------------------------------------------------- |
+| doi                    | Digital Object Identifier, primary unique identifier for the paper                                                                                           | str               | Any             | 10.1002/we.1935                                                                       |
+| title                  | Title of the paper                                                                                                                                           | str               | Any             | Likelihood of a marine vessel accident from wind energy development in the Atlantic   |
+| type                   | Publication type (article, book chapter, conference paper, etc.)                                                                                             | str               | Any             | article                                                                               |
+| year                   | Year of publication                                                                                                                                          | Int64             | Any             | 2016                                                                                  |
+| date                   | Full publication date                                                                                                                                        | datetime          | Any             | 2016-09-01 00:00:00                                                                   |
+| abstract               | Full text abstract of the paper                                                                                                                              | str               | Any             | Offshore wind energy development is planned for areas off the Atlantic coast...       |
+| is_reference           | Whether this paper is in the user's reference list                                                                                                           | bool              | Any             | True                                                                                  |
+| is_found               | Whether this paper was found in any database search.<br>(can be falsed only if a reference paper is not found).                                              | bool              | Any             | True                                                                                  |
+| id_scopus              | Scopus database identifier                                                                                                                                   | str               | Scopus          | 2-s2.0-84949294080                                                                    |
+| keywords_scopus        | Keywords from Scopus (author keywords or indexed keywords)                                                                                                   | str               | Scopus          | commercial shipping \| offshore wind development \| risk assessment                   |
+| relevance_order_scopus | [Relevance ranking position in Scopus search results](https://service.elsevier.com/app/answers/detail/a_id/14182/supporthub/scopus/). (Low score = relevant) | Int64             | Scopus          | 30.0                                                                                  |
+| id_openalex            | OpenAlex Work ID identifier                                                                                                                                  | str               | OpenAlex        | https://openalex.org/W1902656482                                                      |
+| topic_openalex         | [Primary research topic from OpenAlex](https://developers.openalex.org/api-reference/topics)                                                                                                                         | str               | OpenAlex        | Maritime Navigation and Safety                                                        |
+| fields_openalex        | [Primary field of study](https://developers.openalex.org/api-reference/fields)                                                                                                                                       | str               | OpenAlex        | Engineering                                                                           |
+| subfields_openalex     | [Primary subfield of study](https://developers.openalex.org/api-reference/subfields)                                                                                                                                    | str               | OpenAlex        | Ocean Engineering                                                                     |
+| domain_openalex        | [Primary domain classification](https://developers.openalex.org/api-reference/domains)                                                                                                                                | str               | OpenAlex        | Physical Sciences                                                                     |
+| pdf                    | Direct Openalex link to PDF(may need the API key) document                                                                                                                                  | str               | OpenAlex        | https://content.openalex.org/works/W1902656482.pdf                                    |
+| keywords_openalex      | Keywords/tags from OpenAlex                                                                                                                                  | str               | OpenAlex        | Towing\|Marine engineering\|Offshore wind power\|Automatic Identification System...   |
+| relevance_openalex     | [Relevance score from OpenAlex search](https://developers.openalex.org/guides/searching#relevance-score). (High score = relevant)                            | float             | OpenAlex        | 230.3748                                                                              |
+| id_lens                | Lens database identifier                                                                                                                                     | str               | Lens            | 070-792-548-861-437                                                                   |
+| topic_lens             | Research topics from Lens                                                                                                                                    | str               | Lens            | Routing (hydrology); Risk assessment; Engineering; Automatic Identification System... |
+| keywords_lens          | Keywords from Lens                                                                                                                                           | str               | Lens            | Risk; Offshore wind farms                                                             |
+| id_dimensions          | Dimensions database identifier                                                                                                                               | str               | Dimensions      | https://app.dimensions.ai/details/publication/pub.1044840728                          |
+| topic_dimensions       | Research category/topic from Dimensions                                                                                                                      | str               | Dimensions      | B12 Engineering                                                                       |
+| keywords_dimensions    | Keywords from Dimensions                                                                                                                                     | str               | Dimensions      | Risk; Offshore wind farms                                                             |
+
+Note, for the field with "ANY" field, the field will take the first non-NaN value in this order :  SCOPUS -> OPENALEX -> LENS -> DIMENSIONS.
+
+## Run tests
+```bash
+uv run pytest
+```
+
+## Known bugs
+- The Scopus API seems to be not working outside of the TU Delft campus.
+- They may been duplicates of papers, due to different DOI (with the preprint version), or because the databases have these papers in duplicates.
+
+## FAQ
+**Why not including Web of Science?**
+TU Delft does not longuer provide access : https://www.tudelft.nl/en/2025/library/access-to-web-of-science-and-journal-citation-reports-will-end-on-1-january-2026
+
+**Why not including Google Scholar?**
+The result of a query cannot be exported, and there is no official API for integrating a research into the process.
+
+**Llama.cpp is more optimized than Ollama. Do you intend to make the change?**
+Maybe if we feel the need and if it not too complex.
+
+
+
+
 # Systematic Literature Reviews (SLR) using Retrieval-Augmented Generation (RAG)
 
 This project demonstrates a RAG-LLM pipeline for systematic literature reviews. RAG refers to the process of providing Large Language Models (LLMs) with additional information from an external knowledge source, thereby facilitating the generation of more relevant answers. 

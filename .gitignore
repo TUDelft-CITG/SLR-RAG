@@ -1,0 +1,28 @@
+.env
+.vscode/
+
+.zed
+__pycache__/
+
+*.html
+*.egg-info/
+uv.lock
+
+#data files
+data/papers_selection
+data/export_databases/
+data/backup_exports
+output/
+vectorstore_chroma/
+results.json
+output/
+outputs/
+
+notebooks/*.png
+.ipynb_checkpoints/
+# Snellius files
+logs/
+*.out
+*.err
+*.log
+*.logs
