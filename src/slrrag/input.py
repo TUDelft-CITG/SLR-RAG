@@ -121,6 +121,9 @@ FIRST_ROUND_QUESTIONS = {
     "nautical_offshore": "This paper is about nautical safety around offshore infrastructures, like offshore windfarms.",
     "probability_collision": "This paper includes a method to estimate the probability or risk of collision or allision of ships.",
     "quantitative_model": "This paper includes a quantitative model.",
+    "technique_risk_collision": "This paper presents a technique to assess the risk of collision or allisions between ships and other human-made objects around offshore infrastructures or bridges",
+    "recommendation_safety": "This paper recommends gives recommendation for safe navigation around offshore infrastructures/bridges.",
+    "empirical_data": "This paper includes empirical data, like traffic, software or simulator."
 }
 
 
@@ -150,9 +153,6 @@ SECOND_ROUND_QUESTIONS = {
 
 OLLAMA_MODELS = [
     "granite4.1:3b",
-    "qwen3.5:4b",
     "ministral-3:3b",
-    "deepseek-r1:1.5b",
-    "qwen3:4b",
     "llama3.2:3b",
 ]

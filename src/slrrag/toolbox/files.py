@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+import pandas as pd
 import pandera.pandas as pa
 from pandera.typing import DataFrame
 
@@ -34,3 +35,67 @@ def check_overwrite(
     else:
         file_path.parent.mkdir(parents=True, exist_ok=True)
     return True
+
+def slugify(title: str, limit: int = None) -> str:
+    """
+    Convert a paper title to a URL-friendly slug.
+
+    Args:
+        title: The paper title
+
+    Returns:
+        A slugified version of the title (lowercase, hyphens instead of spaces, special chars removed)
+    """
+    if pd.isna(title) or title is None:
+        return "untitled"
+
+    # Convert to string, lowercase, and strip
+    slug = str(title).strip().lower()
+
+    # Replace spaces with hyphens
+    slug = slug.replace(" ", "-")
+
+    # Remove special characters and replace with empty or hyphen
+    # Characters to remove completely
+    for char in [
+        "/",
+        "\\",
+        ":",
+        "*",
+        "?",
+        '"',
+        "<",
+        ">",
+        "|",
+        "–",
+        "—",
+        "‘",
+        "’",
+        ",",
+        ";",
+        "(",
+        ")",
+        "[",
+        "]",
+        "{",
+        "}",
+    ]:
+        slug = slug.replace(char, "")
+
+    # Replace multiple hyphens with single hyphen
+    while "--" in slug:
+        slug = slug.replace("--", "-")
+
+    # Remove trailing/leading hyphens
+    slug = slug.rstrip("-").lstrip("-")
+
+    # Limit length
+    if limit is not None:
+        slug = slug[:limit]
+
+    # If empty after all processing, return untitled
+    if not slug:
+        return "untitled"
+
+    return slug
+
