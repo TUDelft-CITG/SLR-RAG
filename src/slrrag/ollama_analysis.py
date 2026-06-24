@@ -11,7 +11,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables.base import RunnableSequence
 from langchain_ollama import ChatOllama
 from tqdm import tqdm
-
+from langchain.agents import create_agent
 from slrrag.input import OLLAMA_MODELS
 from slrrag.settings import SchemaPapers
 
@@ -19,7 +19,12 @@ tqdm.pandas()
 
 # Model configuration
 MISTRAL_MODEL = "ministral-3b-2512"
-PROMPT_MODEL = "Title: {title}\nAbstract: {abstract}\nQuestion: {question}\nOnly answer with 'True' or 'False', without a dot, nothing else."
+SYSTEM_PROMPT = """
+You are an agent that analyses papers, and your goal is respond to questions about it, that will be asked.
+You will be given a title, abstract and questions. For each question, provide the anwser ONLY IN BINARY FORMAT (True or FALSE), 
+and a small explanation in one or two sentences.
+Title: {title}\nAbstract: {abstract}\nQuestion: {question}\nOnly answer with 'True' or 'False', without a dot, nothing else."
+"""
 OLLAMA_MODEL = OLLAMA_MODELS[0]  # TODO : Make as a list
 
 
@@ -60,7 +65,7 @@ def analyze_paper(
     return answers
 
 
-def analyze_papers_with_agent(
+def analyze_papers_with_list_agents(
     list_agents_name: List[str],
     papers_df: DataFrame[SchemaPapers],
     questions: Dict[str, str],
@@ -74,11 +79,13 @@ def analyze_papers_with_agent(
         return pd.Series(answers)
 
     for agent_model in list_agents_name:
-        agent = ChatOllama(model=agent_model)
+        
+        agent = create_agent(ChatOllama(model=agent_model),system_prompt=SYSTEM_PROMPT)
         outputs_questions = papers_df.progress_apply(
             lambda x: apply_func(x, agent_input=agent), axis=1
         )
         papers_df = pd.concat((papers_df, outputs_questions), axis=1)
+        papers_df.to_csv(f"data/papers_selection/backup_{agent_model}.csv")
     return papers_df
 
 
@@ -94,7 +101,7 @@ if __name__ == "__main__":
     input_csv = Path(sys.argv[1])
     output_csv = Path(sys.argv[2])
     input_df = pd.read_csv(input_csv)
-    results_df = analyze_papers_with_agent(
+    results_df = analyze_papers_with_list_agents(
         OLLAMA_MODELS, input_df, FIRST_ROUND_QUESTIONS
     )
 
