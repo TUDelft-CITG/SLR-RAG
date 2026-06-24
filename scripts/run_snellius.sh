@@ -2,9 +2,9 @@
 #SBATCH --job-name="slrrag-agents"
 #SBATCH --nodes=1
 #SBATCH --ntasks=10
-#SBATCH --time=00:05:00
+#SBATCH --time=04:00:00
 #SBATCH --partition=gpu_a100
-#SBATCH --gpus-per-node=1
+#SBATCH --gpus-per-node=3
 #SBATCH --output=logs/sllrag-agents_%j.out # Standard output file (%j is replaced by job ID)
 #SBATCH --error=logs/sllrag-agents_%j.err  # Standard error file
 
