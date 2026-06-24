@@ -37,8 +37,6 @@ PATH_CSV_04_MANUAL_FILTER = PATH_OUTPUT / "04_papers_manual_filter.csv"
 PATH_UPSET = PATH_OUTPUT / "upset.html"
 
 
-
-
 # Globl variables column names in dataframes
 
 NAME_COL_DOI = "doi"
@@ -162,6 +160,10 @@ ARTICLE_TYPE_MAPPING = {
 }
 
 
+#  -----Pandera specifications-----
+PANDERA_LAZY_VALIDATION = True
+
+
 class SchemaPapers(pa.DataFrameModel):
     """Pandera schema for the papers DataFrame.
 
@@ -229,11 +231,11 @@ class SchemaScopusPapers(SchemaPapers):
     id_scopus: Series[String] = pa.Field(nullable=True, alias=NAME_COL_ID_SCOPUS)
 
     keywords_scopus: Series[String] = pa.Field(
-        nullable=True, alias=NAME_COL_KEYWORDS_SCOPUS
+        nullable=True, alias=NAME_COL_KEYWORDS_SCOPUS, coerce=True
     )
     # Order of the paper after being sort by relevance
     relevance_order_scopus: Series[Int64] = pa.Field(
-        nullable=True, alias=NAME_COL_RELEVANCE_ORDER_SCOPUS
+        nullable=True, alias=NAME_COL_RELEVANCE_ORDER_SCOPUS, coerce=True
     )
 
 
@@ -244,26 +246,26 @@ class SchemaOpenAlexPapers(SchemaPapers):
 
     # Topic fields : https://developers.openalex.org/api-reference/topics
     topic_openalex: Series[String] = pa.Field(
-        nullable=True, alias=NAME_COL_PRIMARY_TOPIC_OPENALEX
+        nullable=True, alias=NAME_COL_PRIMARY_TOPIC_OPENALEX, coerce=True
     )
 
     # Field fields : https://developers.openalex.org/api-reference/fields
     fields_openalex: Series[String] = pa.Field(
-        nullable=True, alias=NAME_COL_PRIMARY_FIELD_OPENALEX
+        nullable=True, alias=NAME_COL_PRIMARY_FIELD_OPENALEX, coerce=True
     )
     subfields_openalex: Series[String] = pa.Field(
-        nullable=True, alias=NAME_COL_PRIMARY_SUBFIELD_OPENALEX
+        nullable=True, alias=NAME_COL_PRIMARY_SUBFIELD_OPENALEX, coerce=True
     )
     domain_openalex: Series[String] = pa.Field(
-        nullable=True, alias=NAME_COL_PRIMARY_DOMAIN_OPENALEX
+        nullable=True, alias=NAME_COL_PRIMARY_DOMAIN_OPENALEX, coerce=True
     )
-    pdf: Series[String] = pa.Field(nullable=True, alias=NAME_COL_PDF)
+    pdf: Series[String] = pa.Field(nullable=True, alias=NAME_COL_PDF, coerce=True)
 
     keywords_openalex: Series[String] = pa.Field(
-        nullable=True, alias=NAME_COL_KEYWORDS_OPENALEX
+        nullable=True, alias=NAME_COL_KEYWORDS_OPENALEX, coerce=True
     )
     relevance_openale: Series[float] = pa.Field(
-        nullable=True, alias=NAME_COL_RELEVANCE_OPENALEX
+        nullable=True, alias=NAME_COL_RELEVANCE_OPENALEX, coerce=True
     )
 
 
@@ -273,9 +275,11 @@ class SchemaLensPapers(SchemaPapers):
     id_lens: Series[String] = pa.Field(nullable=True, alias=NAME_COL_ID_LENS)
 
     # Topic fields
-    topic_lens: Series[String] = pa.Field(nullable=True, alias=NAME_COL_TOPIC_LENS)
+    topic_lens: Series[String] = pa.Field(
+        nullable=True, alias=NAME_COL_TOPIC_LENS, coerce=True
+    )
     keywords_lens: Series[String] = pa.Field(
-        nullable=True, alias=NAME_COL_KEYWORDS_LENS
+        nullable=True, alias=NAME_COL_KEYWORDS_LENS, coerce=True
     )
 
 
@@ -287,11 +291,11 @@ class SchemaDimensionsPapers(SchemaPapers):
     )
     # Topic fields
     topic_dimensions: Series[String] = pa.Field(
-        nullable=True, alias=NAME_COL_TOPIC_DIMENSIONS
+        nullable=True, alias=NAME_COL_TOPIC_DIMENSIONS, coerce=True
     )
 
     keywords_dimensions: Series[String] = pa.Field(
-        nullable=True, alias=NAME_COL_KEYWORDS_DIMENSIONS
+        nullable=True, alias=NAME_COL_KEYWORDS_DIMENSIONS, coerce=True
     )
 
 
@@ -302,7 +306,6 @@ class SchemaAnalysisPapers(SchemaPapers):
     is_found: Series[bool] = pa.Field(nullable=True, alias=NAME_COL_IS_FOUND)
 
 
-PANDERA_LAZY_VALIDATION = False
 DEFAULT_DF_COLUMNS = [
     NAME_COL_DOI,
     NAME_COL_TITLE,

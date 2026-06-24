@@ -4,7 +4,7 @@ from typing import List
 from pandera.typing.pandas import DataFrame
 import pandera.pandas as pa
 import pandas as pd
-from slrrag.querier_openalex import query_openalex_and_standardize
+from slrrag.querier_openalex import query_openalex
 from slrrag.querier_scopus import query_scopus
 from slrrag.query_converter import convert_query_to_lens
 from slrrag.query_converter import query_to_dimensions_url
@@ -61,9 +61,7 @@ def get_new_reference_df() -> DataFrame[SchemaPapers]:
 
 
 def load_or_query_database(
-    db_name: str,
-    csv_path: Path,
-    query_func,
+    db_name: str, csv_path: Path, query_func, query_input: str
 ) -> DataFrame[SchemaPapers] | None:
     """Helper function to load database results from CSV or query the database.
 
@@ -75,17 +73,10 @@ def load_or_query_database(
     Returns:
         DataFrame with results or None if no results
     """
-    if csv_path.exists():
-        user_choice = input(f"{db_name}: Load from {csv_path}? (y/n): ").strip().lower()
-        if user_choice == "y":
-            print(f"---- Loading {db_name} results from {csv_path} ---")
-            return SchemaPapers.validate(
-                pd.read_csv(csv_path), lazy=PANDERA_LAZY_VALIDATION
-            )
 
     # Query the database
     print(f"---- Getting query on {db_name} ---")
-    results = query_func(MAIN_QUERY)
+    results = query_func(query_input)
     if results is not None:
         results = SchemaPapers.validate(results, lazy=PANDERA_LAZY_VALIDATION)
         # Save results to CSV
@@ -95,10 +86,12 @@ def load_or_query_database(
 
 @pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
 def add_scopus_papers(
-    input_papers: DataFrame[SchemaPapers], database_names: List[str]
+    input_papers: DataFrame[SchemaPapers], database_names: List[str], query_input: str
 ) -> tuple[DataFrame[SchemaPapers], List[str]]:
 
-    results_scopus = load_or_query_database("Scopus", PATH_CSV_SCOPUS_QUERY_RESULTS, query_scopus)
+    results_scopus = load_or_query_database(
+        "Scopus", PATH_CSV_SCOPUS_QUERY_RESULTS, query_scopus, query_input
+    )
     if results_scopus is not None:
         input_papers, database_names = merge_papers(
             input_papers, results_scopus, database_names, "scopus"
@@ -108,10 +101,10 @@ def add_scopus_papers(
 
 @pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
 def add_openalex_papers(
-    input_papers: DataFrame[SchemaPapers], database_names: List[str]
+    input_papers: DataFrame[SchemaPapers], database_names: List[str], query_input: str
 ) -> tuple[DataFrame[SchemaPapers], List[str]]:
     results_openalex = load_or_query_database(
-        "OpenAlex", PATH_CSV_OPENALEX_QUERY_RESULTS, query_openalex_and_standardize
+        "OpenAlex", PATH_CSV_OPENALEX_QUERY_RESULTS, query_openalex, query_input
     )
     if results_openalex is not None:
         input_papers, database_names = merge_papers(
@@ -120,14 +113,22 @@ def add_openalex_papers(
     return input_papers, database_names
 
 
+def print_dimensions_export(dimensions_url: str, path_lens_dimensions: str):
+    print("\nDimensions.ai URL:")
+    print(dimensions_url)
+    # Instruct user
+    print("\nPlease go to the URL above on Dimensions.ai")
+    print(f"Export the results as CSV and save to: {path_lens_dimensions}")
+
+
 @pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
-def add_dimensions_papers(
-    merged_papers: DataFrame[SchemaPapers], database_names: List[str]
+def interactive_add_dimensions_papers(
+    merged_papers: DataFrame[SchemaPapers], database_names: List[str], query_input: str
 ) -> tuple[DataFrame[SchemaPapers], List[str]]:
     """Add Dimensions.ai papers to the merged DataFrame.
 
     This function guides the user through the process of adding Dimensions papers:
-    1. Converts MAIN_QUERY to Dimensions URL
+    1. Converts query_input to Dimensions URL
     2. Instructs user to execute the query on dimensions.ai and export results
     3. Optionally reads the export and merges the papers
 
@@ -138,54 +139,44 @@ def add_dimensions_papers(
     Returns:
         Tuple of (updated merged_papers, updated database_names)
     """
-    # Convert MAIN_QUERY to dimensions URL
-    dimensions_url = query_to_dimensions_url(MAIN_QUERY)
-    print("\nDimensions.ai URL:")
-    print(dimensions_url)
-
-    # Instruct user
-    print("\nPlease go to the URL above on Dimensions.ai")
-    print("Export the results as CSV and save to:")
-    print(f"{PATH_DIMENSIONS_EXPORT}")
-
+    dimensions_url = query_to_dimensions_url(query_input)
+    print_lens_export_info(dimensions_url, PATH_DIMENSIONS_EXPORT)
+    # Save to file
     # Ask user what to do next
-    PATH_DIMENSIONS_EXPORT.parent.mkdir(exist_ok=True, parents=True)
-    while True:
-        user_choice = input("Add Dimensions papers? (y/n):").strip()
-        if user_choice == "y":
-            if PATH_DIMENSIONS_EXPORT.exists():
-                print("---- Reading Dimensions export ---")
-                dimensions_df = SchemaPapers.validate(
-                    read_dimensions_export(PATH_DIMENSIONS_EXPORT)
-                )
-                print(f"Found {len(dimensions_df)} papers in Dimensions export")
-                print("---- Merging with Dimensions ---")
-                merged_papers, database_names = merge_papers(
-                    merged_papers, dimensions_df, database_names, "dimensions"
-                )
-                break
-            else:
-                print(
-                    f"File {PATH_DIMENSIONS_EXPORT} does not exist. Dimensions papers not added."
-                )
-                continue
-        elif user_choice == "n":
-            print("Dimensions inclusion cancelled.")
-            break
+    if ask_user_binary("Add Dimensions papers?"):
+        if PATH_DIMENSIONS_EXPORT.exists():
+            print("---- Reading Dimensions export ---")
+            lens_df = read_dimensions_export(PATH_DIMENSIONS_EXPORT)
+            print(f"Found {len(lens_df)} papers in Dimensions export")
+            database_names += ["dimensions"]
+            merged_papers = merge_papers(merged_papers, lens_df, "dimensions")
         else:
-            print("Invalid choice. Please enter y or n.")
-
+            print(
+                f"File {PATH_DIMENSIONS_EXPORT} does not exist. Dimensions papers not added."
+            )
+    else:
+        print("Dimensions inclusion cancelled.")
     return merged_papers, database_names
 
 
+def print_lens_export_info(lens_query: str, path_lens_export_input: Path):
+    path_lens_export_input.parent.mkdir(exist_ok=True, parents=True)
+    print("\nLens query:")
+    print(lens_query)
+    print("\nPlease copy the query above and paste it into the query editor at:")
+    print("https://www.lens.org/lens/search/scholar/structured")
+    print("Export the results as CSV and save to:")
+    print(f"{path_lens_export_input}")
+
+
 @pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
-def add_lens_papers(
-    merged_papers: DataFrame[SchemaPapers], database_names: List[str]
+def interactive_add_lens_papers(
+    merged_papers: DataFrame[SchemaPapers], database_names: List[str], query_input: str
 ) -> tuple[DataFrame[SchemaPapers], List[str]]:
     """Add Lens papers to the merged DataFrame.
 
     This function guides the user through the process of adding Lens papers:
-    1. Converts MAIN_QUERY to Lens query format
+    1. Converts query_input to Lens query format
     2. Saves the query to a file
     3. Instructs user to execute the query on lens.org and export results
     4. Optionally reads the export and merges the papers
@@ -197,11 +188,8 @@ def add_lens_papers(
     Returns:
         Tuple of (updated merged_papers, updated database_names)
     """
-    # Convert MAIN_QUERY to lens format
-    lens_query = convert_query_to_lens(MAIN_QUERY)
-    print("\nLens query:")
-    print(lens_query)
-
+    lens_query = convert_query_to_lens(query_input)
+    print_lens_export_info(lens_query, PATH_LENS_EXPORT)
     # Save to file
     query_lens_path = PATH_OUTPUT / "query_lens.txt"
     os.makedirs(PATH_OUTPUT, exist_ok=True)
@@ -209,36 +197,19 @@ def add_lens_papers(
         f.write(lens_query + "\n")
     print(f"\nQuery saved to {query_lens_path}")
 
-    # Instruct user
-    print("\nPlease copy the query above and paste it into the query editor at:")
-    print("https://www.lens.org/lens/search/scholar/structured")
-    print("Export the results as CSV and save to:")
-    print(f"{PATH_LENS_EXPORT}")
-
     # Ask user what to do next
-    PATH_LENS_EXPORT.parent.mkdir(exist_ok=True, parents=True)
-    while True:
-        user_choice = input("Add Lens papers? (y/n):").strip()
-        if user_choice == "y":
-            if PATH_LENS_EXPORT.exists():
-                print("---- Reading Lens export ---")
-                lens_df = SchemaPapers.validate(read_lens_export(PATH_LENS_EXPORT))
-                print(f"Found {len(lens_df)} papers in Lens export")
-                print("---- Merging with Lens ---")
-                merged_papers, database_names = merge_papers(
-                    merged_papers, lens_df, database_names, "lens"
-                )
-
-                break
-            else:
-                print(f"File {PATH_LENS_EXPORT} does not exist. Lens papers not added.")
-                continue
-        elif user_choice == "n":
-            print("Lens inclusion cancelled.")
-            break
+    if ask_user_binary("Add Lens papers?"):
+        if PATH_LENS_EXPORT.exists():
+            print("---- Reading Lens export ---")
+            lens_df = read_lens_export(PATH_LENS_EXPORT)
+            print(f"Found {len(lens_df)} papers in Lens export")
+            print("---- Merging with Lens ---")
+            database_names += ["lens"]
+            merged_papers = merge_papers(merged_papers, lens_df, "lens")
         else:
-            print("Invalid choice. Please enter y or n.")
-
+            print(f"File {PATH_LENS_EXPORT} does not exist. Lens papers not added.")
+    else:
+        print("Lens inclusion cancelled.")
     return merged_papers, database_names
 
 
@@ -247,7 +218,6 @@ def add_lens_papers(
 def merge_papers(
     left_df: DataFrame[SchemaPapers],
     right_df: DataFrame[SchemaPapers],
-    database_names: List[str],
     right_db_name: str,
 ) -> DataFrame[SchemaPapers]:
     """Merge two paper DataFrames by DOI/title, keeping only specified fields.
@@ -296,12 +266,13 @@ def merge_papers(
         # Remove useless column
         merged_df = merged_df.drop(columns=f"{col}_{right_db_name}")
 
-    database_names += [right_db_name]
-    return merged_df, database_names
+    return merged_df
 
 
 @pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
-def clean_merged_df(merged_papers: DataFrame[SchemaPapers], database_names: List[str]):
+def complete_papers_df(
+    merged_papers: DataFrame[SchemaPapers], database_names: List[str]
+):
     """
     Make the clean of the datafram before further processing, and apply filters
     setup in ADDITIONAL_PARAMETERS
@@ -406,7 +377,6 @@ def show_merged_stats(
         in_db = merged_papers[f"in_{db}"].sum()
         print(f"Number of papers in {db}: {in_db}")
         print(f"Number of reference papers in {db}: {ref_in_db}")
-    return merged_papers
 
 
 def prompt_user_for_action_before_querying() -> str:
@@ -467,29 +437,75 @@ def handle_user_actions_after_querying(
             )
 
 
+def ask_user_binary(msg: str) -> bool:
+
+    user_input = input(msg + "(y/n)").lower()
+    if user_input == "y":
+        return True
+    elif user_input == "n":
+        return False
+    else:
+        return ask_user_binary(msg)
+
+
+def load_csv_results_if_exist_user_okay(csv_path: Path):
+    if csv_path.exists():
+        if ask_user_binary(f"Load from {csv_path}? (y/n): "):
+            print(f"---- Loading from {csv_path.name} ---")
+            return SchemaPapers.validate(
+                pd.read_csv(csv_path), lazy=PANDERA_LAZY_VALIDATION
+            )
+    return None
+
+
 @pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
-def get_all_papers_from_databases() -> tuple[DataFrame[SchemaPapers], List[str]]:
+def interactive_get_all_papers_from_databases(
+    query_input: str,
+) -> tuple[DataFrame[SchemaPapers], List[str]]:
     papers_df = get_new_reference_df()
     database_names = []
     # Step 1: Query Scopus
-
-    papers_df, database_names = add_scopus_papers(papers_df, database_names)
+    if ask_user_binary("Search for Scopus paper?"):
+        scopus_df = load_csv_results_if_exist_user_okay(PATH_CSV_SCOPUS_QUERY_RESULTS)
+        if scopus_df is None:
+            scopus_df = query_scopus(query_input)
+            save_dataframe_to_csv(scopus_df, PATH_CSV_SCOPUS_QUERY_RESULTS)
+        if scopus_df is None:
+            print("scopus_df is None. Skipping Scoppus")
+        else:
+            database_names += ["scopus"]
+            papers_df = merge_papers(papers_df, scopus_df, "scopus")
 
     # Step 2: Query OpenAlex
-    papers_df, database_names = add_openalex_papers(papers_df, database_names)
+    if ask_user_binary("Search for Openalex papers?"):
+        openalex_df = load_csv_results_if_exist_user_okay(
+            PATH_CSV_OPENALEX_QUERY_RESULTS
+        )
+        if openalex_df is None:
+            openalex_df = query_openalex(query_input)
+            save_dataframe_to_csv(openalex_df, PATH_CSV_OPENALEX_QUERY_RESULTS)
+        if openalex_df is None:
+            print("openalex_df is None. Skipping OpenAlex")
+        else:
+            database_names += ["openalex"]
+            papers_df = merge_papers(papers_df, openalex_df, "openalex")
+    # Step 2: Lens
 
     # Step 3: Merge papers from Scopus and OpenAlex
     print("---- Merging papers ---")
 
     # Step 3b: Ask if user wants to add lens.database
-    user_input = input("Search for Lens papers? (y/n): ").lower()
-    if user_input == "y":
-        papers_df, database_names = add_lens_papers(papers_df, database_names)
+    if ask_user_binary("Search for Lens papers?"):
+        papers_df, database_names = interactive_add_lens_papers(
+            papers_df, database_names, query_input
+        )
 
     # Step 3c: Ask if user wants to add dimensions.ai papers
-    user_input = input("Search for Dimensions.ai papers? (y/n): ").lower()
-    if user_input == "y":
-        papers_df, database_names = add_dimensions_papers(papers_df, database_names)
+
+    if ask_user_binary("Search for Dimensions papers?"):
+        papers_df, database_names = interactive_add_dimensions_papers(
+            papers_df, database_names, query_input
+        )
 
     # Add reference papers in the final dataframe.
     return papers_df, database_names
@@ -498,14 +514,16 @@ def get_all_papers_from_databases() -> tuple[DataFrame[SchemaPapers], List[str]]
 # --- Main workflow ---
 def main():
     if prompt_user_for_action_before_querying() == "s":
-        papers_df, database_names = get_all_papers_from_databases()
+        papers_df, database_names = interactive_get_all_papers_from_databases(
+            MAIN_QUERY
+        )
     else:
         papers_df = SchemaPapers.validate(pd.read_csv(PATH_CSV_01_QUERY_RESULTS))
 
         database_names = [
             c.removeprefix("id_") for c in papers_df.columns if c.startswith("id_")
         ]
-    papers_df = clean_merged_df(papers_df, database_names)
+    papers_df = complete_papers_df(papers_df, database_names)
     print(f"Databases used : {database_names}")
     papers_df = show_merged_stats(papers_df, database_names)
 

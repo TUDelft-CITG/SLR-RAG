@@ -36,40 +36,31 @@
  */
 
 :root {
-    /* === TOPIC 1: OFFSHORE INFRASTRUCTURE (Blue) === */
-    --kw-blue-fg: #1e90ff;
+    --kw-blue-fg: #3198ff;
     --kw-blue-bg: rgba(30, 144, 255, 0.15);
     
-    /* === TOPIC 2: MARITIME VESSELS & STRUCTURES (Cyan) === */
     --kw-cyan-fg: #00bcd4;
     --kw-cyan-bg: rgba(0, 188, 212, 0.15);
     
-    /* === TOPIC 3: SAFETY & INCIDENTS (Red) === */
     --kw-red-fg: #d32f2f;
     --kw-red-bg: rgba(211, 47, 47, 0.15);
     
-    /* === TOPIC 4: NAUTICAL & NAVIGATION (Purple) === */
-    --kw-purple-fg: #9c27b0;
-    --kw-purple-bg: rgba(156, 39, 176, 0.15);
+    --kw-pink-fg: #ee6fff;
+    --kw-pink-bg: rgba(156, 39, 176, 0.15);
     
-    /* === TOPIC 5: RISK AND SAFETY (Green) === */
     --kw-green-fg: #388e3c;
     --kw-green-bg: rgba(56, 142, 60, 0.15);
     
-    /* === TOPIC 6: ANALYSIS & PREDICTION (Light green) === */
     --kw-light-green-fg: #77ff38;
     --kw-light-green-bg: rgba(245, 124, 0, 0.15);
     
-    /* === TOPIC 7:Probability and frequency (Orange) === */
     --kw-orange-fg: #f57c00;
     --kw-orange-bg: rgba(245, 124, 0, 0.15);
     
-    /* === TOPIC 8: ASSESSMENT (Yellow) === */
     --kw-yellow-fg: #f0f321;
-    --kw-yellow-bg: rgba(56, 142, 60, 0.15);
+    --kw-yellow-bg: rgba(27, 27, 27, 0.15);
 
-    /* === TOPIC 9: IRRELEVANT (Gray) === */
-    --kw-gray-fg: #9e9e9e;
+    --kw-gray-fg: #aaaaaa;
     --kw-gray-bg: rgba(158, 158, 158, 0.15);
 }
 
@@ -80,21 +71,22 @@
    using the highlight_keywords.py script
    ============================================ */
 
-/* === TOPIC 1: OFFSHORE INFRASTRUCTURE (Blue) === */
+/* === OFFSHORE INFRASTRUCTURE (Yellow) === */
 .kw-offshore,
 .kw-infrastructure,
 .kw-wind-farm,
 .kw-bridge,
 .kw-other-offshore-infrastructures {
-    color: var(--kw-blue-fg) !important;
+    color: var(--kw-yellow-fg) !important;
     font-weight: 600 !important;
     /* background-color: var(--kw-blue-bg) !important;
     border-radius: 2px !important; */
     padding: 0 2px !important;
 }
 
-/* === TOPIC 2: MARITIME VESSELS & STRUCTURES (Cyan) === */
+/* === MARITIME VESSELS & STRUCTURES (Cyan) === */
 .kw-ship,
+.kw-nautical,
 .kw-vessel {
     color: var(--kw-cyan-fg) !important;
     font-weight: 600 !important;
@@ -103,7 +95,8 @@
     padding: 0 2px !important;
 }
 
-/* === TOPIC 3: SAFETY & INCIDENTS (Red) === */
+
+/* === Collisions and accidents (Red) === */
 .kw-collision,
 .kw-impact,
 .kw-accident {
@@ -114,38 +107,24 @@
     padding: 0 2px !important;
 }
 
-/* === TOPIC 4: NAUTICAL & NAVIGATION (Purple) === */
-.kw-nautical {
-    color: var(--kw-purple-fg) !important;
-    font-weight: 600 !important;
-    /* background-color: var(--kw-purple-bg) !important;
-    border-radius: 2px !important; */
-    padding: 0 2px !important;
-}
-
-/* === TOPIC 5: RISK ASSESSMENT (Green) === */
+/* === RISK And safety (Orange) === */
 .kw-risk,
-.kw-safety,
-.kw-navigation-risk-assessment {
-    color: var(--kw-green-fg) !important;
+.kw-safety
+ {
+    color: var(--kw-orange-fg) !important;
     font-weight: 600 !important;
     /* background-color: var(--kw-green-bg) !important;
     border-radius: 2px !important; */
     padding: 0 2px !important;
 }
 
-.kw-assess {
-    color: var(--kw-yellow-fg) !important;
-    font-weight: 600 !important;
-    /* background-color: var(--kw-yellow-bg) !important;
-    border-radius: 2px !important; */
-    padding: 0 2px !important;
-}
 
-/* === TOPIC 6: QUANTITATIVE ANALYSIS & PREDICTION (Orange) === */
+/* === QUANTITATIVE ANALYSIS & PREDICTION (Light Green) === */
 .kw-model,
 .kw-predict,
+.kw-navigation-risk-assessment,
 .kw-chance,
+.kw-assess,
 .kw-analyse {
     color: var(--kw-light-green-fg) !important;
     font-weight: 600 !important;
@@ -153,11 +132,10 @@
     border-radius: 2px !important; */
     padding: 0 2px !important;
 }
-/* === TOPIC 7:Probability and frequency (Orange) === */
-
+/* === Probability and frequency (Orange) === */
 .kw-probability,
 .kw-frequency {
-    color: var(--kw-orange-fg) !important;
+    color: var(--kw-pink-fg) !important;
     font-weight: 600 !important;
     /* background-color: var(--kw-orange-bg) !important;
     border-radius: 2px !important; */
@@ -165,16 +143,7 @@
 }
 
 
-/* === TOPIC 8: ASSESSMENT (YELLOW) === */
-.kw-assess {
-    color: var(--kw-yellow-fg) !important;
-    font-weight: 600 !important;
-    /* background-color: var(--kw-yellow-bg) !important;
-    border-radius: 2px !important; */
-    padding: 0 2px !important;
-}
-
-/* === TOPIC 9: IRRELEVANT (Gray) === */
+/* ===  IRRELEVANT (Gray) === */
 .kw-irrelevant {
     color: var(--kw-gray-fg) !important;
     font-weight: 600 !important;

@@ -12,7 +12,6 @@ from slrrag.settings import (
     NAME_COL_PRIMARY_TOPIC_OPENALEX,
     NAME_COL_RELEVANCE_OPENALEX,
     PANDERA_LAZY_VALIDATION,
-    THRESHOLD_BIG_COUNT_PAPER,
     SchemaOpenAlexPapers,
     SchemaPapers,
 )
@@ -29,31 +28,20 @@ def check_doi_in_openalex(doi: str) -> bool:
     except Exception:
         return False
 
+def get_openalex_work_from_query(query: str):
+    return Works().search_filter(title_and_abstract=query)
 
-def query_openalex(query: str, ask_input=True, n_paper_max=None):
-    works = Works().search_filter(title_and_abstract=query)
-    nb_paper = works.count()
-    if nb_paper > THRESHOLD_BIG_COUNT_PAPER and ask_input:
-        user_input = input(f"{nb_paper} found in OpenAlex. Continue? (y/n)").lower()
-        if user_input != "y":
-            return None
-    print(f"{nb_paper} found in OpenAlex. Downloading.")
+
+def work_openalex_to_list(works: Works):
+    nb_papers_openalex = works.count()
+    print(f"{nb_papers_openalex} found in Openalex.")
     list_ret = []
     pager = works.paginate(per_page=DEFAULT_OPEN_ALEX_PAGING)
-    for page in tqdm(pager, total=nb_paper / DEFAULT_OPEN_ALEX_PAGING):
+    for page in tqdm(pager, total=nb_papers_openalex / DEFAULT_OPEN_ALEX_PAGING):
         list_ret += page
-        if n_paper_max and len(list_ret) > n_paper_max:
-            break
     return list_ret
 
-
-# --- OpenAlex functions ---
-def query_openalex_and_standardize(
-    query: str, ask_input=True, n_paper_max=None
-) -> DataFrame[SchemaPapers]:
-    """Query OpenAlex and return results as a pandas DataFrame."""
-    print("Query :", query)
-    list_ret = query_openalex(query, ask_input, n_paper_max)
+def parse_openalex_list_to_dataframe(list_openalex_papers: list)  -> DataFrame[SchemaOpenAlexPapers]:
     input_openalex_columns_name = [
         "doi",
         "id",
@@ -116,7 +104,7 @@ def query_openalex_and_standardize(
             + [get_primary_subfield(x)]
             + [get_primary_domain(x)]
             + [get_keywords(x)]
-            for x in list_ret
+            for x in list_openalex_papers
         ],
         columns=input_openalex_columns_name
         + [
@@ -137,3 +125,14 @@ def query_openalex_and_standardize(
     )
     return_df["doi"] = return_df["doi"].str.removeprefix("https://doi.org/")
     return SchemaOpenAlexPapers.validate(return_df, lazy=PANDERA_LAZY_VALIDATION)
+
+
+# --- OpenAlex functions ---
+def query_openalex(query: str) -> DataFrame[SchemaOpenAlexPapers]:
+    """Query OpenAlex and return results as a pandas DataFrame."""
+    print("Query :", query)
+    works = get_openalex_work_from_query(query)
+    
+    list_ret = work_openalex_to_list(works)
+    return parse_openalex_list_to_dataframe(list_ret)
+    

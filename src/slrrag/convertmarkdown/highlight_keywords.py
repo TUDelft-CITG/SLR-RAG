@@ -203,10 +203,10 @@ def process_file(filepath):
     # Check if there's a frontmatter header
     header = None
     body = content
-    
-    if content.strip().startswith('---'):
+
+    if content.strip().startswith("---"):
         # Find the closing ---
-        second_dash_pos = content.find('---', 3)  # Start after first ---
+        second_dash_pos = content.find("---", 3)  # Start after first ---
         if second_dash_pos != -1:
             # Extract header (including the --- delimiters)
             header_end = second_dash_pos + 3

@@ -11,7 +11,9 @@ def plot_and_save_upset(df_input: DataFrame[SchemaPapers], output_html: Path | s
     upset_fig.write_html(output_html)
 
 
-def plot_upset(df_input: DataFrame[SchemaPapers]) -> plotly.graph_objs._figure.Figure:  # noqa: F821
+def plot_upset(
+    df_input: DataFrame[SchemaPapers], **kwargs
+) -> plotly.graph_objs._figure.Figure:  # noqa: F821
     # set TRUE/FALSE if the paper exists or not for each database
     # Dynamically detect which id_{db} columns exist
     id_cols = [col for col in df_input.columns if col.startswith("id_")]
@@ -22,5 +24,6 @@ def plot_upset(df_input: DataFrame[SchemaPapers]) -> plotly.graph_objs._figure.F
     return Upset.generate_plot(
         df_fig[database_names + ["is_reference"]].rename(
             columns={"is_reference": "reference"}
-        )
+        ),
+        **kwargs,
     )
