@@ -115,16 +115,45 @@ REFERENCE_PAPERS = [
     ),
 ]
 
+MAIN_QUESTION="""
+We consider the following subjects part of risks for maritime traffic :
+- Collisions/allisions probabilities
+- Alert system when detecting risky situation
+- Detection of anlomalous trajectories
+- Risk or safety index/score calculation
+- Frequency of collisions/allisions
+- Safety distance estimations
+- Explanation and or analysis of collisions using models.
+- Maritime traffic analysis for martime safety.
+- Marine spatial planning and pressure on maritime traffic ana 
 
-FIRST_ROUND_QUESTIONS = {
-    "risk_nautical": "This paper discusses about risk assessment or risk analysis in the context of nautical safety for ships or vessels.",
-    "nautical_offshore": "This paper is about nautical safety around offshore infrastructures, like offshore windfarms.",
-    "probability_collision": "This paper includes a method to estimate the probability or risk of collision or allision of ships.",
-    "quantitative_model": "This paper includes a quantitative model.",
-    "technique_risk_collision": "This paper presents a technique to assess the risk of collision or allisions between ships and other human-made objects around offshore infrastructures or bridges",
-    "recommendation_safety": "This paper recommends gives recommendation for safe navigation around offshore infrastructures/bridges.",
-    "empirical_data": "This paper includes empirical data, like traffic, software or simulator."
-}
+But we are not interested in:
+- Ecological impact (collision between birds and OWF)
+- impact on structural bridges/platforms when collisions. (mainly damage analysis).
+- Structural or design analysis of bridges of offshore infrastructures.
+- Cybersecurity
+- Risk assessment during maintnance operation.
+- Predicting inboard problems.
+- Diverse other risk of accidents related to offshore platforms or bridges (e.g : oil spill, crash during operations, ice)
+- Risk assessment when installing/decommisionning offshore infrastructures. (Impact of weather, ground...)
+- Collision/Risk linked to the bridge of ships. (studying human factors)
+- Other safety assessment of bridges (e.g heavy load)
+- Other risky threats (tsunami, anchor damages to infrastructures)
+- Safe manoeuver in ports or other areas.
+- Terrorist attack on infrastructures.
+- Ship/platforms/bridges evacuation in case of risks.
+
+Is the subject of the paper is about risks for maritime traffic, as explained above, around offshore infrastructures (e.g windfarms, platforms...) and/or bridges?
+"""
+FIRST_ROUND_QUESTIONS =  [
+    # {"name": "risk_nautical", "question": "Does this paper discuss about risk assessment or risk analysis in the context of nautical safety for ships or vessels?"},
+    # {"name": "nautical_offshore", "question": "Is this paper about nautical safety around offshore infrastructures, like offshore windfarms?"},
+    # {"name": "probability_collision", "question": "Does this paper include a method to estimate the probability or risk of collision or allision of ships?"},
+    # {"name": "quantitative_model", "question": "Does this paper include a quantitative model?"},
+    # {"name": "technique_risk_collision", "question": "Does this paper present a technique to assess the risk of collision or allisions between ships and other human-made objects around offshore infrastructures or bridges?"},   
+    # {"name": "recommendation_safety", "question": "Does this paper gives recommendation for safe navigation around offshore infrastructures or bridges?"},
+    {"name": "main_question", "question": MAIN_QUESTION},
+]
 
 
 SECOND_ROUND_QUESTIONS = {
