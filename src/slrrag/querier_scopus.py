@@ -8,6 +8,7 @@ from slrrag.settings import (
     NAME_COL_RELEVANCE_ORDER_SCOPUS,
     PANDERA_LAZY_VALIDATION,
     SCOPUS_IS_SUBSCRIBER,
+    PATH_PYBLIOMETRICS_CONFIG,
     SchemaPapers,
     SchemaScopusPapers,
 )
@@ -43,7 +44,7 @@ def query_scopus(query: str) -> DataFrame[SchemaPapers] | None:
     scopus_query = to_query_scopus(query)
     print("Query :", query)
     try:
-        pybliometrics.init()  # Init for scopus
+        pybliometrics.init(config_path=PATH_PYBLIOMETRICS_CONFIG)  # Init for scopus
         nb_paper = ScopusSearch(
             query=scopus_query, download=False, subscriber=SCOPUS_IS_SUBSCRIBER
         ).get_results_size()
