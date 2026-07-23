@@ -28,7 +28,7 @@ PATH_CSV_OPENALEX_QUERY_RESULTS = PATH_OUTPUT / "openalex_query_results.csv"
 PATH_CSV_02_FILTERED_TOPIC = PATH_OUTPUT / "02_papers_filtered_topic.csv"
 
 # Outputs of papers with first_round_question answerd by the agents.
-PATH_CSV_03_AGENTS_ANWSERS = PATH_OUTPUT / "03_papers_agent_anwsers_v2.csv"
+PATH_CSV_03_AGENTS_ANWSERS = PATH_OUTPUT / "03_papers_agent_anwsers_v3.csv"
 
 # Outputs of papers with manual_filters
 PATH_CSV_04_MANUAL_FILTER = PATH_OUTPUT / "04_papers_manual_filter.csv"

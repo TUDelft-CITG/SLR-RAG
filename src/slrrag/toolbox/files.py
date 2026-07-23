@@ -36,6 +36,7 @@ def check_overwrite(
         file_path.parent.mkdir(parents=True, exist_ok=True)
     return True
 
+
 def slugify(title: str, limit: int = None) -> str:
     """
     Convert a paper title to a URL-friendly slug.
@@ -98,4 +99,3 @@ def slugify(title: str, limit: int = None) -> str:
         return "untitled"
 
     return slug
-

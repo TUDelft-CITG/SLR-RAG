@@ -20,6 +20,7 @@ output/
 outputs/
 
 notebooks/*.png
+notebooks/experiments
 .ipynb_checkpoints/
 # Snellius files
 logs/

@@ -59,7 +59,7 @@ STEMMING_DICT = {
         "synthetic islands",
     ],
     "bridge": ["bridge", "bridges", "bridging"],
-    "aquaculture" : ["aquaculture"],
+    "aquaculture": ["aquaculture"],
     # === 2. MARITIME VESSELS & STRUCTURES ===
     "ship": ["ship", "ships", "shipping", "shipped"],
     "vessel": ["vessel", "vessels"],
@@ -109,7 +109,7 @@ STEMMING_DICT = {
         "predicting",
         "prediction",
         "predictions",
-        "predictive"
+        "predictive",
     ],
     "analyse": [
         "analyse",
@@ -121,7 +121,7 @@ STEMMING_DICT = {
         "analyzed",
         "analyzing",
     ],
-    "simulator" : ["simulator", "simulate", "simulation"],
+    "simulator": ["simulator", "simulate", "simulation"],
     # === 7. IRRELEVANT (for exclusion/filtering) ===
     "irrelevant": ["therapy", "therapies", "blood", "medicine", "medicines", "medical"],
 }

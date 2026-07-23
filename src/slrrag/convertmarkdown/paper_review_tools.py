@@ -18,6 +18,7 @@ from slrrag.settings import NAME_COL_RELEVANCE_OPENALEX, NAME_COL_RELEVANCE_ORDE
 
 # Import the keyword highlighting functionality
 from slrrag.convertmarkdown.highlight_keywords import highlight_keywords_in_text
+from slrrag.toolbox.files import slugify
 
 
 # Configuration
@@ -25,7 +26,6 @@ MANUAL_REVIEW_FIELD = "manual_review"
 DEFAULT_REVIEW_STATUS = None  # Can be "keep", "removed", "not-sure", or None
 
 # Field groupings for better organization in markdown
-
 
 
 def write_paper_to_markdown(
