@@ -30,7 +30,7 @@ uv sync
 | Database   | Link | Connection |
 |------------|------|------------|
 | Scopus     | [https://www.scopus.com/](https://www.scopus.com/) | [API key](http://dev.elsevier.com/myapikey.html) |
-| OpenAlex   | [https://openalex.org/](https://openalex.org/) | Automatic / [API key](https://developers.openalex.org/api-reference/introduction) |
+| OpenAlex   | [https://openalex.org/](https://openalex.org/) |  [API key](https://developers.openalex.org/api-reference/introduction) |
 | Lens       | [https://www.lens.org/](https://www.lens.org/) | Manual export |
 | Dimensions | [https://app.dimensions.ai/](https://app.dimensions.ai/) | Manual export |
 
@@ -44,8 +44,15 @@ uv sync
    - If you work remotely, you might encounter the error: "The requestor is not authorized to access the requested view or fields of the resource. Returning empty DataFrame". There is currently no solution other than working on campus.
    - You can edit your scopus API key in ~/.config/pybliometrics.cfg
 
-2. **OpenAlex API Key (Optional)**
-   - The OpenAlex API key is not mandatory but may be needed in the future. See [OpenAlex API documentation](https://developers.openalex.org/api-reference/introduction).
+2. **OpenAlex API Key**
+
+   The OpenAlex API key is now mandatory
+   - Create a .env file in your project root.
+   - Add the following line, replacing <YOUR_API_KEY> with your actual key from openalex.org/settings/api:
+```sh
+OPENALEX_API_KEY=<YOUR_API_KEY>
+```
+   See [OpenAlex API documentation](https://developers.openalex.org/api-reference/introduction).
 
 3. **Ollama Installation**
    - You need to have [Ollama](https://ollama.ai/) installed and running locally.
