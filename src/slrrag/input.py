@@ -116,39 +116,38 @@ REFERENCE_PAPERS = [
 ]
 
 
-FIRST_ROUND_QUESTIONS = {
-    "risk_nautical": "This paper discusses about risk assessment or risk analysis in the context of nautical safety for ships or vessels.",
-    "nautical_offshore": "This paper is about nautical safety around offshore infrastructures, like offshore windfarms.",
-    "probability_collision": "This paper includes a method to estimate the probability or risk of collision or allision of ships.",
-    "quantitative_model": "This paper includes a quantitative model.",
-    "technique_risk_collision": "This paper presents a technique to assess the risk of collision or allisions between ships and other human-made objects around offshore infrastructures or bridges",
-    "recommendation_safety": "This paper recommends gives recommendation for safe navigation around offshore infrastructures/bridges.",
-    "empirical_data": "This paper includes empirical data, like traffic, software or simulator."
-}
+FIRST_ROUND_QUESTIONS = {"questions": [
+    {"name": "risk_nautical", "question": "This paper discusses about risk assessment or risk analysis in the context of nautical safety for ships or vessels."},
+    {"name": "nautical_offshore", "question": "This paper is about nautical safety around offshore infrastructures, like offshore windfarms."},
+    {"name": "probability_collision", "question": "This paper includes a method to estimate the probability or risk of collision or allision of ships."},
+    {"name": "quantitative_model", "question": "This paper includes a quantitative model."},
+    {"name": "technique_risk_collision", "question": "This paper presents a technique to assess the risk of collision or allisions between ships and other human-made objects around offshore infrastructures or bridges"},
+    {"name": "recommendation_safety", "question": "This paper recommends gives recommendation for safe navigation around offshore infrastructures/bridges."},
+    {"name": "empirical_data", "question": "This paper includes empirical data, like traffic, software or simulator."}
+]}
 
 
 SECOND_ROUND_QUESTIONS = {
     "strategic": {
-        "frequency": "This paper estimates the frequency / return periods of collisions of ships with another object in a certain area.",
-        "long-term": "This paper assesses the risk in a long-term context with static data.",
+        {"name": "frequency", "question": "This paper estimates the frequency / return periods of collisions of ships with another object in a certain area."},
+        {"name": "long-term", "question": "This paper assesses the risk in a long-term context with static data."},
     },
     "tactical": {
-        "traffic-accidents": "This paper study the traffic in general, in order to minimize the risks of a accidents, such as by reducing the complexity or congestion of the traffic.",
-        "traffic-dynamic": "This paper studies the entire traffic by using dynamic data.",
+        {"name": "traffic-accidents", "question": "This paper study the traffic in general, in order to minimize the risks of a accidents, such as by reducing the complexity or congestion of the traffic."},
+        {"name": "traffic-dynamic", "question": "This paper studies the entire traffic by using dynamic data."},
     },
     "operational": {
-        "short-term": "This paper present a methodology to assess the risk of a accidents that can come in short-term (usually in terms of hours).",
-        "limited-number-agents": "The paper uses only a limited amount of agents (ships) to estimate the risks of accidents.",
+        {"name": "short-term", "question": "This paper present a methodology to assess the risk of a accidents that can come in short-term (usually in terms of hours)."},
+        {"name": "limited-number-agents", "question": "The paper uses only a limited amount of agents (ships) to estimate the risks of accidents."},
     },
     "quantitative": {
-        "quantitative-model": "This paper includes a quantitative model to calculate the likehood of the risks in a mathematical way. (such as probability, risk index, frequency, or return period.",
-        "empirical-data": "This paper relies on empirical data to estimate the risks",
+        {"name": "quantitative-model", "question": "This paper includes a quantitative model to calculate the likehood of the risks in a mathematical way. (such as probability, risk index, frequency, or return period."},
+        {"name": "empirical-data", "question": "This paper relies on empirical data to estimate the risks"},
     },
     "qualitative": {
-        "expert-judgment": "This paper makes use of experts judgements to estimate the risks.",
-        "visualisation": "This paper only makes conclusion of the risks by visualizing the traffic, without calculating the risk in a mathematical way (like probability or frequency).",
+        {"name": "expert-judgment", "question": "This paper makes use of experts judgements to estimate the risks."},
+        {"name": "visualisation", "question": "This paper only makes conclusion of the risks by visualizing the traffic, without calculating the risk in a mathematical way (like probability or frequency)."},
     },
-    "": {},
 }
 
 OLLAMA_MODELS = [

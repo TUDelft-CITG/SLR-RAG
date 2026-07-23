@@ -12,6 +12,7 @@ uv.lock
 data/papers_selection
 data/export_databases/
 data/backup_exports
+data/temp
 output/
 vectorstore_chroma/
 results.json

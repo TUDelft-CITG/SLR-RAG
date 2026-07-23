@@ -21,7 +21,9 @@ tqdm.pandas()
 MISTRAL_MODEL = "ministral-3b-2512"
 SYSTEM_PROMPT = """
 You are an agent that analyses papers, and your goal is respond to questions about it, that will be asked.
-You will be given a title, abstract and questions. For each question, provide the anwser ONLY IN BINARY FORMAT (True or FALSE), 
+
+You will be given a title, abstract. Below, you will find a list of questions 
+For each question, provide the anwser ONLY IN BINARY FORMAT (True or False), 
 and a small explanation in one or two sentences.
 Title: {title}\nAbstract: {abstract}\nQuestion: {question}\nOnly answer with 'True' or 'False', without a dot, nothing else."
 """
