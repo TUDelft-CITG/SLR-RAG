@@ -7,6 +7,8 @@ __pycache__/
 *.html
 *.egg-info/
 uv.lock
+pybliometrics.cfg
+
 .obsidian
 #data files
 data/papers_selection

@@ -36,6 +36,9 @@ PATH_CSV_04_MANUAL_FILTER = PATH_OUTPUT / "04_papers_manual_filter.csv"
 # Output of upset plot
 PATH_UPSET = PATH_OUTPUT / "upset.html"
 
+# Path of config for pybliometrics
+
+PATH_PYBLIOMETRICS_CONFIG = PROJECT_ROOT / "pybliometrics.cfg"
 
 # Globl variables column names in dataframes
 
