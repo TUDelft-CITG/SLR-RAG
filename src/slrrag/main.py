@@ -9,7 +9,7 @@ from slrrag.querier_scopus import query_scopus
 from slrrag.query_converter import convert_query_to_lens
 from slrrag.query_converter import query_to_dimensions_url
 from slrrag.ollama_analysis import (
-    analyze_papers_with_list_agents,
+    analyze_papers_with_list_agents
 )
 from slrrag.querier_dimensions import read_dimensions_export
 from slrrag.querier_lens import read_lens_export
