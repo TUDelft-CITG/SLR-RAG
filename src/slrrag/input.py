@@ -106,12 +106,20 @@ REFERENCE_PAPERS = [
         "10.3390/app12073441",
     ),
     (
-        "The Impact of Offshore Wind Farm Construction on Maritime Traffic Complexity; An Empirical Analysis of the Yangtze River Estuary",
+        "The Impact of Offshore Wind Farm Construction on Maritime Traffic Complexity: An Empirical Analysis of the Yangtze River Estuary",
         "10.3390/jmse12122232",
     ),
     (
         "Risk Assessment of Collision Between Out of Control Vessels and Offshore Platforms",
         "10.1109/ICTIS68762.2025.11214868",
+    ),
+    (
+        "Fuzzy logic based approach for ship-bridge collision alert system",
+        "10.1016/j.oceaneng.2019.106152",
+    ),
+    (
+        "Assessing offshore wind farm collision risks using AIS data: an overview",
+        "10.15480/882.4716",
     ),
 ]
 
@@ -125,7 +133,7 @@ We consider the following subjects part of risks for maritime traffic :
 - Safety distance estimations
 - Explanation and or analysis of collisions using models.
 - Maritime traffic analysis for martime safety.
-- Marine spatial planning and pressure on maritime traffic ana 
+- Marine spatial planning and pressure on maritime traffic ana
 
 But we are not interested in:
 - Ecological impact (collision between birds and OWF)
