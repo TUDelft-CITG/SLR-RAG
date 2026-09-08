@@ -160,13 +160,13 @@ ARTICLE_TYPE_MAPPING = {
     "retracted": OTHER_N,
     "paratext": OTHER_N,
     "peer-review": OTHER_N,
-    'conference-abstract': OTHER_N,
-    'dataset': OTHER_N,
-    'erratum': OTHER_N,
-    'reference-entry': OTHER_N,
-    'book-review': OTHER_N,
-    'paratext': OTHER_N,
-    'editorial': OTHER_N
+    "conference-abstract": OTHER_N,
+    "dataset": OTHER_N,
+    "erratum": OTHER_N,
+    "reference-entry": OTHER_N,
+    "book-review": OTHER_N,
+    "paratext": OTHER_N,
+    "editorial": OTHER_N,
 }
 
 
@@ -203,8 +203,7 @@ class SchemaPapers(pa.DataFrameModel):
     type: Series[String] = pa.Field(
         nullable=True, alias=NAME_COL_TYPE, isin=ALL_ARTICLE_TYPES
     )
-    year: Series[Int64] = pa.Field(
-        nullable=True, alias=NAME_COL_YEAR, coerce=True)
+    year: Series[Int64] = pa.Field(nullable=True, alias=NAME_COL_YEAR, coerce=True)
     date: Series[datetime] = pa.Field(nullable=True, alias=NAME_COL_DATE)
     abstract: Series[String] = pa.Field(nullable=True, alias=NAME_COL_ABSTRACT)
 
@@ -214,8 +213,7 @@ class SchemaPapers(pa.DataFrameModel):
         non_null_mask = series.notna()
 
         if non_null_mask.any():
-            processed = series[non_null_mask].astype(
-                str).str.lower().str.strip()
+            processed = series[non_null_mask].astype(str).str.lower().str.strip()
             processed = processed.replace(ARTICLE_TYPE_MAPPING)
             result.loc[non_null_mask] = processed
 
@@ -240,8 +238,7 @@ class SchemaPapers(pa.DataFrameModel):
 class SchemaScopusPapers(SchemaPapers):
     # ID in databases (a link if possible)
 
-    id_scopus: Series[String] = pa.Field(
-        nullable=True, alias=NAME_COL_ID_SCOPUS)
+    id_scopus: Series[String] = pa.Field(nullable=True, alias=NAME_COL_ID_SCOPUS)
 
     keywords_scopus: Series[String] = pa.Field(
         nullable=True, alias=NAME_COL_KEYWORDS_SCOPUS, coerce=True
@@ -255,8 +252,7 @@ class SchemaScopusPapers(SchemaPapers):
 class SchemaOpenAlexPapers(SchemaPapers):
     # ID in databases (a link if possible)
 
-    id_openalex: Series[String] = pa.Field(
-        nullable=True, alias=NAME_COL_ID_OPENALEX)
+    id_openalex: Series[String] = pa.Field(nullable=True, alias=NAME_COL_ID_OPENALEX)
 
     # Topic fields : https://developers.openalex.org/api-reference/topics
     topic_openalex: Series[String] = pa.Field(
@@ -273,8 +269,7 @@ class SchemaOpenAlexPapers(SchemaPapers):
     domain_openalex: Series[String] = pa.Field(
         nullable=True, alias=NAME_COL_PRIMARY_DOMAIN_OPENALEX, coerce=True
     )
-    pdf: Series[String] = pa.Field(
-        nullable=True, alias=NAME_COL_PDF, coerce=True)
+    pdf: Series[String] = pa.Field(nullable=True, alias=NAME_COL_PDF, coerce=True)
 
     keywords_openalex: Series[String] = pa.Field(
         nullable=True, alias=NAME_COL_KEYWORDS_OPENALEX, coerce=True
@@ -315,8 +310,7 @@ class SchemaDimensionsPapers(SchemaPapers):
 
 
 class SchemaAnalysisPapers(SchemaPapers):
-    is_reference: Series[bool] = pa.Field(
-        nullable=True, alias=NAME_COL_IS_REFERENCE)
+    is_reference: Series[bool] = pa.Field(nullable=True, alias=NAME_COL_IS_REFERENCE)
 
     # Fields to know if a reference paper has been found
     is_found: Series[bool] = pa.Field(nullable=True, alias=NAME_COL_IS_FOUND)

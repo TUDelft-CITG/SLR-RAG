@@ -8,9 +8,7 @@ from slrrag.querier_openalex import query_openalex
 from slrrag.querier_scopus import query_scopus
 from slrrag.query_converter import convert_query_to_lens
 from slrrag.query_converter import query_to_dimensions_url
-from slrrag.ollama_analysis import (
-    analyze_papers_with_list_agents
-)
+from slrrag.ollama_analysis import analyze_papers_with_list_agents
 from slrrag.querier_dimensions import read_dimensions_export
 from slrrag.querier_lens import read_lens_export
 from slrrag.input import (
@@ -45,7 +43,7 @@ from slrrag.settings import (
 )
 from slrrag.settings import SchemaPapers
 
-from slrrag.toolbox.files import check_overwrite, save_dataframe_to_csv
+from slrrag.toolbox.files import check_overwrite, save_dataframe_to_csv, slugify
 from slrrag.upset_plotter import plot_and_save_upset
 
 
@@ -234,11 +232,12 @@ def merge_papers(
     # Temporary Key is the DOI, Title if the DOI is None.
     # Sometimes, doi / title do not have same uppercase : 10.1017/S0373463319000444 == 10.1017/s0373463319000444.
     # BUG: Will have duplicata if one has doi and not the other
+    
     left_df["temp_key"] = (
-        left_df[NAME_COL_DOI].fillna(left_df[NAME_COL_TITLE]).str.lower()
+        left_df[NAME_COL_DOI].fillna(left_df[NAME_COL_TITLE].apply(slugify))
     )
     right_df["temp_key"] = (
-        right_df[NAME_COL_DOI].fillna(right_df[NAME_COL_TITLE]).str.lower()
+        right_df[NAME_COL_DOI].fillna(right_df[NAME_COL_TITLE].apply(slugify))
     )
 
     # Merge by temp_key
@@ -265,8 +264,22 @@ def merge_papers(
         )
         # Remove useless column
         merged_df = merged_df.drop(columns=f"{col}_{right_db_name}")
-
+    merged_df = add_is_reference_column(merged_df)
     return merged_df
+
+
+@pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
+def add_is_reference_column(merged_papers: DataFrame[SchemaPapers]):
+    reference_paper = get_new_reference_df()
+
+    merged_papers[NAME_COL_IS_REFERENCE] = (
+        merged_papers[NAME_COL_DOI].notna()
+        & merged_papers[NAME_COL_DOI].isin(reference_paper[NAME_COL_DOI])  # SAME DOI
+    ) | (
+        merged_papers[NAME_COL_TITLE].isin(reference_paper[NAME_COL_TITLE])
+        & merged_papers[NAME_COL_DOI].isna()  # Same title if DOI is None.
+    )
+    return merged_papers
 
 
 @pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
@@ -292,15 +305,8 @@ def complete_papers_df(
     merged_papers["year"] = merged_papers["year"].astype(
         "Int64"
     )  # To avoid having floats
-    reference_paper = get_new_reference_df()
+    merged_papers = add_is_reference_column(merged_papers)
     # DOI Matches or title matches
-    merged_papers[NAME_COL_IS_REFERENCE] = (
-        merged_papers[NAME_COL_DOI].notna()
-        & merged_papers[NAME_COL_DOI].isin(reference_paper[NAME_COL_DOI])  # SAME DOI
-    ) | (
-        merged_papers[NAME_COL_TITLE].isin(reference_paper[NAME_COL_TITLE])
-        & merged_papers[NAME_COL_DOI].isna()  # Same title if DOI is None.
-    )
     if MINIMUM_YEAR_NAME in ADDITIONAL_PARAMETERS:
         df_after = merged_papers[
             merged_papers["year"].isna()
