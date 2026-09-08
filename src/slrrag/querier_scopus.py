@@ -40,15 +40,18 @@ TITLE-ABS-KEY( {query})
     return scopus_query
 
 
-def query_scopus(query: str) -> DataFrame[SchemaPapers] | None:
+def query_scopus(query: str, dry_run = False) -> DataFrame[SchemaPapers] | None:
     scopus_query = to_query_scopus(query)
-    print("Query :", query)
+    print("Scopus Query :", scopus_query)
     try:
         pybliometrics.init(config_path=PATH_PYBLIOMETRICS_CONFIG)  # Init for scopus
         nb_paper = ScopusSearch(
             query=scopus_query, download=False, subscriber=SCOPUS_IS_SUBSCRIBER
         ).get_results_size()
         print(f"{nb_paper} found in Scopus.")
+        if dry_run:
+            print("Dry run activated, exiting without downloading")
+            return None
         scopus_search = ScopusSearch(
             query=scopus_query,
             verbose=True,
