@@ -33,6 +33,10 @@ PATH_CSV_03_AGENTS_ANWSERS = PATH_OUTPUT / "03_papers_agent_anwsers_v3.csv"
 # Outputs of papers with manual_filters
 PATH_CSV_04_MANUAL_FILTER = PATH_OUTPUT / "04_papers_manual_filter.csv"
 
+# Outputs of 111 papers picked
+PATH_CSV_06 = PATH_OUTPUT / "06_picky_selection.csv"
+
+
 # Output of upset plot
 PATH_UPSET = PATH_OUTPUT / "upset.html"
 

@@ -157,7 +157,7 @@ FIRST_ROUND_QUESTIONS = [
 
 
 SECOND_ROUND_QUESTIONS = {
-    "strategic": {
+    "strategic": [
         {
             "name": "frequency",
             "question": "This paper estimates the frequency / return periods of collisions of ships with another object in a certain area.",
@@ -166,8 +166,8 @@ SECOND_ROUND_QUESTIONS = {
             "name": "long-term",
             "question": "This paper assesses the risk in a long-term context with static data.",
         },
-    },
-    "tactical": {
+    ],
+    "tactical": [
         {
             "name": "traffic-accidents",
             "question": "This paper study the traffic in general, in order to minimize the risks of a accidents, such as by reducing the complexity or congestion of the traffic.",
@@ -176,8 +176,8 @@ SECOND_ROUND_QUESTIONS = {
             "name": "traffic-dynamic",
             "question": "This paper studies the entire traffic by using dynamic data.",
         },
-    },
-    "operational": {
+    ],
+    "operational": [
         {
             "name": "short-term",
             "question": "This paper present a methodology to assess the risk of a accidents that can come in short-term (usually in terms of hours).",
@@ -186,8 +186,8 @@ SECOND_ROUND_QUESTIONS = {
             "name": "limited-number-agents",
             "question": "The paper uses only a limited amount of agents (ships) to estimate the risks of accidents.",
         },
-    },
-    "quantitative": {
+    ],
+    "quantitative": [
         {
             "name": "quantitative-model",
             "question": "This paper includes a quantitative model to calculate the likehood of the risks in a mathematical way. (such as probability, risk index, frequency, or return period.",
@@ -196,8 +196,8 @@ SECOND_ROUND_QUESTIONS = {
             "name": "empirical-data",
             "question": "This paper relies on empirical data to estimate the risks",
         },
-    },
-    "qualitative": {
+    ],
+    "qualitative": [
         {
             "name": "expert-judgment",
             "question": "This paper makes use of experts judgements to estimate the risks.",
@@ -206,7 +206,7 @@ SECOND_ROUND_QUESTIONS = {
             "name": "visualisation",
             "question": "This paper only makes conclusion of the risks by visualizing the traffic, without calculating the risk in a mathematical way (like probability or frequency).",
         },
-    },
+    ],
 }
 
 OLLAMA_MODELS = [
