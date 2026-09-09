@@ -1,6 +1,5 @@
 """Ollama and LangChain agent functions for paper analysis."""
 
-
 import pandas as pd
 from langchain_ollama import ChatOllama
 from pandera.typing.pandas import DataFrame

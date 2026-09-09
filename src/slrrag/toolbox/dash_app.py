@@ -38,8 +38,7 @@ def create_data_table(
             "whiteSpace": "normal",
             "height": "auto",
         },
-        style_header={
-            "backgroundColor": "rgb(230, 230, 230)", "fontWeight": "bold"},
+        style_header={"backgroundColor": "rgb(230, 230, 230)", "fontWeight": "bold"},
         style_data_conditional=style_data_conditional or [],
         page_size=page_size,
     )
@@ -221,7 +220,9 @@ def create_roc_curve_tab(
 
 
 def create_performance_metrics_tab(
-    df_input: pd.DataFrame, model_columns: list[str] | None = None
+    df_input: pd.DataFrame,
+    model_columns: list[str] | None = None,
+    y_true_col: str = "is_picky_kept",
 ) -> html.Div:
     """Create the Performance Metrics tab content.
 
@@ -238,12 +239,12 @@ def create_performance_metrics_tab(
     return html.Div(
         [
             html.H2("Model Performance Metrics"),
-            html.P(
-                f"Comparing {len(model_columns)} models performance metrics"
-            ),
+            html.P(f"Comparing {len(model_columns)} models performance metrics"),
             dcc.Graph(
                 id="performance-metrics",
-                figure=calculate_performance_metrics(df_input, model_columns),
+                figure=calculate_performance_metrics(
+                    df_input, model_columns, y_true_col
+                ),
             ),
         ]
     )
@@ -268,9 +269,7 @@ def create_upset_plot_tab(
     return html.Div(
         [
             html.H2("Upset Plot: Model Intersections"),
-            html.P(
-                f"Showing intersections between {len(binary_columns)} binary sets"
-            ),
+            html.P(f"Showing intersections between {len(binary_columns)} binary sets"),
             create_upset_plot(df_input, binary_columns),
         ]
     )
@@ -278,10 +277,10 @@ def create_upset_plot_tab(
 
 class AppLayoutBuilder:
     """Builder class for creating Dash app layouts with a functional paradigm.
-    
+
     Allows chaining tab additions to build the layout dynamically.
     """
-    
+
     def __init__(
         self,
         df_input: pd.DataFrame | None = None,
@@ -289,7 +288,7 @@ class AppLayoutBuilder:
         binary_columns: list[str] | None = None,
     ):
         """Initialize the layout builder.
-        
+
         Args:
             df_input: pandas DataFrame to display (optional, can be provided per-tab)
             model_columns: Optional list of model columns (optional, can be provided per-tab)
@@ -300,18 +299,18 @@ class AppLayoutBuilder:
         self.binary_columns = binary_columns or []
         self.tabs: list[dcc.Tab] = []
         self.default_tab_value = "data-table"
-    
+
     def add_data_table_tab(
         self,
         df_input: pd.DataFrame | None = None,
         model_columns: list[str] | None = None,
     ) -> "AppLayoutBuilder":
         """Add a data table tab to the layout.
-        
+
         Args:
             df_input: Optional DataFrame (uses builder's if not provided)
             model_columns: Optional model columns (uses builder's if not provided)
-            
+
         Returns:
             AppLayoutBuilder: Returns self for method chaining
         """
@@ -325,18 +324,18 @@ class AppLayoutBuilder:
             )
         )
         return self
-    
+
     def add_roc_curve_tab(
         self,
         df_input: pd.DataFrame | None = None,
         model_columns: list[str] | None = None,
     ) -> "AppLayoutBuilder":
         """Add a ROC curve tab to the layout.
-        
+
         Args:
             df_input: Optional DataFrame (uses builder's if not provided)
             model_columns: Optional model columns (uses builder's if not provided)
-            
+
         Returns:
             AppLayoutBuilder: Returns self for method chaining
         """
@@ -350,18 +349,20 @@ class AppLayoutBuilder:
             )
         )
         return self
-    
+
     def add_performance_metrics_tab(
         self,
         df_input: pd.DataFrame | None = None,
         model_columns: list[str] | None = None,
+        y_true_col: str = "is_picky_kept",
+
     ) -> "AppLayoutBuilder":
         """Add a performance metrics tab to the layout.
-        
+
         Args:
             df_input: Optional DataFrame (uses builder's if not provided)
             model_columns: Optional model columns (uses builder's if not provided)
-            
+
         Returns:
             AppLayoutBuilder: Returns self for method chaining
         """
@@ -371,22 +372,22 @@ class AppLayoutBuilder:
             dcc.Tab(
                 label="Performance Metrics",
                 value="performance-metrics",
-                children=[create_performance_metrics_tab(df, cols)],
+                children=[create_performance_metrics_tab(df, cols, y_true_col)],
             )
         )
         return self
-    
+
     def add_upset_plot_tab(
         self,
         df_input: pd.DataFrame | None = None,
         binary_columns: list[str] | None = None,
     ) -> "AppLayoutBuilder":
         """Add an upset plot tab to the layout.
-        
+
         Args:
             df_input: Optional DataFrame (uses builder's if not provided)
             binary_columns: Optional binary columns (uses builder's if not provided)
-            
+
         Returns:
             AppLayoutBuilder: Returns self for method chaining
         """
@@ -400,22 +401,22 @@ class AppLayoutBuilder:
             )
         )
         return self
-    
+
     def set_default_tab(self, tab_value: str) -> "AppLayoutBuilder":
         """Set the default tab value.
-        
+
         Args:
             tab_value: The value of the tab to set as default
-            
+
         Returns:
             AppLayoutBuilder: Returns self for method chaining
         """
         self.default_tab_value = tab_value
         return self
-    
+
     def build(self) -> html.Div:
         """Build and return the final Dash app layout.
-        
+
         Returns:
             html.Div: The complete Dash app layout
         """
@@ -443,22 +444,22 @@ def create_app_layout(
     binary_columns: list[str] | None = None,
 ) -> AppLayoutBuilder:
     """Create an AppLayoutBuilder for building Dash app layouts with a functional paradigm.
-    
+
     This function returns a builder object that supports method chaining to add tabs.
-    
+
     Usage:
         app_layout = (create_app_layout()
             .add_roc_curve_tab(df, model_names)
             .add_performance_metrics_tab(df, model_names)
             .set_default_tab("roc-curve")
             .build())
-    
+
     Or with initial data:
         app_layout = (create_app_layout(df, model_columns, binary_columns)
             .add_data_table_tab()
             .add_roc_curve_tab()
             .build())
-    
+
     Args:
         df_input: Optional pandas DataFrame to display (can also be provided per-tab)
         model_columns: Optional list of model columns (can also be provided per-tab)
@@ -485,12 +486,10 @@ if __name__ == "__main__":
     df = pd.read_csv(input_csv_path)
 
     # Find all model columns (columns that start with 'main_question_answer_')
-    model_columns = [
-        col for col in df.columns if col.startswith(prefix_model_question)]
+    model_columns = [col for col in df.columns if col.startswith(prefix_model_question)]
 
     # Sort by consensus_score score (descending - highest first)
-    df = df.sort_values("consensus_score",
-                        ascending=False).reset_index(drop=True)
+    df = df.sort_values("consensus_score", ascending=False).reset_index(drop=True)
 
     # Drop NA values
     df = df.dropna()
@@ -499,11 +498,13 @@ if __name__ == "__main__":
     binary_columns = ["is_picky_kept"] + model_columns
 
     # Create app layout with all tabs
-    app.layout = (create_app_layout(df, model_columns, binary_columns)
+    app.layout = (
+        create_app_layout(df, model_columns, binary_columns)
         .add_data_table_tab()
         .add_roc_curve_tab()
         .add_performance_metrics_tab()
         .add_upset_plot_tab()
-        .build())
+        .build()
+    )
 
     app.run(debug=True)

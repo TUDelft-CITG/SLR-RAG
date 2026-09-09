@@ -1,4 +1,3 @@
-
 import pandas as pd
 import plotly.graph_objs as go
 from dash_upset import UpSet
@@ -9,9 +8,10 @@ from sklearn.metrics import accuracy_score, auc, f1_score, roc_curve
 def calculate_roc_data(
     df_input: pd.DataFrame,
     model_columns: list[str],
+    y_true_col: str = "is_picky_kept",
     prefix_model_question: str = "main_question_answer_",
 ) -> go.Figure:
-    y_true = df_input["is_picky_kept"].astype(int).values
+    y_true = df_input[y_true_col].astype(int).values
 
     # Create ROC curve figure
     roc_fig = go.Figure()
@@ -90,9 +90,10 @@ def create_upset_plot(
 def calculate_performance_metrics(
     df_input: pd.DataFrame,
     model_columns: list[str],
+    y_true_col: str = "is_picky_kept",
     prefix_model_question: str = "main_question_answer_",
 ) -> go.Figure:
-    y_true = df_input["is_picky_kept"].astype(int).values
+    y_true = df_input[y_true_col].astype(int).values
 
     # Dictionary to store metrics for each model
     metrics_data = {
