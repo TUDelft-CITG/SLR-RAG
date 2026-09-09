@@ -1,11 +1,11 @@
 """Ollama and LangChain agent functions for paper analysis."""
 
-from typing import Dict, List
-from pandera.typing.pandas import DataFrame
 
 import pandas as pd
 from langchain_ollama import ChatOllama
+from pandera.typing.pandas import DataFrame
 from tqdm import tqdm
+
 from slrrag.input import OLLAMA_MODELS
 from slrrag.settings import SchemaPapers
 
@@ -48,8 +48,8 @@ def setup_chat_agent(name_ollama_model: str) -> ChatOllama:
 
 
 def analyze_paper(
-    agent: ChatOllama, title: str, abstract: str, questions: Dict, model_name: str
-) -> Dict:
+    agent: ChatOllama, title: str, abstract: str, questions: dict, model_name: str
+) -> dict:
     """Use the agent to answer questions about a paper."""
     answers = {}
     for q in questions:
@@ -64,9 +64,9 @@ def analyze_paper(
 
 
 def analyze_papers_with_list_agents(
-    list_agents_name: List[str],
+    list_agents_name: list[str],
     papers_df: DataFrame[SchemaPapers],
-    questions: Dict,
+    questions: dict,
 ) -> pd.DataFrame:
     """Analyze papers using agent and return DataFrame with answers."""
 
@@ -95,6 +95,7 @@ def analyze_papers_with_list_agents(
 if __name__ == "__main__":
     import sys
     from pathlib import Path
+
     from slrrag.input import FIRST_ROUND_QUESTIONS
     from slrrag.toolbox.files import save_dataframe_to_csv
 

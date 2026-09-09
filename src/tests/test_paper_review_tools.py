@@ -12,11 +12,12 @@ Tests cover:
 - update_paper_review_status function
 """
 
-import pytest
 import os
 import sys
 import tempfile
+
 import pandas as pd
+import pytest
 
 # Add the src directory to the Python path so we can import the module
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
@@ -24,10 +25,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 from slrrag.convertmarkdown.paper_review_tools import (
     MANUAL_REVIEW_FIELD,
     slugify,
-    write_series_papers_into_markdown,
     write_paper_to_markdown,
+    write_series_papers_into_markdown,
 )
-
 
 # Fixtures
 

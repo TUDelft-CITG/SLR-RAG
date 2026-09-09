@@ -1,14 +1,15 @@
 import os
 
-from dotenv import load_dotenv
 import pandas as pd
+import pyalex
+from dotenv import load_dotenv
 from pandera.typing import DataFrame
 from pyalex import Works
-import pyalex
 from tqdm import tqdm
 
 from slrrag.settings import (
     DEFAULT_OPEN_ALEX_PAGING,
+    NAME_COL_DATE,
     NAME_COL_KEYWORDS_OPENALEX,
     NAME_COL_PRIMARY_DOMAIN_OPENALEX,
     NAME_COL_PRIMARY_FIELD_OPENALEX,
@@ -18,9 +19,6 @@ from slrrag.settings import (
     PANDERA_LAZY_VALIDATION,
     PROJECT_ROOT,
     SchemaOpenAlexPapers,
-)
-from slrrag.settings import (
-    NAME_COL_DATE,
 )
 
 
@@ -32,11 +30,15 @@ def check_doi_in_openalex(doi: str) -> bool:
     except Exception:
         return False
 
+
 def load_openalex_api_key():
     load_dotenv(dotenv_path=PROJECT_ROOT / ".env")
     pyalex.config.api_key = os.environ.get("OPENALEX_API_KEY")
     if pyalex.config.api_key is None:
-        print(f"Warning: OPENALEX_API_KEY in {PROJECT_ROOT / ".env"} has not been loaded.\n Please write OPENALEX_API_KEY=<you api key> in the file.")
+        print(
+            f"Warning: OPENALEX_API_KEY in {PROJECT_ROOT / '.env'} has not been loaded.\n Please write OPENALEX_API_KEY=<you api key> in the file."
+        )
+
 
 def get_openalex_work_from_query(query: str):
     load_openalex_api_key()

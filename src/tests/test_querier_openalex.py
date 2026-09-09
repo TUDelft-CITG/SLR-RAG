@@ -5,24 +5,23 @@ Tests cover:
 - work_openalex_to_list function
 """
 
-from pathlib import Path
-
-import pytest
 import os
-import sys
-import pandas as pd
 import pickle
+import sys
+from pathlib import Path
 from unittest.mock import Mock
+
+import pandas as pd
+import pytest
 
 # Add the src directory to the Python path so we can import the module
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from slrrag.querier_openalex import (
-    work_openalex_to_list,
     parse_openalex_list_to_dataframe,
+    work_openalex_to_list,
 )
 from slrrag.settings import SchemaOpenAlexPapers
-
 
 # Fixtures
 

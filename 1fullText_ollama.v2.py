@@ -1,15 +1,16 @@
-import shutil
 import os
+import shutil
 from collections import defaultdict
+from typing import Literal
+
 import pandas as pd
 from dotenv import load_dotenv
-from typing import Literal
 from langchain_community.document_loaders import PyPDFLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 from langchain_core.prompts import ChatPromptTemplate
-from pydantic import BaseModel
 from langchain_ollama import ChatOllama, OllamaEmbeddings
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from pydantic import BaseModel
 
 # functions
 

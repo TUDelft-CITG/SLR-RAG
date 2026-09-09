@@ -1,50 +1,47 @@
 import os
 from pathlib import Path
-from typing import List
-from pandera.typing.pandas import DataFrame
-import pandera.pandas as pa
+
 import pandas as pd
-from slrrag.querier_openalex import query_openalex
-from slrrag.querier_scopus import query_scopus
-from slrrag.query_converter import convert_query_to_lens
-from slrrag.query_converter import query_to_dimensions_url
+import pandera.pandas as pa
+from pandera.typing.pandas import DataFrame
+
+from slrrag.input import (
+    ADDITIONAL_PARAMETERS,
+    FIRST_ROUND_QUESTIONS,
+    LIST_TYPE_TO_KEEP_NAME,
+    MAIN_QUERY,
+    MINIMUM_YEAR_NAME,
+    OLLAMA_MODELS,
+    REFERENCE_PAPERS,
+)
 from slrrag.ollama_analysis import (
     analyze_papers_with_list_agents,
 )
 from slrrag.querier_dimensions import read_dimensions_export
 from slrrag.querier_lens import read_lens_export
-from slrrag.input import (
-    ADDITIONAL_PARAMETERS,
-    LIST_TYPE_TO_KEEP_NAME,
-    MAIN_QUERY,
-    MINIMUM_YEAR_NAME,
-    FIRST_ROUND_QUESTIONS,
-    OLLAMA_MODELS,
-    REFERENCE_PAPERS,
-)
+from slrrag.querier_openalex import query_openalex
+from slrrag.querier_scopus import query_scopus
+from slrrag.query_converter import convert_query_to_lens, query_to_dimensions_url
 from slrrag.settings import (
     AUTOMATICALLY_OVERWRITE,
-    NAME_COL_YEAR,
-    PATH_CSV_03_AGENTS_ANWSERS,
-    PATH_CSV_01_QUERY_RESULTS,
-    PATH_CSV_SCOPUS_QUERY_RESULTS,
-    PATH_CSV_OPENALEX_QUERY_RESULTS,
-    PATH_OUTPUT,
-    PATH_UPSET_DISTINCT,
-    PANDERA_LAZY_VALIDATION,
-    PATH_DIMENSIONS_EXPORT,
-    PATH_LENS_EXPORT,
-)
-from slrrag.settings import (
     NAME_COL_ABSTRACT,
     NAME_COL_DATE,
     NAME_COL_DOI,
+    NAME_COL_IS_REFERENCE,
     NAME_COL_TITLE,
     NAME_COL_TYPE,
-    NAME_COL_IS_REFERENCE,
+    NAME_COL_YEAR,
+    PANDERA_LAZY_VALIDATION,
+    PATH_CSV_01_QUERY_RESULTS,
+    PATH_CSV_03_AGENTS_ANWSERS,
+    PATH_CSV_OPENALEX_QUERY_RESULTS,
+    PATH_CSV_SCOPUS_QUERY_RESULTS,
+    PATH_DIMENSIONS_EXPORT,
+    PATH_LENS_EXPORT,
+    PATH_OUTPUT,
+    PATH_UPSET_DISTINCT,
+    SchemaPapers,
 )
-from slrrag.settings import SchemaPapers
-
 from slrrag.toolbox.files import check_overwrite, save_dataframe_to_csv
 from slrrag.upset_plotter import plot_and_save_upset
 
@@ -86,8 +83,8 @@ def load_or_query_database(
 
 @pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
 def add_scopus_papers(
-    input_papers: DataFrame[SchemaPapers], database_names: List[str], query_input: str
-) -> tuple[DataFrame[SchemaPapers], List[str]]:
+    input_papers: DataFrame[SchemaPapers], database_names: list[str], query_input: str
+) -> tuple[DataFrame[SchemaPapers], list[str]]:
 
     results_scopus = load_or_query_database(
         "Scopus", PATH_CSV_SCOPUS_QUERY_RESULTS, query_scopus, query_input
@@ -101,8 +98,8 @@ def add_scopus_papers(
 
 @pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
 def add_openalex_papers(
-    input_papers: DataFrame[SchemaPapers], database_names: List[str], query_input: str
-) -> tuple[DataFrame[SchemaPapers], List[str]]:
+    input_papers: DataFrame[SchemaPapers], database_names: list[str], query_input: str
+) -> tuple[DataFrame[SchemaPapers], list[str]]:
     results_openalex = load_or_query_database(
         "OpenAlex", PATH_CSV_OPENALEX_QUERY_RESULTS, query_openalex, query_input
     )
@@ -123,8 +120,8 @@ def print_dimensions_export(dimensions_url: str, path_lens_dimensions: str):
 
 @pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
 def interactive_add_dimensions_papers(
-    merged_papers: DataFrame[SchemaPapers], database_names: List[str], query_input: str
-) -> tuple[DataFrame[SchemaPapers], List[str]]:
+    merged_papers: DataFrame[SchemaPapers], database_names: list[str], query_input: str
+) -> tuple[DataFrame[SchemaPapers], list[str]]:
     """Add Dimensions.ai papers to the merged DataFrame.
 
     This function guides the user through the process of adding Dimensions papers:
@@ -171,8 +168,8 @@ def print_lens_export_info(lens_query: str, path_lens_export_input: Path):
 
 @pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
 def interactive_add_lens_papers(
-    merged_papers: DataFrame[SchemaPapers], database_names: List[str], query_input: str
-) -> tuple[DataFrame[SchemaPapers], List[str]]:
+    merged_papers: DataFrame[SchemaPapers], database_names: list[str], query_input: str
+) -> tuple[DataFrame[SchemaPapers], list[str]]:
     """Add Lens papers to the merged DataFrame.
 
     This function guides the user through the process of adding Lens papers:
@@ -271,7 +268,7 @@ def merge_papers(
 
 @pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
 def complete_papers_df(
-    merged_papers: DataFrame[SchemaPapers], database_names: List[str]
+    merged_papers: DataFrame[SchemaPapers], database_names: list[str]
 ):
     """
     Make the clean of the datafram before further processing, and apply filters
@@ -337,7 +334,7 @@ def complete_papers_df(
 
 @pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
 def show_merged_stats(
-    merged_papers: DataFrame[SchemaPapers], database_names: List[str]
+    merged_papers: DataFrame[SchemaPapers], database_names: list[str]
 ) -> None:
     """Print statistics about merged papers.
 
@@ -461,7 +458,7 @@ def load_csv_results_if_exist_user_okay(csv_path: Path):
 @pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
 def interactive_get_all_papers_from_databases(
     query_input: str,
-) -> tuple[DataFrame[SchemaPapers], List[str]]:
+) -> tuple[DataFrame[SchemaPapers], list[str]]:
     papers_df = get_new_reference_df()
     database_names = []
     # Step 1: Query Scopus

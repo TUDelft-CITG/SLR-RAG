@@ -7,25 +7,25 @@ Tests cover:
 - check_doi_in_scopus function (basic structure)
 """
 
-import pytest
 import os
-import sys
-import pandas as pd
 import pickle
+import sys
+
+import pandas as pd
+import pytest
 
 # Add the src directory to the Python path so we can import the module
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from slrrag.querier_scopus import (
-    to_query_scopus,
     scopus_to_dict_list,
+    to_query_scopus,
 )
 from slrrag.settings import (
     DEFAULT_DF_COLUMNS,
     NAME_COL_RELEVANCE_ORDER_SCOPUS,
     SchemaScopusPapers,
 )
-
 
 # Fixtures
 
