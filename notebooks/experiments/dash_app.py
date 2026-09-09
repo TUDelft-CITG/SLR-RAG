@@ -10,6 +10,7 @@ project_root = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(project_root / 'src'))
 
 from dash import Dash, html, dash_table, dcc
+from dash_upset import UpSet
 import pandas as pd
 from sklearn.metrics import roc_curve, auc, accuracy_score, f1_score, precision_score, recall_score
 import plotly.graph_objs as go
@@ -263,6 +264,26 @@ def calculate_performance_metrics():
     
     return fig
 
+# Create upset plot for binary columns intersections
+def create_upset_plot():
+    # Prepare data for upset plot - only use binary columns
+    upset_data = df[binary_columns].copy()
+    
+    # Convert to boolean if not already
+    for col in upset_data.columns:
+        if upset_data[col].dtype != bool:
+            upset_data[col] = upset_data[col].astype(bool)
+    
+    # Create the upset plot component using dash_upset
+    return UpSet(
+        id="model-upset",
+        data=upset_data,
+        mode="intersect",
+        theme="tol-light",
+        inactive_color="#ffffff",
+        selection_color="#d55e00",
+    )
+
 app.layout = html.Div(children=[
     html.H1(children='SLR-RAG Data Analysis'),
     html.Div(children='''
@@ -305,6 +326,13 @@ app.layout = html.Div(children=[
                 html.H2('Model Performance Metrics'),
                 html.P(f'Comparing {len(model_columns)} models performance metrics'),
                 dcc.Graph(id='performance-metrics', figure=calculate_performance_metrics())
+            ])
+        ]),
+        dcc.Tab(label='Upset Plot', value='upset-plot', children=[
+            html.Div([
+                html.H2('Upset Plot: Model Intersections'),
+                html.P(f'Showing intersections between {len(binary_columns)} binary sets'),
+                create_upset_plot()
             ])
         ])
     ])
