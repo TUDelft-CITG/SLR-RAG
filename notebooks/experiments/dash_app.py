@@ -1,10 +1,11 @@
-# Run this app with `python dash_app.py` and
+#!/usr/bin/env python3
+# Run this app with `python dash_app.py <input_csv_path>` and
 # visit http://127.0.0.1:8050/ in your web browser.
 
+import sys
 import pandas as pd
 from dash import Dash, dash_table, dcc, html
 
-from slrrag.settings import PATH_INPUT
 from slrrag.toolbox.plotly_visualze import (
     calculate_performance_metrics,
     calculate_roc_data,
@@ -37,7 +38,8 @@ def create_data_table(
             "whiteSpace": "normal",
             "height": "auto",
         },
-        style_header={"backgroundColor": "rgb(230, 230, 230)", "fontWeight": "bold"},
+        style_header={
+            "backgroundColor": "rgb(230, 230, 230)", "fontWeight": "bold"},
         style_data_conditional=style_data_conditional or [],
         page_size=page_size,
     )
@@ -248,7 +250,8 @@ def create_app_layout(df_input, model_columns, binary_columns, style_data_condit
                                     html.P(
                                         f"Showing intersections between {len(binary_columns)} binary sets"
                                     ),
-                                    create_upset_plot(df_input, binary_columns),
+                                    create_upset_plot(
+                                        df_input, binary_columns),
                                 ]
                             )
                         ],
@@ -260,17 +263,26 @@ def create_app_layout(df_input, model_columns, binary_columns, style_data_condit
 
 
 if __name__ == "__main__":
+    # Check if input CSV path is provided
+    if len(sys.argv) < 2:
+        print("Usage: python dash_app.py <input_csv_path>")
+        print("Please provide the path to the input CSV file.")
+        sys.exit(1)
+
+    input_csv_path = sys.argv[1]
     prefix_model_question = "main_question_answer_"
     app = Dash(__name__)
 
     # Load and preprocess data
-    df = pd.read_csv(PATH_INPUT / "result_agents_to_plot.csv")
+    df = pd.read_csv(input_csv_path)
 
     # Find all model columns (columns that start with 'main_question_answer_')
-    model_columns = [col for col in df.columns if col.startswith(prefix_model_question)]
+    model_columns = [
+        col for col in df.columns if col.startswith(prefix_model_question)]
 
     # Sort by consensus_score score (descending - highest first)
-    df = df.sort_values("consensus_score", ascending=False).reset_index(drop=True)
+    df = df.sort_values("consensus_score",
+                        ascending=False).reset_index(drop=True)
 
     # Drop NA values
     df = df.dropna()
