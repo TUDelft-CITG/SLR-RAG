@@ -38,7 +38,8 @@ PATH_CSV_06 = PATH_OUTPUT / "06_picky_selection.csv"
 
 
 # Output of upset plot
-PATH_UPSET = PATH_OUTPUT / "upset.html"
+PATH_UPSET_DISTINCT = PATH_OUTPUT / "upset_distinct.html"
+PATH_UPSET_INTERSECT = PATH_OUTPUT / "upset_intersect.html"
 
 # Path of config for pybliometrics
 

@@ -58,7 +58,8 @@ def calculate_roc_data(
 # Create upset plot for binary columns intersections
 def create_upset_plot(
     df_input: pd.DataFrame,
-    binary_columns: List[str]
+    binary_columns: List[str],
+    mode = "intersect",
 ) -> UpSet:
     # Prepare data for upset plot - only use binary columns
     upset_data = df_input[binary_columns].copy()
@@ -72,7 +73,7 @@ def create_upset_plot(
     return UpSet(
         id="model-upset",
         data=upset_data,
-        mode="intersect",
+        mode=mode,
         theme="tol-light",
         inactive_color="#ffffff",
         selection_color="#d55e00",

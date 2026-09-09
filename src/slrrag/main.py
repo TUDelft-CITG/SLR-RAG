@@ -30,7 +30,7 @@ from slrrag.settings import (
     PATH_CSV_SCOPUS_QUERY_RESULTS,
     PATH_CSV_OPENALEX_QUERY_RESULTS,
     PATH_OUTPUT,
-    PATH_UPSET,
+    PATH_UPSET_DISTINCT,
     PANDERA_LAZY_VALIDATION,
     PATH_DIMENSIONS_EXPORT,
     PATH_LENS_EXPORT,
@@ -394,7 +394,7 @@ def prompt_user_for_action_after_querying() -> str:
     """Prompt the user for action: continue, print papers, or exit."""
     while True:
         user_input = input(
-            f"Choose an option:\n  'c' to continue with the agents\n  'p' to print papers' names\n  'r' to see references papers \n  'e' to exit\n  's' to save to '{PATH_CSV_01_QUERY_RESULTS}'\n  'u' to plot upset plot at '{PATH_UPSET}'\n> "
+            f"Choose an option:\n  'c' to continue with the agents\n  'p' to print papers' names\n  'r' to see references papers \n  'e' to exit\n  's' to save to '{PATH_CSV_01_QUERY_RESULTS}'\n  'u' to plot upset plot at '{PATH_UPSET_DISTINCT}'\n> "
         ).lower()
         if user_input in ["c", "p", "e", "s", "u", "r"]:
             return user_input
@@ -423,9 +423,9 @@ def handle_user_actions_after_querying(
         elif action == "s":  # Save merged papers as CSV
             save_dataframe_to_csv(papers_df, PATH_CSV_01_QUERY_RESULTS)
         elif action == "u":
-            if check_overwrite(PATH_UPSET, AUTOMATICALLY_OVERWRITE):
-                plot_and_save_upset(papers_df, PATH_UPSET)
-                print(f"Upset plot saved to {PATH_UPSET}")
+            if check_overwrite(PATH_UPSET_DISTINCT, AUTOMATICALLY_OVERWRITE):
+                plot_and_save_upset(papers_df, PATH_UPSET_DISTINCT)
+                print(f"Upset plot saved to {PATH_UPSET_DISTINCT}")
         elif action == "c":  # continue
             os.makedirs(PATH_CSV_03_AGENTS_ANWSERS.parent, exist_ok=True)
             return True
