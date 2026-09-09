@@ -156,14 +156,137 @@ def build_conditional_styling(df_input, binary_columns):
     return style_data_conditional
 
 
-def create_app_layout(df_input, model_columns, binary_columns, style_data_conditional):
+def create_data_table_tab(
+    df_input: pd.DataFrame,
+    model_columns: list[str] | None = None,
+    style_data_conditional: list[dict] | None = None,
+) -> html.Div:
+    """Create the Data Table tab content.
+
+    Args:
+        df_input: pandas DataFrame to display
+        model_columns: Optional list of model columns for display count
+        style_data_conditional: Optional conditional styling rules
+
+    Returns:
+        html.Div: Data Table tab content
+    """
+    if style_data_conditional is None:
+        binary_columns = model_columns or []
+        style_data_conditional = build_conditional_styling(df_input, binary_columns)
+
+    return html.Div(
+        [
+            html.H2("Paper Review Data"),
+            html.P(
+                f"Displaying {len(df_input)} papers with {len(model_columns) if model_columns else 0} models"
+            ),
+            create_data_table(
+                df_input,
+                table_id="data-table",
+                page_size=20,
+                style_data_conditional=style_data_conditional,
+            ),
+        ]
+    )
+
+
+def create_roc_curve_tab(
+    df_input: pd.DataFrame, model_columns: list[str] | None = None
+) -> html.Div:
+    """Create the ROC Curve tab content.
+
+    Args:
+        df_input: pandas DataFrame to display
+        model_columns: Optional list of model columns
+
+    Returns:
+        html.Div: ROC Curve tab content
+    """
+    if model_columns is None:
+        model_columns = []
+
+    return html.Div(
+        [
+            html.H2("ROC Curve Analysis"),
+            html.P(
+                f"Comparing {len(model_columns)} models predictions against Ground Truth"
+            ),
+            dcc.Graph(
+                id="roc-curve",
+                figure=calculate_roc_data(df_input, model_columns),
+            ),
+        ]
+    )
+
+
+def create_performance_metrics_tab(
+    df_input: pd.DataFrame, model_columns: list[str] | None = None
+) -> html.Div:
+    """Create the Performance Metrics tab content.
+
+    Args:
+        df_input: pandas DataFrame to display
+        model_columns: Optional list of model columns
+
+    Returns:
+        html.Div: Performance Metrics tab content
+    """
+    if model_columns is None:
+        model_columns = []
+
+    return html.Div(
+        [
+            html.H2("Model Performance Metrics"),
+            html.P(
+                f"Comparing {len(model_columns)} models performance metrics"
+            ),
+            dcc.Graph(
+                id="performance-metrics",
+                figure=calculate_performance_metrics(df_input, model_columns),
+            ),
+        ]
+    )
+
+
+def create_upset_plot_tab(
+    df_input: pd.DataFrame,
+    binary_columns: list[str] | None = None,
+) -> html.Div:
+    """Create the Upset Plot tab content.
+
+    Args:
+        df_input: pandas DataFrame to display
+        binary_columns: Optional list of binary columns
+
+    Returns:
+        html.Div: Upset Plot tab content
+    """
+    if binary_columns is None:
+        binary_columns = []
+
+    return html.Div(
+        [
+            html.H2("Upset Plot: Model Intersections"),
+            html.P(
+                f"Showing intersections between {len(binary_columns)} binary sets"
+            ),
+            create_upset_plot(df_input, binary_columns),
+        ]
+    )
+
+
+def create_app_layout(
+    df_input: pd.DataFrame,
+    model_columns: list[str] | None = None,
+    binary_columns: list[str] | None = None,
+) -> html.Div:
     """Create the Dash app layout.
 
     Args:
         df_input: pandas DataFrame to display
-        model_columns: List of model columns
-        binary_columns: List of binary columns
-        style_data_conditional: Conditional styling rules
+        model_columns: Optional list of model columns
+        binary_columns: Optional list of binary columns
 
     Returns:
         html.Div: Dash app layout
@@ -183,78 +306,22 @@ def create_app_layout(df_input, model_columns, binary_columns, style_data_condit
                     dcc.Tab(
                         label="Data Table",
                         value="data-table",
-                        children=[
-                            html.Div(
-                                [
-                                    html.H2("Paper Review Data"),
-                                    html.P(
-                                        f"Displaying {len(df_input)} papers with {len(model_columns)} models"
-                                    ),
-                                    create_data_table(
-                                        df_input,
-                                        table_id="data-table",
-                                        page_size=20,
-                                        style_data_conditional=style_data_conditional,
-                                    ),
-                                ]
-                            )
-                        ],
+                        children=[create_data_table_tab(df_input, model_columns)],
                     ),
                     dcc.Tab(
                         label="ROC Curve",
                         value="roc-curve",
-                        children=[
-                            html.Div(
-                                [
-                                    html.H2("ROC Curve Analysis"),
-                                    html.P(
-                                        f"Comparing {len(model_columns)} models predictions against Ground Truth"
-                                    ),
-                                    dcc.Graph(
-                                        id="roc-curve",
-                                        figure=calculate_roc_data(
-                                            df_input, model_columns
-                                        ),
-                                    ),
-                                ]
-                            )
-                        ],
+                        children=[create_roc_curve_tab(df_input, model_columns)],
                     ),
                     dcc.Tab(
                         label="Performance Metrics",
                         value="performance-metrics",
-                        children=[
-                            html.Div(
-                                [
-                                    html.H2("Model Performance Metrics"),
-                                    html.P(
-                                        f"Comparing {len(model_columns)} models performance metrics"
-                                    ),
-                                    dcc.Graph(
-                                        id="performance-metrics",
-                                        figure=calculate_performance_metrics(
-                                            df_input, model_columns
-                                        ),
-                                    ),
-                                ]
-                            )
-                        ],
+                        children=[create_performance_metrics_tab(df_input, model_columns)],
                     ),
                     dcc.Tab(
                         label="Upset Plot",
                         value="upset-plot",
-                        children=[
-                            html.Div(
-                                [
-                                    html.H2("Upset Plot: Model Intersections"),
-                                    html.P(
-                                        f"Showing intersections between {len(binary_columns)} binary sets"
-                                    ),
-                                    create_upset_plot(
-                                        df_input, binary_columns),
-                                ]
-                            )
-                        ],
+                        children=[create_upset_plot_tab(df_input, binary_columns)],
                     ),
                 ],
             ),
@@ -290,12 +357,9 @@ if __name__ == "__main__":
     # Binary columns to color (green for 1/True, red for 0/False)
     binary_columns = ["is_picky_kept"] + model_columns
 
-    # Build conditional styling
-    style_data_conditional = build_conditional_styling(df, binary_columns)
-
     # Create app layout
     app.layout = create_app_layout(
-        df, model_columns, binary_columns, style_data_conditional
+        df, model_columns, binary_columns
     )
 
     app.run(debug=True)
