@@ -167,12 +167,8 @@ ARTICLE_TYPE_MAPPING = {
     "paratext": OTHER_N,
     "peer-review": OTHER_N,
     "conference-abstract": OTHER_N,
-    "dataset": OTHER_N,
-    "erratum": OTHER_N,
     "reference-entry": OTHER_N,
     "book-review": OTHER_N,
-    "paratext": OTHER_N,
-    "editorial": OTHER_N,
 }
 
 

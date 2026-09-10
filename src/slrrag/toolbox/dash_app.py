@@ -251,8 +251,7 @@ def create_performance_metrics_tab(
 
 
 def create_upset_plot_tab(
-    df_input: pd.DataFrame,
-    binary_columns: list[str] | None = None,
+    df_input: pd.DataFrame, binary_columns: list[str] | None = None, mode="intersect"
 ) -> html.Div:
     """Create the Upset Plot tab content.
 
@@ -268,9 +267,9 @@ def create_upset_plot_tab(
 
     return html.Div(
         [
-            html.H2("Upset Plot: Model Intersections"),
+            html.H2(f"Upset Plot: Model {mode}"),
             html.P(f"Showing intersections between {len(binary_columns)} binary sets"),
-            create_upset_plot(df_input, binary_columns),
+            create_upset_plot(df_input, binary_columns, mode=mode),
         ]
     )
 
@@ -380,6 +379,7 @@ class AppLayoutBuilder:
         self,
         df_input: pd.DataFrame | None = None,
         binary_columns: list[str] | None = None,
+        mode="intersect",
     ) -> "AppLayoutBuilder":
         """Add an upset plot tab to the layout.
 
@@ -396,7 +396,7 @@ class AppLayoutBuilder:
             dcc.Tab(
                 label="Upset Plot",
                 value="upset-plot",
-                children=[create_upset_plot_tab(df, cols)],
+                children=[create_upset_plot_tab(df, cols, mode=mode)],
             )
         )
         return self
