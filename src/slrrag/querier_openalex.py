@@ -1,14 +1,15 @@
 import os
 
-from dotenv import load_dotenv
 import pandas as pd
+import pyalex
+from dotenv import load_dotenv
 from pandera.typing import DataFrame
 from pyalex import Works
-import pyalex
 from tqdm import tqdm
 
 from slrrag.settings import (
     DEFAULT_OPEN_ALEX_PAGING,
+    NAME_COL_DATE,
     NAME_COL_KEYWORDS_OPENALEX,
     NAME_COL_PRIMARY_DOMAIN_OPENALEX,
     NAME_COL_PRIMARY_FIELD_OPENALEX,
@@ -18,9 +19,6 @@ from slrrag.settings import (
     PANDERA_LAZY_VALIDATION,
     PROJECT_ROOT,
     SchemaOpenAlexPapers,
-)
-from slrrag.settings import (
-    NAME_COL_DATE,
 )
 
 

@@ -1,8 +1,8 @@
 import pandas as pd
 import pybliometrics
 
-from slrrag.querier_scopus import check_doi_in_scopus
 from slrrag.querier_openalex import check_doi_in_openalex
+from slrrag.querier_scopus import check_doi_in_scopus
 
 
 def check_dois_in_databases(dois: list[str]) -> pd.DataFrame:

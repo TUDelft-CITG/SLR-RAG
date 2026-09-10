@@ -1,8 +1,9 @@
-from pathlib import Path
-import pandas as pd
-from pandera import String, Int64
-import pandera.pandas as pa
 from datetime import datetime
+from pathlib import Path
+
+import pandas as pd
+import pandera.pandas as pa
+from pandera import Int64, String
 from pandera.typing import Series
 
 # --- User-defined variables ---
@@ -33,8 +34,13 @@ PATH_CSV_03_AGENTS_ANWSERS = PATH_OUTPUT / "03_papers_agent_anwsers_v3.csv"
 # Outputs of papers with manual_filters
 PATH_CSV_04_MANUAL_FILTER = PATH_OUTPUT / "04_papers_manual_filter.csv"
 
+# Outputs of 111 papers picked
+PATH_CSV_06 = PATH_OUTPUT / "06_picky_selection.csv"
+
+
 # Output of upset plot
-PATH_UPSET = PATH_OUTPUT / "upset.html"
+PATH_UPSET_DISTINCT = PATH_OUTPUT / "upset_distinct.html"
+PATH_UPSET_INTERSECT = PATH_OUTPUT / "upset_intersect.html"
 
 # Path of config for pybliometrics
 
@@ -207,7 +213,7 @@ class SchemaPapers(pa.DataFrameModel):
     date: Series[datetime] = pa.Field(nullable=True, alias=NAME_COL_DATE)
     abstract: Series[String] = pa.Field(nullable=True, alias=NAME_COL_ABSTRACT)
 
-    @pa.parser("type")  #
+    @pa.parser("type")
     def _parse_type(cls, series: Series) -> Series:
         result = series.copy()
         non_null_mask = series.notna()

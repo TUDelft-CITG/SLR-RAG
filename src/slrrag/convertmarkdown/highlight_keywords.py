@@ -13,9 +13,10 @@ All variants get the same class: kw-root_word
 Usage: python highlight_keywords.py /path/to/your/notes/folder
 """
 
-import regex as re
 import sys
 from pathlib import Path
+
+import regex as re
 
 # Stemming dictionary: {root_word: [all_variants]}
 # Organized by topics:

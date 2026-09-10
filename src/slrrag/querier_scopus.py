@@ -1,14 +1,14 @@
 import pandas as pd
-from pandera.typing import DataFrame
 import pybliometrics
+from pandera.typing import DataFrame
 from pybliometrics.scopus import ScopusSearch
 
 from slrrag.settings import (
     DEFAULT_DF_COLUMNS,
     NAME_COL_RELEVANCE_ORDER_SCOPUS,
     PANDERA_LAZY_VALIDATION,
-    SCOPUS_IS_SUBSCRIBER,
     PATH_PYBLIOMETRICS_CONFIG,
+    SCOPUS_IS_SUBSCRIBER,
     SchemaPapers,
     SchemaScopusPapers,
 )

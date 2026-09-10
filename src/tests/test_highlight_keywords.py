@@ -9,24 +9,24 @@ Tests cover:
 - process_file function (with temp files)
 """
 
-import pytest
 import os
+import sys
 import tempfile
 from pathlib import Path
-import sys
+
+import pytest
 
 # Add the src directory to the Python path so we can import the module
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from slrrag.convertmarkdown.highlight_keywords import (
     STEMMING_DICT,
-    highlight_keywords_in_text,
-    root_to_class,
-    get_all_keyword_variants,
     cleanup_file,
+    get_all_keyword_variants,
+    highlight_keywords_in_text,
     process_file,
+    root_to_class,
 )
-
 
 # =============================================================================
 # Fixtures
@@ -497,9 +497,9 @@ class TestIntegration:
 
     def test_full_workflow(self, temp_folder_with_markdown_files):
         """Test the full workflow of finding and processing multiple files."""
-        from pathlib import Path
         import sys
         from io import StringIO
+        from pathlib import Path
 
         # Save original stdout
         old_stdout = sys.stdout

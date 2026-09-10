@@ -1,5 +1,4 @@
 import pandas as pd
-from typing import List, Set
 import plotly.express as px
 
 
@@ -27,7 +26,7 @@ def group_by_col_ref(df_input: pd.DataFrame, col_name: str, min_count_to_keep: i
 
 def filter_on_list(
     df_input: pd.DataFrame,
-    list_input: List[str] | Set[str],
+    list_input: list[str] | set[str],
     col_name: str,
     blacklist=True,
 ):
@@ -44,7 +43,7 @@ def filter_on_list(
 def explode_and_filter_on_list(
     df_input: pd.DataFrame,
     col_name: str,
-    black_list_input: Set[str] | List[str],
+    black_list_input: set[str] | list[str],
     seaparator=";",
     black_list=True,
 ):

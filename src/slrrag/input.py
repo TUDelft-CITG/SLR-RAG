@@ -1,7 +1,7 @@
 from slrrag.settings import (
     ARTICLE_N,
-    BOOK_N,
     BOOK_CHAPTER_N,
+    BOOK_N,
     CONFERENCE_PAPER_N,
     CONFERENCE_PROCEEDING_N,
 )

@@ -3,22 +3,23 @@ from pathlib import Path
 
 import pandas as pd
 from pandera.typing import DataFrame
+
 from slrrag.settings import (
-    DEFAULT_DF_COLUMNS,
-    NAME_COL_KEYWORDS_LENS,
     ARTICLE_N,
-    BOOK_N,
     BOOK_CHAPTER_N,
+    BOOK_N,
+    DEFAULT_DF_COLUMNS,
     DISSERTATION_N,
-    PREPRINT_N,
-    REPORT_N,
     NAME_COL_ABSTRACT,
     NAME_COL_DATE,
     NAME_COL_DOI,
+    NAME_COL_KEYWORDS_LENS,
     NAME_COL_TITLE,
     NAME_COL_TOPIC_LENS,
     NAME_COL_TYPE,
     PANDERA_LAZY_VALIDATION,
+    PREPRINT_N,
+    REPORT_N,
     SchemaLensPapers,
     SchemaPapers,
 )

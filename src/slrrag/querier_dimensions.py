@@ -2,8 +2,9 @@
 from pathlib import Path
 
 import pandas as pd
-from pandera.typing import DataFrame
 import pandera.pandas as pa
+from pandera.typing import DataFrame
+
 from slrrag.settings import (
     DEFAULT_DF_COLUMNS,
     NAME_COL_ABSTRACT,

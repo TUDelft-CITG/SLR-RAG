@@ -9,17 +9,17 @@ The files include a manual_review field that can be set to "keep", "removed", or
 using Obsidian hotkeys.
 """
 
-import pandas as pd
 import os
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Any
+
+import pandas as pd
 from tqdm import tqdm
-from slrrag.settings import NAME_COL_RELEVANCE_OPENALEX, NAME_COL_RELEVANCE_ORDER_SCOPUS
 
 # Import the keyword highlighting functionality
 from slrrag.convertmarkdown.highlight_keywords import highlight_keywords_in_text
+from slrrag.settings import NAME_COL_RELEVANCE_OPENALEX, NAME_COL_RELEVANCE_ORDER_SCOPUS
 from slrrag.toolbox.files import slugify
-
 
 # Configuration
 MANUAL_REVIEW_FIELD = "manual_review"
@@ -29,7 +29,7 @@ DEFAULT_REVIEW_STATUS = None  # Can be "keep", "removed", "not-sure", or None
 
 
 def write_paper_to_markdown(
-    paper: Dict[str, Any],
+    paper: dict[str, Any],
     output_file: Path,
     add_yaml_frontmatter: bool = True,
 ) -> str:
@@ -138,7 +138,7 @@ def write_series_papers_into_markdown(
     add_yaml_frontmatter: bool = True,
     overwrite: bool = False,
     batch_size: int = 50,
-) -> List[str]:
+) -> list[str]:
     """
     Convert a pandas DataFrame of papers to individual markdown files.
     Files are split into batches of `batch_size` (default 50) in numerically prefixed subfolders.
@@ -230,9 +230,9 @@ if __name__ == "__main__":
         NAME_COL_RELEVANCE_OPENALEX: False,
         NAME_COL_RELEVANCE_ORDER_SCOPUS: True,
     }
-    list_col_sort = [x for x in dict_sort_relevance.keys() if x in df.columns]
+    list_col_sort = [x for x in dict_sort_relevance if x in df.columns]
     list_ascending = [
-        dict_sort_relevance[x] for x in dict_sort_relevance.keys() if x in df.columns
+        dict_sort_relevance[x] for x in dict_sort_relevance if x in df.columns
     ]
     if len(list_col_sort) > 0:
         df = df.sort_values(by=list_col_sort, ascending=list_ascending)
