@@ -80,6 +80,7 @@ def slugify(title: str, limit: int = None) -> str:
         "]",
         "{",
         "}",
+        ".",
     ]:
         slug = slug.replace(char, "")
 

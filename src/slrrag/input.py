@@ -46,10 +46,6 @@ REFERENCE_PAPERS = [
         "10.1155/2021/4588333",
     ),
     (
-        "A study on influence of Putian Port offshore wind farm construction on navigation safety",
-        None,
-    ),
-    (
         "A System-Theory and Complex Network-Fused Approach to Analyze Vessel–Wind Turbine Allisions in Offshore Wind Farm Waters",
         "10.3390/jmse11071306",
     ),
@@ -116,10 +112,6 @@ REFERENCE_PAPERS = [
     (
         "Fuzzy logic based approach for ship-bridge collision alert system",
         "10.1016/j.oceaneng.2019.106152",
-    ),
-    (
-        "Assessing offshore wind farm collision risks using AIS data: an overview",
-        "10.15480/882.4716",
     ),
 ]
 

@@ -32,11 +32,15 @@ def check_doi_in_openalex(doi: str) -> bool:
     except Exception:
         return False
 
+
 def load_openalex_api_key():
     load_dotenv(dotenv_path=PROJECT_ROOT / ".env")
     pyalex.config.api_key = os.environ.get("OPENALEX_API_KEY")
     if pyalex.config.api_key is None:
-        print(f"Warning: OPENALEX_API_KEY in {PROJECT_ROOT / ".env"} has not been loaded.\n Please write OPENALEX_API_KEY=<you api key> in the file.")
+        print(
+            f"Warning: OPENALEX_API_KEY in {PROJECT_ROOT / '.env'} has not been loaded.\n Please write OPENALEX_API_KEY=<you api key> in the file."
+        )
+
 
 def get_openalex_work_from_query(query: str):
     load_openalex_api_key()

@@ -233,12 +233,8 @@ def merge_papers(
     # Sometimes, doi / title do not have same uppercase : 10.1017/S0373463319000444 == 10.1017/s0373463319000444.
     # BUG: Will have duplicata if one has doi and not the other
     
-    left_df["temp_key"] = (
-        left_df[NAME_COL_DOI].fillna(left_df[NAME_COL_TITLE].apply(slugify))
-    )
-    right_df["temp_key"] = (
-        right_df[NAME_COL_DOI].fillna(right_df[NAME_COL_TITLE].apply(slugify))
-    )
+    left_df["temp_key"] = left_df[NAME_COL_TITLE].apply(slugify)
+    right_df["temp_key"] = right_df[NAME_COL_TITLE].apply(slugify)
 
     # Merge by temp_key
     merged_df = pd.merge(

@@ -22,6 +22,7 @@ output/
 outputs/
 
 notebooks/*.png
+notebooks/01_query_engineering_personal.ipynb
 notebooks/experiments
 .ipynb_checkpoints/
 # Snellius files
