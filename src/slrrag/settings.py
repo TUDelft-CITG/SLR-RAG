@@ -77,14 +77,17 @@ NAME_COL_PRIMARY_DOMAIN_OPENALEX = "domain_openalex"
 
 NAME_COL_TOPIC_LENS = "topic_lens"
 NAME_COL_TOPIC_DIMENSIONS = "topic_dimensions"
+NAME_COL_TOPIC_SCOPUS = "topic_scopus"
 NAME_COL_KEYWORDS_SCOPUS = "keywords_scopus"
 NAME_COL_KEYWORDS_OPENALEX = "keywords_openalex"
 NAME_COL_RELEVANCE_OPENALEX = "relevance_openalex"
 NAME_COL_RELEVANCE_ORDER_SCOPUS = "relevance_order_scopus"
 
 NAME_COL_KEYWORDS_LENS = "keywords_lens"
-
 NAME_COL_KEYWORDS_DIMENSIONS = "keywords_dimensions"
+
+NAME_COL_LANGUAGE_SCOPUS = "language_scopus" 
+NAME_COL_LANGUAGE_OPENALEX = "language_openalex"  
 
 # Type categories
 

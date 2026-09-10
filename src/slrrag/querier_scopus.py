@@ -9,6 +9,9 @@ from slrrag.settings import (
     PANDERA_LAZY_VALIDATION,
     PATH_PYBLIOMETRICS_CONFIG,
     SCOPUS_IS_SUBSCRIBER,
+    NAME_COL_TOPIC_SCOPUS,
+    NAME_COL_LANGUAGE_SCOPUS,
+    NAME_COL_ID_SCOPUS,
     SchemaPapers,
     SchemaScopusPapers,
 )
@@ -52,7 +55,7 @@ def get_scopus_info_of_single_paper(id_paper : str):
 
 def complete_scopus_df(df_input : DataFrame[SchemaPapers]) -> DataFrame[SchemaPapers]:
     pybliometrics.init(config_path=PATH_PYBLIOMETRICS_CONFIG)  # Init for scopus
-    df_input[["language", "subject_area" ]] = df_input["id_scopus"].apply(get_scopus_info_of_single_paper)
+    df_input[[NAME_COL_LANGUAGE_SCOPUS, NAME_COL_TOPIC_SCOPUS]] = df_input[NAME_COL_ID_SCOPUS].apply(get_scopus_info_of_single_paper)
     return df_input
 
 
