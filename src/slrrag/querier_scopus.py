@@ -1,7 +1,7 @@
 import pandas as pd
 import pybliometrics
 from pandera.typing import DataFrame
-from pybliometrics.scopus import ScopusSearch
+from pybliometrics.scopus import ScopusSearch, AbstractRetrieval
 
 from slrrag.settings import (
     DEFAULT_DF_COLUMNS,
@@ -12,6 +12,7 @@ from slrrag.settings import (
     SchemaPapers,
     SchemaScopusPapers,
 )
+
 
 
 def check_doi_in_scopus(doi: str) -> bool:
@@ -32,12 +33,27 @@ def check_doi_in_scopus(doi: str) -> bool:
 # --- Scopus functions ---
 
 
+
 def to_query_scopus(query: str):
     """Query Scopus and return results."""
     scopus_query = f"""
 TITLE-ABS-KEY( {query})
 """
     return scopus_query
+
+
+def get_scopus_info_of_single_paper(id_paper : str):
+    if not pd.isna(id_paper):
+        doc = AbstractRetrieval(identifier=id_paper, view="FULL")
+        area_text = "|".join([x.area for x in doc.subject_areas])
+        return pd.Series((doc.language,area_text))
+    else:
+        return pd.Series((pd.NA, pd.NA))
+
+def complete_scopus_df(df_input : DataFrame[SchemaPapers]) -> DataFrame[SchemaPapers]:
+    pybliometrics.init(config_path=PATH_PYBLIOMETRICS_CONFIG)  # Init for scopus
+    df_input[["language", "subject_area" ]] = df_input["id_scopus"].apply(get_scopus_info_of_single_paper)
+    return df_input
 
 
 def query_scopus(query: str, dry_run=False) -> DataFrame[SchemaPapers] | None:
