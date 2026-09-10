@@ -19,14 +19,8 @@ from slrrag.input import (
     OLLAMA_MODELS,
     REFERENCE_PAPERS,
 )
-from slrrag.ollama_analysis import (
-    analyze_papers_with_list_agents,
-)
 from slrrag.querier_dimensions import read_dimensions_export
 from slrrag.querier_lens import read_lens_export
-from slrrag.querier_openalex import query_openalex
-from slrrag.querier_scopus import query_scopus
-from slrrag.query_converter import convert_query_to_lens, query_to_dimensions_url
 from slrrag.settings import (
     AUTOMATICALLY_OVERWRITE,
     NAME_COL_ABSTRACT,
@@ -44,13 +38,10 @@ from slrrag.settings import (
     PATH_DIMENSIONS_EXPORT,
     PATH_LENS_EXPORT,
     PATH_OUTPUT,
-    PATH_UPSET_DISTINCT,
     SchemaPapers,
 )
-from slrrag.settings import SchemaPapers
 
-from slrrag.toolbox.files import check_overwrite, save_dataframe_to_csv, slugify
-from slrrag.toolbox.files import check_overwrite, save_dataframe_to_csv
+from slrrag.toolbox.files import save_dataframe_to_csv, slugify
 
 
 def get_new_reference_df() -> DataFrame[SchemaPapers]:

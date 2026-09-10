@@ -355,7 +355,6 @@ class AppLayoutBuilder:
         df_input: pd.DataFrame | None = None,
         model_columns: list[str] | None = None,
         y_true_col: str = "is_picky_kept",
-
     ) -> "AppLayoutBuilder":
         """Add a performance metrics tab to the layout.
 
