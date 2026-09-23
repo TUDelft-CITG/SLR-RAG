@@ -38,10 +38,6 @@ REFERENCE_PAPERS = [
         "10.51400/2709-6998.2462",
     ),
     (
-        "A method for risk analysis of ship collisions with stationary infrastructure using AIS data and a ship manoeuvring simulator",
-        "10.1016/j.oceaneng.2021.109396",
-    ),
-    (
         "A Novel Method for Navigational Risk Assessment in Wind Farm Waters Based on the Fuzzy Inference System",
         "10.1155/2021/4588333",
     ),
@@ -108,10 +104,6 @@ REFERENCE_PAPERS = [
     (
         "Risk Assessment of Collision Between Out of Control Vessels and Offshore Platforms",
         "10.1109/ICTIS68762.2025.11214868",
-    ),
-    (
-        "Fuzzy logic based approach for ship-bridge collision alert system",
-        "10.1016/j.oceaneng.2019.106152",
     ),
 ]
 

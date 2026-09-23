@@ -86,8 +86,8 @@ NAME_COL_RELEVANCE_ORDER_SCOPUS = "relevance_order_scopus"
 NAME_COL_KEYWORDS_LENS = "keywords_lens"
 NAME_COL_KEYWORDS_DIMENSIONS = "keywords_dimensions"
 
-NAME_COL_LANGUAGE_SCOPUS = "language_scopus" 
-NAME_COL_LANGUAGE_OPENALEX = "language_openalex"  
+NAME_COL_LANGUAGE_SCOPUS = "language_scopus"
+NAME_COL_LANGUAGE_OPENALEX = "language_openalex"
 
 # Type categories
 
@@ -172,8 +172,10 @@ ARTICLE_TYPE_MAPPING = {
     "conference-abstract": OTHER_N,
     "reference-entry": OTHER_N,
     "book-review": OTHER_N,
+    "standard": OTHER_N,
+    "supplementary-materials": OTHER_N,
+    "retraction": OTHER_N,
 }
-
 
 #  -----Pandera specifications-----
 PANDERA_LAZY_VALIDATION = True
@@ -218,6 +220,7 @@ class SchemaPapers(pa.DataFrameModel):
         non_null_mask = series.notna()
 
         if non_null_mask.any():
+            # apply the filter to any documents with known type.
             processed = series[non_null_mask].astype(str).str.lower().str.strip()
             processed = processed.replace(ARTICLE_TYPE_MAPPING)
             result.loc[non_null_mask] = processed

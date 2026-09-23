@@ -275,6 +275,11 @@ def add_is_reference_column(merged_papers: DataFrame[SchemaPapers]):
     return merged_papers
 
 
+def remove_duplicates(merged_papers: DataFrame[SchemaPapers]):
+    # Group by title and take first non-null value for each column, removing duplicates
+    return merged_papers.groupby(NAME_COL_TITLE, as_index=False).first()
+
+
 @pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
 def complete_papers_df(
     merged_papers: DataFrame[SchemaPapers], database_names: list[str]
@@ -331,7 +336,9 @@ def complete_papers_df(
         ), f"""one or more reference papers type are not in {ADDITIONAL_PARAMETERS[LIST_TYPE_TO_KEEP_NAME]}.
             {merged_papers[merged_papers["is_reference"] & ~merged_papers.index.isin(df_after.index)][[NAME_COL_TITLE, NAME_COL_TYPE]]}"""  # Make sure that a reference paper is not removed by the filtering
         merged_papers = df_after
-    return merged_papers
+    return_df = remove_duplicates(merged_papers)
+    print(f"Removed {len(merged_papers) - len(return_df)} duplicates")
+    return return_df
 
 
 @pa.check_types(lazy=PANDERA_LAZY_VALIDATION)

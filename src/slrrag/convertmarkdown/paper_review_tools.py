@@ -116,7 +116,14 @@ def write_paper_to_markdown(
         lines.append("")
 
     # Collect topics from all database fields
-    for prefix in ["topic", "keywords", "fields", "relevance_order", "relevance"]:
+    for prefix in [
+        "topic",
+        "keywords",
+        "fields",
+        "relevance_order",
+        "relevance",
+        "subfields",
+    ]:
         lines.append(f"## {prefix}")
         for db in ["scopus", "openalex", "lens", "dimensions"]:
             prefix_db = f"{prefix}_{db}"

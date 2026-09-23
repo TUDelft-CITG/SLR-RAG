@@ -2,7 +2,12 @@ import pandas as pd
 import plotly.express as px
 
 
-def group_by_col_ref(df_input: pd.DataFrame, col_name: str, min_count_to_keep: int = 1):
+def group_by_col_ref(
+    df_input: pd.DataFrame,
+    col_name: str,
+    min_count_to_keep: int = 1,
+    reference_colunm="is_reference",
+):
     df_gb_top = (
         df_input.groupby([col_name])
         .size()
@@ -14,7 +19,7 @@ def group_by_col_ref(df_input: pd.DataFrame, col_name: str, min_count_to_keep: i
     df_gb_top = df_gb_top[(df_gb_top["count"] >= min_count_to_keep)]
 
     df_ret = (
-        df_input.groupby([col_name, "is_reference"])
+        df_input.groupby([col_name, reference_colunm])
         .size()
         .sort_values(ascending=False)
         .rename("count")
@@ -71,12 +76,15 @@ def explode_and_groupby_topic(
     name_topic_col: str,
     min_count_to_keep=1,
     separator=";",
+    reference_colunm="is_reference",
 ):
     df_input = df_input[df_input[name_topic_col].notna()].reset_index(drop=True).copy()
     df_input[name_topic_col] = df_input[name_topic_col].str.split(pat=separator)
     df_input = df_input.explode(name_topic_col)
     df_input[name_topic_col] = df_input[name_topic_col].str.strip()
-    return group_by_col_ref(df_input, name_topic_col, min_count_to_keep)
+    return group_by_col_ref(
+        df_input, name_topic_col, min_count_to_keep, reference_colunm=reference_colunm
+    )
 
 
 def plot_histogram(
@@ -85,9 +93,18 @@ def plot_histogram(
     min_count_to_keep=1,
     seperator: str = None,
     height=500,
+    reference_colunm="is_reference",
 ):
     if seperator is None:
-        gb = group_by_col_ref(df_input, col_name, min_count_to_keep)
+        gb = group_by_col_ref(
+            df_input, col_name, min_count_to_keep, reference_colunm=reference_colunm
+        )
     else:
-        gb = explode_and_groupby_topic(df_input, col_name, min_count_to_keep, seperator)
-    return px.bar(gb, y=col_name, color="is_reference", x="count", height=height)
+        gb = explode_and_groupby_topic(
+            df_input,
+            col_name,
+            min_count_to_keep,
+            seperator,
+            reference_colunm=reference_colunm,
+        )
+    return px.bar(gb, y=col_name, color=reference_colunm, x="count", height=height)

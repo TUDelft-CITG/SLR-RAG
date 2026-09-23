@@ -17,7 +17,6 @@ from slrrag.settings import (
 )
 
 
-
 def check_doi_in_scopus(doi: str) -> bool:
     """Check if a DOI exists in Scopus."""
     try:
@@ -36,7 +35,6 @@ def check_doi_in_scopus(doi: str) -> bool:
 # --- Scopus functions ---
 
 
-
 def to_query_scopus(query: str):
     """Query Scopus and return results."""
     scopus_query = f"""
@@ -45,21 +43,26 @@ TITLE-ABS-KEY( {query})
     return scopus_query
 
 
-def get_scopus_info_of_single_paper(id_paper : str):
+def get_scopus_info_of_single_paper(id_paper: str):
     if not pd.isna(id_paper):
         doc = AbstractRetrieval(identifier=id_paper, view="FULL")
         area_text = "|".join([x.area for x in doc.subject_areas])
-        return pd.Series((doc.language,area_text))
+        return pd.Series((doc.language, area_text))
     else:
         return pd.Series((pd.NA, pd.NA))
 
-def complete_scopus_df(df_input : DataFrame[SchemaPapers]) -> DataFrame[SchemaPapers]:
+
+def complete_scopus_df(df_input: DataFrame[SchemaPapers]) -> DataFrame[SchemaPapers]:
     pybliometrics.init(config_path=PATH_PYBLIOMETRICS_CONFIG)  # Init for scopus
-    df_input[[NAME_COL_LANGUAGE_SCOPUS, NAME_COL_TOPIC_SCOPUS]] = df_input[NAME_COL_ID_SCOPUS].apply(get_scopus_info_of_single_paper)
+    df_input[[NAME_COL_LANGUAGE_SCOPUS, NAME_COL_TOPIC_SCOPUS]] = df_input[
+        NAME_COL_ID_SCOPUS
+    ].apply(get_scopus_info_of_single_paper)
     return df_input
 
 
-def query_scopus(query: str, dry_run=False) -> DataFrame[SchemaPapers] | None:
+def query_scopus(
+    query: str, dry_run=False, refresh=True
+) -> DataFrame[SchemaPapers] | None:
     scopus_query = to_query_scopus(query)
     # print("Scopus Query :", scopus_query)
     try:
@@ -75,7 +78,7 @@ def query_scopus(query: str, dry_run=False) -> DataFrame[SchemaPapers] | None:
             query=scopus_query,
             verbose=True,
             subscriber=SCOPUS_IS_SUBSCRIBER,
-            refresh=False,
+            refresh=refresh,
             sort="-relevance",
         )
         return scopus_to_dict_list(scopus_search)

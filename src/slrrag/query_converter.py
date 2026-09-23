@@ -11,7 +11,12 @@ def query_to_dimensions_url(query: str) -> str:
     Returns:
         The corresponding Dimensions.ai URL with the query URL-encoded.
     """
-    encoded_query = query.replace('"', "%22").replace(" ", "%20").replace("\n", "%0A")
+    encoded_query = (
+        query.replace('"', "%22")
+        .replace(" ", "%20")
+        .replace("\n", "%0A")
+        .replace("\t", "")
+    )
     base_url = "https://app.dimensions.ai/discover/publication"
     return (
         f"{base_url}?search_mode=content&search_text={encoded_query}"

@@ -16,6 +16,7 @@ from slrrag.settings import (
     NAME_COL_PRIMARY_SUBFIELD_OPENALEX,
     NAME_COL_PRIMARY_TOPIC_OPENALEX,
     NAME_COL_RELEVANCE_OPENALEX,
+    NAME_COL_LANGUAGE_OPENALEX,
     PANDERA_LAZY_VALIDATION,
     PROJECT_ROOT,
     SchemaOpenAlexPapers,
@@ -45,9 +46,12 @@ def get_openalex_work_from_query(query: str):
     return Works().search_filter(title_and_abstract=query)
 
 
-def work_openalex_to_list(works: Works):
+def work_openalex_to_list(works: Works, dry_run=False):
     nb_papers_openalex = works.count()
     print(f"{nb_papers_openalex} found in Openalex.")
+    if dry_run:
+        print("Dry run activated for OpenAlex")
+        return []
     list_ret = []
     pager = works.paginate(per_page=DEFAULT_OPEN_ALEX_PAGING)
     for page in tqdm(pager, total=nb_papers_openalex / DEFAULT_OPEN_ALEX_PAGING):
@@ -66,6 +70,7 @@ def parse_openalex_list_to_dataframe(
         "abstract",
         "type",
         "relevance_score",
+        "language",
     ]
 
     # Due to legal reasons, we have to extract the abstract manually : https://pypi.org/project/pyalex/#get-abstract:~:text=Get%20abstract
@@ -137,6 +142,7 @@ def parse_openalex_list_to_dataframe(
             "publication_date": NAME_COL_DATE,
             "id": "id_openalex",
             "relevance_score": NAME_COL_RELEVANCE_OPENALEX,
+            "language": NAME_COL_LANGUAGE_OPENALEX,
         }
     )
     return_df["doi"] = return_df["doi"].str.removeprefix("https://doi.org/")
@@ -144,10 +150,12 @@ def parse_openalex_list_to_dataframe(
 
 
 # --- OpenAlex functions ---
-def query_openalex(query: str) -> DataFrame[SchemaOpenAlexPapers]:
+def query_openalex(query: str, dry_run=False) -> DataFrame[SchemaOpenAlexPapers]:
     """Query OpenAlex and return results as a pandas DataFrame."""
     print("Query :", query)
     works = get_openalex_work_from_query(query)
-
-    list_ret = work_openalex_to_list(works)
-    return parse_openalex_list_to_dataframe(list_ret)
+    list_ret = work_openalex_to_list(works, dry_run)
+    if dry_run:
+        return None
+    else:
+        return parse_openalex_list_to_dataframe(list_ret)
