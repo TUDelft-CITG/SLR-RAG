@@ -42,8 +42,10 @@ PATH_CSV_06 = PATH_OUTPUT / "06_picky_selection.csv"
 PATH_UPSET_DISTINCT = PATH_OUTPUT / "upset_distinct.html"
 PATH_UPSET_INTERSECT = PATH_OUTPUT / "upset_intersect.html"
 
-# Path of config for pybliometrics
+# Output of the papers enriched with Zotero metadata
+PATH_CSV_ZOTERO_QUERY_RESULTS = PATH_OUTPUT / "zotero_query_results.csv"
 
+# Path of config for pybliometrics
 PATH_PYBLIOMETRICS_CONFIG = PROJECT_ROOT / "pybliometrics.cfg"
 
 # Globl variables column names in dataframes
@@ -88,6 +90,13 @@ NAME_COL_KEYWORDS_DIMENSIONS = "keywords_dimensions"
 
 NAME_COL_LANGUAGE_SCOPUS = "language_scopus"
 NAME_COL_LANGUAGE_OPENALEX = "language_openalex"
+
+# Zotero
+NAME_COL_AUTHORS_ZOTERO = "authors_zotero"
+NAME_COL_JOURNAL_ZOTERO = "journal_zotero"
+NAME_COL_CONFERENCE_ZOTERO = "conference_zotero"
+NAME_COL_UNIVERSITY_ZOTERO = "university_zotero"
+NAME_COL_COUNTRY_ZOTERO = "country_zotero"
 
 # Type categories
 

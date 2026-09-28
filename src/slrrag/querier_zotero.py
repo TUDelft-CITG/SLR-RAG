@@ -4,17 +4,15 @@ import re
 import pandas as pd
 from dotenv import load_dotenv
 from tqdm import tqdm
-
+from pyzotero import zotero
+from pyzotero.zotero import Zotero
 from slrrag.settings import (
-    NAME_COL_ABSTRACT,
     NAME_COL_AUTHORS_ZOTERO,
     NAME_COL_CONFERENCE_ZOTERO,
     NAME_COL_COUNTRY_ZOTERO,
-    NAME_COL_DATE,
     NAME_COL_DOI,
     NAME_COL_JOURNAL_ZOTERO,
     NAME_COL_TITLE,
-    NAME_COL_TYPE,
     NAME_COL_UNIVERSITY_ZOTERO,
     PATH_CSV_01_QUERY_RESULTS,
     PATH_CSV_ZOTERO_QUERY_RESULTS,
@@ -24,20 +22,15 @@ from slrrag.settings import (
 # Zotero write API accepts at most 50 items per request
 ZOTERO_MAX_ITEMS_PER_REQUEST = 50
 
-# Mapping from our article types to Zotero item types
-ZOTERO_ITEM_TYPE_MAPPING = {
-    "article": "journalArticle",
-    "conference-paper": "conferencePaper",
-    "conference-proceeding": "conferencePaper",
-    "preprint": "preprint",
-    "book-chapter": "bookSection",
-    "book": "book",
-    "dissertation": "thesis",
-    "report": "report",
-    "seminar": "presentation",
-    "software": "computerProgram",
-    "other": "document",
-}
+# Policies when a collection with the same name already exists
+COLLECTION_IF_EXISTS_DO_NOTHING = "do nothing"
+COLLECTION_IF_EXISTS_OVERWRITE = "overwrite"
+COLLECTION_IF_EXISTS_ADD_NEW = "add new"
+COLLECTION_IF_EXISTS_POLICIES = (
+    COLLECTION_IF_EXISTS_DO_NOTHING,
+    COLLECTION_IF_EXISTS_OVERWRITE,
+    COLLECTION_IF_EXISTS_ADD_NEW,
+)
 
 
 def load_zotero_client():
@@ -48,7 +41,6 @@ def load_zotero_client():
         ZOTERO_API_KEY=<api key>
         ZOTERO_LIBRARY_TYPE=user   # or group
     """
-    from pyzotero import zotero
 
     load_dotenv(dotenv_path=PROJECT_ROOT / ".env")
     library_id = os.environ.get("ZOTERO_LIBRARY_ID")
@@ -63,7 +55,7 @@ def load_zotero_client():
     return zotero.Zotero(library_id, library_type, api_key)
 
 
-def get_collection_key(zot, name: str) -> str | None:
+def get_collection_key(zot : Zotero, name: str) -> str | None:
     """Return the key of the first collection whose name matches `name`."""
     for collection in zot.everything(zot.collections()):
         if collection["data"]["name"] == name:
@@ -72,9 +64,29 @@ def get_collection_key(zot, name: str) -> str | None:
 
 
 def create_collection(
-    zot, collection_name: str, parent_collection_name: str | None = None
+    zot : Zotero,
+    collection_name: str,
+    parent_collection_name: str | None = None,
+    if_exists: str = COLLECTION_IF_EXISTS_DO_NOTHING,
 ) -> str:
-    """Create a collection (optionally nested inside a parent) and return its key."""
+    """Create a collection (optionally nested inside a parent) and return its key.
+
+    If a collection with the same name already exists, `if_exists` decides:
+        - "do nothing": return the key of the existing collection unchanged
+        - "overwrite": erase every paper inside, then return its key
+        - "add new": keep its papers, then return its key
+    """
+    if if_exists not in COLLECTION_IF_EXISTS_POLICIES:
+        raise ValueError(
+            f"Invalid if_exists '{if_exists}', expected one of {COLLECTION_IF_EXISTS_POLICIES}."
+        )
+
+    existing_key = get_collection_key(zot, collection_name)
+    if existing_key is not None:
+        if if_exists == COLLECTION_IF_EXISTS_OVERWRITE:
+            remove_collection_items(zot, existing_key)
+        return existing_key
+
     parent_key = None
     if parent_collection_name is not None:
         parent_key = get_collection_key(zot, parent_collection_name)
@@ -89,53 +101,80 @@ def create_collection(
     return resp["success"]["0"]
 
 
-def paper_to_zotero_item(
-    zot, paper: pd.Series, collection_key: str, templates_cache: dict
-) -> dict:
-    """Build a Zotero item dict from one row of the papers DataFrame."""
-    item_type = ZOTERO_ITEM_TYPE_MAPPING.get(paper.get(NAME_COL_TYPE), "document")
-    if item_type not in templates_cache:
-        # Fetch the valid template for this type (fields not in it would be rejected)
-        templates_cache[item_type] = zot.item_template(item_type)
-    template = templates_cache[item_type].copy()
-
-    template[NAME_COL_TITLE] = paper[NAME_COL_TITLE]
-    template["collections"] = [collection_key]
-
-    doi = paper.get(NAME_COL_DOI)
-    if pd.notna(doi) and "DOI" in template:
-        template["DOI"] = str(doi).removeprefix("https://doi.org/")
-
-    abstract = paper.get(NAME_COL_ABSTRACT)
-    if pd.notna(abstract) and "abstractNote" in template:
-        template["abstractNote"] = str(abstract)
-
-    date = paper.get(NAME_COL_DATE)
-    if pd.notna(date) and "date" in template:
-        template["date"] = str(pd.Timestamp(date).date())
-
-    return template
+def remove_collection_items(zot : Zotero, collection_key: str):
+    """Remove every paper from the collection (the items stay in the library)."""
+    items = [
+        item
+        for item in zot.everything(zot.collection_items(collection_key))
+        if item["data"]["itemType"] not in ("attachment", "note")
+    ]
+    for item in tqdm(items, desc="Removing papers from the collection"):
+        zot.deletefrom_collection(collection_key, item)
 
 
-def upload_papers_to_collection(zot, df_papers: pd.DataFrame, collection_key: str):
-    """Upload every paper of the DataFrame into the collection, 50 at a time."""
-    templates_cache = {}
-    for start in tqdm(
-        range(0, len(df_papers), ZOTERO_MAX_ITEMS_PER_REQUEST),
-        total=1 + (len(df_papers) - 1) // ZOTERO_MAX_ITEMS_PER_REQUEST,
-    ):
-        batch = df_papers.iloc[start : start + ZOTERO_MAX_ITEMS_PER_REQUEST]
-        items = [
-            paper_to_zotero_item(zot, paper, collection_key, templates_cache)
-            for _, paper in batch.iterrows()
-        ]
-        resp = zot.create_items(items)
-        if resp.get("failed"):
-            print(
-                f"Warning: {len(resp['failed'])} item(s) rejected in batch: {resp['failed']}"
-            )
-        if not resp.get("success"):
-            raise RuntimeError(f"Zotero rejected the batch: {resp}")
+def fetch_library_papers(zot : Zotero) -> list[dict]:
+    """Return the API dict of every regular item of the Zotero library."""
+    return [
+        item
+        for item in zot.everything(zot.items())
+        if item["data"]["itemType"] not in ("attachment", "note")
+    ]
+
+
+def link_papers_to_collection(
+    zot : Zotero, df_papers: pd.DataFrame, collection_key: str
+) -> pd.DataFrame:
+    """Add the papers already in the Zotero library to the collection, report the others.
+
+    Papers are matched on normalized DOI first, then on normalized title.
+    Matched items are added to the collection (items already in it are left
+    as they are). Papers found nowhere in the library are printed at the end —
+    their DOI to paste into the Zotero magic wand, then the title of those
+    without a DOI to retrieve manually — and returned as a DataFrame.
+    """
+    by_doi, by_title = {}, {}
+    for item in fetch_library_papers(zot):
+        data = item["data"]
+        doi = normalize_doi(data.get("DOI"))
+        if doi and doi not in by_doi:
+            by_doi[doi] = item
+        title = data.get("title")
+        if title and title.strip().lower() not in by_title:
+            by_title[title.strip().lower()] = item
+
+    in_collection = {
+        item["key"] for item in zot.everything(zot.collection_items(collection_key))
+    }
+
+    to_add, unmatched = [], []
+    for _, paper in df_papers.iterrows():
+        item = by_doi.get(normalize_doi(paper.get(NAME_COL_DOI)))
+        title = paper.get(NAME_COL_TITLE)
+        if item is None and pd.notna(title):
+            item = by_title.get(str(title).strip().lower())
+        if item is None:
+            unmatched.append(paper)
+        elif item["key"] not in in_collection:
+            to_add.append(item)
+            in_collection.add(item["key"])
+
+    for item in tqdm(to_add, desc="Linking papers to the collection"):
+        zot.addto_collection(collection_key, item)
+    print(f"{len(to_add)} existing item(s) added to the collection.")
+
+    df_unmatched = pd.DataFrame(unmatched, columns=df_papers.columns)
+    if not df_unmatched.empty:
+        with_doi = df_unmatched[df_unmatched[NAME_COL_DOI].notna()]
+        if not with_doi.empty:
+            print(f"{len(with_doi)} paper(s) not in Zotero, DOI to paste in the magic wand:")
+            for doi in with_doi[NAME_COL_DOI]:
+                print(f"  {doi}")
+        without_doi = df_unmatched[df_unmatched[NAME_COL_DOI].isna()]
+        if not without_doi.empty:
+            print(f"{len(without_doi)} paper(s) not in Zotero and without a DOI, to retrieve manually:")
+            for title in without_doi[NAME_COL_TITLE]:
+                print(f"  {title}")
+    return df_unmatched
 
 
 def parse_extra_field(item_data: dict, field: str) -> str | None:
@@ -156,7 +195,7 @@ def parse_country(item_data: dict) -> str | None:
     return None
 
 
-def fetch_collection_metadata(zot, collection_key: str) -> pd.DataFrame:
+def fetch_collection_metadata(zot : Zotero, collection_key: str) -> pd.DataFrame:
     """Query Zotero for all items of the collection and extract the target fields."""
     records = []
     for item in zot.everything(zot.collection_items(collection_key)):
@@ -253,8 +292,9 @@ def main(
     collection_name: str = "SLR-RAG",
     parent_collection_name: str | None = None,
     output_path: str | None = None,
+    if_exists: str = COLLECTION_IF_EXISTS_DO_NOTHING,
 ):
-    """Create the collection, upload the papers, query Zotero, update the DataFrame."""
+    """Create the collection, link the papers, query Zotero, update the DataFrame."""
     input_path = input_path or PATH_CSV_01_QUERY_RESULTS
     output_path = output_path or PATH_CSV_ZOTERO_QUERY_RESULTS
 
@@ -262,11 +302,19 @@ def main(
     print(f"{len(df_papers)} papers loaded from {input_path}")
 
     zot = load_zotero_client()
-    collection_key = create_collection(zot, collection_name, parent_collection_name)
-    print(f"Collection '{collection_name}' created (key: {collection_key})")
+    already_exists = get_collection_key(zot, collection_name) is not None
+    collection_key = create_collection(
+        zot, collection_name, parent_collection_name, if_exists=if_exists
+    )
+    if already_exists:
+        print(f"Collection '{collection_name}' already exists (key: {collection_key})")
+    else:
+        print(f"Collection '{collection_name}' created (key: {collection_key})")
 
-    upload_papers_to_collection(zot, df_papers, collection_key)
-    print("All papers uploaded.")
+    if already_exists and if_exists == COLLECTION_IF_EXISTS_DO_NOTHING:
+        print(f"if_exists='{if_exists}': no paper linked.")
+    else:
+        link_papers_to_collection(zot, df_papers, collection_key)
 
     df_zotero = fetch_collection_metadata(zot, collection_key)
     print(f"{len(df_zotero)} items retrieved from Zotero.")

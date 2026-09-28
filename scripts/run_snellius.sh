@@ -16,5 +16,5 @@ ollama serve &> logs/logs_ollama.out & # run ollama serve in background, and ove
 echo "$(date): Waiting for ollama server to start"
 sleep 5 # wait for ollama server to start
 echo "$(date): Starting to run the script src/slrrag/ollama_analysis.py"
-uv run src/slrrag/ollama_analysis.py data/papers_selection/01_papers_query_results.csv data/papers_selection/03_papers_agent_anwsers.csv
+uv run src/slrrag/ollama_analysis.py data/papers_selection/02_papers_filtered_topic.csv data/papers_selection/03_papers_agent_anwsers.csv
 echo "Done : $(date)"
