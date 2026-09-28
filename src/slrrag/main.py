@@ -279,32 +279,8 @@ def remove_duplicates(merged_papers: DataFrame[SchemaPapers]):
     # Group by title and take first non-null value for each column, removing duplicates
     return merged_papers.groupby(NAME_COL_TITLE, as_index=False).first()
 
-
 @pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
-def complete_papers_df(
-    merged_papers: DataFrame[SchemaPapers], database_names: list[str]
-):
-    """
-    Make the clean of the datafram before further processing, and apply filters
-    setup in ADDITIONAL_PARAMETERS
-    """
-    print("---------CLEANING------------")
-    assert len(database_names) > 0, (
-        "List of database is empty. Please use at least one Database."
-    )
-    for db in database_names:
-        merged_papers[f"in_{db}"] = merged_papers[f"id_{db}"].notna()
-    merged_papers["is_found"] = pd.concat(
-        [merged_papers[f"in_{db}"] for db in database_names], axis=1
-    ).any(axis=1)
-    merged_papers["year"] = pd.to_datetime(
-        merged_papers[NAME_COL_DATE], format="mixed"
-    ).dt.year
-    merged_papers["year"] = merged_papers["year"].astype(
-        "Int64"
-    )  # To avoid having floats
-    merged_papers = add_is_reference_column(merged_papers)
-    # DOI Matches or title matches
+def filter_from_additional_parameters(merged_papers: DataFrame[SchemaPapers]):
     if MINIMUM_YEAR_NAME in ADDITIONAL_PARAMETERS:
         df_after = merged_papers[
             merged_papers["year"].isna()
@@ -336,6 +312,35 @@ def complete_papers_df(
         ), f"""one or more reference papers type are not in {ADDITIONAL_PARAMETERS[LIST_TYPE_TO_KEEP_NAME]}.
             {merged_papers[merged_papers["is_reference"] & ~merged_papers.index.isin(df_after.index)][[NAME_COL_TITLE, NAME_COL_TYPE]]}"""  # Make sure that a reference paper is not removed by the filtering
         merged_papers = df_after
+    return merged_papers
+
+
+@pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
+def complete_papers_df(
+    merged_papers: DataFrame[SchemaPapers], database_names: list[str]
+):
+    """
+    Make the clean of the datafram before further processing, and apply filters
+    setup in ADDITIONAL_PARAMETERS
+    """
+    print("---------CLEANING------------")
+    assert len(database_names) > 0, (
+        "List of database is empty. Please use at least one Database."
+    )
+    for db in database_names:
+        merged_papers[f"in_{db}"] = merged_papers[f"id_{db}"].notna()
+    merged_papers["is_found"] = pd.concat(
+        [merged_papers[f"in_{db}"] for db in database_names], axis=1
+    ).any(axis=1)
+    merged_papers["year"] = pd.to_datetime(
+        merged_papers[NAME_COL_DATE], format="mixed"
+    ).dt.year
+    merged_papers["year"] = merged_papers["year"].astype(
+        "Int64"
+    )  # To avoid having floats
+    merged_papers = add_is_reference_column(merged_papers)
+    # DOI Matches or title matches
+
     return_df = remove_duplicates(merged_papers)
     print(f"Removed {len(merged_papers) - len(return_df)} duplicates")
     return return_df
