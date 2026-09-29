@@ -200,9 +200,16 @@ SECOND_ROUND_QUESTIONS = {
         },
     ],
 }
-
-OLLAMA_MODELS = [
-    "granite4.1:3b",
-    "ministral-3:3b",
-    "llama3.2:3b",
+REASONING_MODELS = [
+    "qwen3.8:27b",
+    "gpt-oss:20b",
 ]
+
+LIGHT_MODELS = [
+#"granite4.2:30b",
+"ministral-3:14b",
+"llama3.1:8b",
+]
+
+OLLAMA_MODELS = LIGHT_MODELS
+

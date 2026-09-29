@@ -28,44 +28,53 @@ output_schema = {
 # class AnswerWithJustification(TypedDict):
 #     answer: str
 #     justification: Annotated[str | None, None, "A justification for the answer."]
-# Model configuration
-MISTRAL_MODEL = "ministral-3b-2512"
-SYSTEM_PROMPT = """
-You are an agent that analyses papers, and your goal is respond to questions about it, that will be asked.
-
-You will be given a title, abstract. Below, you will find a list of questions 
-For each question, provide the anwser ONLY IN BINARY FORMAT (True or False), 
-and a small explanation in one or two sentences.
-Title: {title}\nAbstract: {abstract}\nQuestion: {question}\nOnly answer with 'True' or 'False', without a dot, nothing else."
-"""
-OLLAMA_MODEL = OLLAMA_MODELS[0]  # TODO : Make as a list
-
+# Model configuration 
 
 def setup_chat_agent(name_ollama_model: str) -> ChatOllama:
     """Initialize Chat agent."""
     return ChatOllama(model=name_ollama_model)
+PROMPT="""
+You are an expert in nautical safety, especially about assessing risk assessment of collision between vessels and offshore platforms. You are conducting a literature review. 
+Your task is to evaluate studies based on specific crtiteria.
 
+Inclusion Criteria:
+- Goals: Papers that talks about quantitative risk assessment of collision and allision between vessels and offshore platforms.
+- Environment: The context must be related to an offshore infrastructure, like oil platform or wind farms.
+- Study Design: The paper should present a methodology to assess the risk of collision.
+
+Exclusion Criteria:
+- The paper does respond to all the inclusion criteria
+- The paper is not in english
+- The paper analyzes the consequence of the collision on the infrastructures/ships, but does not study its likelihood.
+- The paper talks about other risks than collisions between vessels and offshore infrastructures.
+
+Answer with a JSON object containing:
+- 'answer': 'True' or 'False'
+- 'explanation': a short explanation (1-2 sentences)
+
+Title: {title}
+Abstract: {abstract}
+"""
 
 def analyze_paper(
-    agent: ChatOllama, title: str, abstract: str, questions: dict, model_name: str
+    agent: ChatOllama, title: str, abstract: str, model_name: str, input_prompt: str
 ) -> dict:
     """Use the agent to answer questions about a paper."""
     answers = {}
-    for q in questions:
-        input_text = f"You are a precise assistant that analyse the tite and abstract of a paper to answer binary question. Answer with a JSON object containing:\n- 'answer': 'True' or 'False'\n- 'justification': a short explanation (1-2 sentences)\nTitle: {title}\nAbstract: {abstract}\nQuestion: {q.get('question')}"
-        response = agent.invoke(input_text)
-        answers[q.get("name", "") + "_answer_" + model_name] = response.get("answer")
+    input_text = input_prompt.format(title=title,abstract=abstract)
+    response = agent.invoke(input_text)
+    answers["answer_" + model_name] = response.get("answer")
 
-        answers[q.get("name", "") + "_justification_" + model_name] = response.get(
-            "explanation"
-        )
+    answers["explanation_" + model_name] = response.get(
+        "explanation"
+    )
     return answers
 
 
 def analyze_papers_with_list_agents(
     list_agents_name: list[str],
     papers_df: DataFrame[SchemaPapers],
-    questions: dict,
+    input_prompt:str
 ) -> pd.DataFrame:
     """Analyze papers using agent and return DataFrame with answers."""
 
@@ -74,7 +83,7 @@ def analyze_papers_with_list_agents(
             agent_input,
             paper_input["title"],
             paper_input["abstract"],
-            questions,
+            input_prompt=input_prompt,
             model_name=model_name,
         )
         return pd.Series(answers)
@@ -83,7 +92,7 @@ def analyze_papers_with_list_agents(
         print("-----", agent_model_name, "-------")
         agent = ChatOllama(model=agent_model_name).with_structured_output(output_schema)
         outputs_questions = papers_df.progress_apply(
-            lambda x: apply_func(x, agent_input=agent, model_name=agent_model_name),
+            lambda paper_el: apply_func(paper_input=paper_el, agent_input=agent, model_name=agent_model_name),
             axis=1,
         )
         papers_df = pd.concat((papers_df, outputs_questions), axis=1)
@@ -94,8 +103,6 @@ def analyze_papers_with_list_agents(
 if __name__ == "__main__":
     import sys
     from pathlib import Path
-
-    from slrrag.input import FIRST_ROUND_QUESTIONS
     from slrrag.toolbox.files import save_dataframe_to_csv
 
     print(f"Analyzing papers with agent : {OLLAMA_MODELS}")
@@ -106,9 +113,9 @@ if __name__ == "__main__":
     input_df = pd.read_csv(input_csv)
     # Uncomment next line for testing purposes
     # input_df = pd.concat((input_df.head(4), input_df[input_df["is_reference"]]))
-    print("Input questions", FIRST_ROUND_QUESTIONS)
+    print("Input prompt", PROMPT)
     results_df = analyze_papers_with_list_agents(
-        OLLAMA_MODELS, input_df, FIRST_ROUND_QUESTIONS
+        OLLAMA_MODELS, input_df, PROMPT
     )
     print(f"Saving results to {output_csv}")
     save_dataframe_to_csv(results_df, output_csv)
