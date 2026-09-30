@@ -28,12 +28,15 @@ output_schema = {
 # class AnswerWithJustification(TypedDict):
 #     answer: str
 #     justification: Annotated[str | None, None, "A justification for the answer."]
-# Model configuration 
+# Model configuration
+
 
 def setup_chat_agent(name_ollama_model: str) -> ChatOllama:
     """Initialize Chat agent."""
     return ChatOllama(model=name_ollama_model)
-PROMPT="""
+
+# TODO : make it simpler
+DEFAULT_PROMPT = """
 You are an expert in nautical safety, especially about assessing risk assessment of collision between vessels and offshore platforms. You are conducting a literature review. 
 Your task is to evaluate studies based on specific crtiteria.
 
@@ -56,25 +59,22 @@ Title: {title}
 Abstract: {abstract}
 """
 
+
 def analyze_paper(
     agent: ChatOllama, title: str, abstract: str, model_name: str, input_prompt: str
 ) -> dict:
     """Use the agent to answer questions about a paper."""
     answers = {}
-    input_text = input_prompt.format(title=title,abstract=abstract)
+    input_text = input_prompt.format(title=title, abstract=abstract)
     response = agent.invoke(input_text)
     answers["answer_" + model_name] = response.get("answer")
 
-    answers["explanation_" + model_name] = response.get(
-        "explanation"
-    )
+    answers["explanation_" + model_name] = response.get("explanation")
     return answers
 
 
 def analyze_papers_with_list_agents(
-    list_agents_name: list[str],
-    papers_df: DataFrame[SchemaPapers],
-    input_prompt:str
+    list_agents_name: list[str], papers_df: DataFrame[SchemaPapers], input_prompt: str
 ) -> pd.DataFrame:
     """Analyze papers using agent and return DataFrame with answers."""
 
@@ -92,7 +92,9 @@ def analyze_papers_with_list_agents(
         print("-----", agent_model_name, "-------")
         agent = ChatOllama(model=agent_model_name).with_structured_output(output_schema)
         outputs_questions = papers_df.progress_apply(
-            lambda paper_el: apply_func(paper_input=paper_el, agent_input=agent, model_name=agent_model_name),
+            lambda paper_el: apply_func(
+                paper_input=paper_el, agent_input=agent, model_name=agent_model_name
+            ),
             axis=1,
         )
         papers_df = pd.concat((papers_df, outputs_questions), axis=1)
@@ -113,10 +115,8 @@ if __name__ == "__main__":
     input_df = pd.read_csv(input_csv)
     # Uncomment next line for testing purposes
     # input_df = pd.concat((input_df.head(4), input_df[input_df["is_reference"]]))
-    print("Input prompt", PROMPT)
-    results_df = analyze_papers_with_list_agents(
-        OLLAMA_MODELS, input_df, PROMPT
-    )
+    print("Input prompt", DEFAULT_PROMPT)
+    results_df = analyze_papers_with_list_agents(OLLAMA_MODELS, input_df, DEFAULT_PROMPT)
     print(f"Saving results to {output_csv}")
     save_dataframe_to_csv(results_df, output_csv)
     print(f"Analysis complete. Results saved to {output_csv}")

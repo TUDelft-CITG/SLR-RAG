@@ -206,10 +206,9 @@ REASONING_MODELS = [
 ]
 
 LIGHT_MODELS = [
-#"granite4.2:30b",
-"ministral-3:14b",
-"llama3.1:8b",
+    # "granite4.2:30b",
+    "ministral-3:14b",
+    "llama3.1:8b",
 ]
 
 OLLAMA_MODELS = LIGHT_MODELS
-

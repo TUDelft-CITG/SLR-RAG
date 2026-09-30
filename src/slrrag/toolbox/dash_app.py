@@ -215,7 +215,9 @@ def create_roc_curve_tab(
             ),
             dcc.Graph(
                 id="roc-curve",
-                figure=calculate_roc_data(df_input, model_columns,y_true_col=y_true_col),
+                figure=calculate_roc_data(
+                    df_input, model_columns, y_true_col=y_true_col
+                ),
             ),
         ]
     )

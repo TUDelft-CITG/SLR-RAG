@@ -55,7 +55,7 @@ def load_zotero_client():
     return zotero.Zotero(library_id, library_type, api_key)
 
 
-def get_collection_key(zot : Zotero, name: str) -> str | None:
+def get_collection_key(zot: Zotero, name: str) -> str | None:
     """Return the key of the first collection whose name matches `name`."""
     for collection in zot.everything(zot.collections()):
         if collection["data"]["name"] == name:
@@ -64,7 +64,7 @@ def get_collection_key(zot : Zotero, name: str) -> str | None:
 
 
 def create_collection(
-    zot : Zotero,
+    zot: Zotero,
     collection_name: str,
     parent_collection_name: str | None = None,
     if_exists: str = COLLECTION_IF_EXISTS_DO_NOTHING,
@@ -101,7 +101,7 @@ def create_collection(
     return resp["success"]["0"]
 
 
-def remove_collection_items(zot : Zotero, collection_key: str):
+def remove_collection_items(zot: Zotero, collection_key: str):
     """Remove every paper from the collection (the items stay in the library)."""
     items = [
         item
@@ -112,7 +112,7 @@ def remove_collection_items(zot : Zotero, collection_key: str):
         zot.deletefrom_collection(collection_key, item)
 
 
-def fetch_library_papers(zot : Zotero) -> list[dict]:
+def fetch_library_papers(zot: Zotero) -> list[dict]:
     """Return the API dict of every regular item of the Zotero library."""
     return [
         item
@@ -122,7 +122,7 @@ def fetch_library_papers(zot : Zotero) -> list[dict]:
 
 
 def link_papers_to_collection(
-    zot : Zotero, df_papers: pd.DataFrame, collection_key: str
+    zot: Zotero, df_papers: pd.DataFrame, collection_key: str
 ) -> pd.DataFrame:
     """Add the papers already in the Zotero library to the collection, report the others.
 
@@ -166,12 +166,16 @@ def link_papers_to_collection(
     if not df_unmatched.empty:
         with_doi = df_unmatched[df_unmatched[NAME_COL_DOI].notna()]
         if not with_doi.empty:
-            print(f"{len(with_doi)} paper(s) not in Zotero, DOI to paste in the magic wand:")
+            print(
+                f"{len(with_doi)} paper(s) not in Zotero, DOI to paste in the magic wand:"
+            )
             for doi in with_doi[NAME_COL_DOI]:
                 print(f"  {doi}")
         without_doi = df_unmatched[df_unmatched[NAME_COL_DOI].isna()]
         if not without_doi.empty:
-            print(f"{len(without_doi)} paper(s) not in Zotero and without a DOI, to retrieve manually:")
+            print(
+                f"{len(without_doi)} paper(s) not in Zotero and without a DOI, to retrieve manually:"
+            )
             for title in without_doi[NAME_COL_TITLE]:
                 print(f"  {title}")
     return df_unmatched
@@ -195,7 +199,7 @@ def parse_country(item_data: dict) -> str | None:
     return None
 
 
-def fetch_collection_metadata(zot : Zotero, collection_key: str) -> pd.DataFrame:
+def fetch_collection_metadata(zot: Zotero, collection_key: str) -> pd.DataFrame:
     """Query Zotero for all items of the collection and extract the target fields."""
     records = []
     for item in zot.everything(zot.collection_items(collection_key)):
@@ -267,9 +271,9 @@ def update_dataframe_with_zotero(
     df_merged = df_merged.merge(df_doi, how="left", on="_match_doi")
 
     # Fallback: match the rows still without metadata by title
-    unmatched_mask = df_merged[NAME_COL_AUTHORS_ZOTERO].isna() & df_merged[
-        "_match_title"
-    ].notna()
+    unmatched_mask = (
+        df_merged[NAME_COL_AUTHORS_ZOTERO].isna() & df_merged["_match_title"].notna()
+    )
     if unmatched_mask.any():
         df_title = df_zotero[df_zotero["_match_doi"].isna()].drop(
             columns=[NAME_COL_DOI, NAME_COL_TITLE, "_match_doi"]
@@ -278,9 +282,7 @@ def update_dataframe_with_zotero(
         df_merged.loc[unmatched_mask, zotero_columns] = (
             df_merged.loc[unmatched_mask]
             .drop(columns=zotero_columns, errors="ignore")
-            .merge(df_title, how="left", on="_match_title", sort=False)[
-                zotero_columns
-            ]
+            .merge(df_title, how="left", on="_match_title", sort=False)[zotero_columns]
             .to_numpy()
         )
 

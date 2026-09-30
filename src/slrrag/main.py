@@ -215,7 +215,7 @@ def merge_papers(
     right_df: DataFrame[SchemaPapers],
     right_db_name: str,
     name_col_title=NAME_COL_TITLE,
-    need_to_slugify=True
+    need_to_slugify=True,
 ) -> DataFrame[SchemaPapers]:
     """Merge two paper DataFrames by slugify title, keeping only specified fields.
 
@@ -253,7 +253,7 @@ def merge_papers(
         NAME_COL_ABSTRACT,
         NAME_COL_TYPE,
         NAME_COL_YEAR,
-        name_col_title
+        name_col_title,
     }
     # Combine fields - prefer left database
     for col in columns_to_combine:
@@ -283,6 +283,7 @@ def add_is_reference_column(merged_papers: DataFrame[SchemaPapers]):
 def remove_duplicates(merged_papers: DataFrame[SchemaPapers]):
     # Group by title and take first non-null value for each column, removing duplicates
     return merged_papers.groupby(NAME_COL_TITLE, as_index=False).first()
+
 
 @pa.check_types(lazy=PANDERA_LAZY_VALIDATION)
 def filter_from_additional_parameters(merged_papers: DataFrame[SchemaPapers]):
