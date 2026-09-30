@@ -38,9 +38,9 @@ You are an expert in nautical safety, especially about assessing risk assessment
 Your task is to evaluate studies based on specific crtiteria.
 
 Inclusion Criteria:
-- Goals: Papers that talks about quantitative risk assessment of collision and allision between vessels and offshore platforms.
-- Environment: The context must be related to an offshore infrastructure, like oil platform or wind farms.
-- Study Design: The paper should present a methodology to assess the risk of collision.
+- Goals : Papers with at least one of these five goals ; 1) Quantitative risk assessment of collision and allision between vessels and offshore infrastructures. 2) Safe distance between offshore infrastructures and maritime traffic. 3) Decision making of location of infrastructures or maritime routes, taking account of maritime traffic safety. 4) Operational risk assessment of collision in real-time. 5) Impact of offshore infrastructure on maritime traffic.
+- Environment: The context must be related to an offshore infrastructure, like oil platform or wind farms, or other similar infrastructures.
+- Study Design: The paper should present a quantitative methodology to assess nautical safety with an emphasize on factors that increase risk of collision.
 
 Exclusion Criteria:
 - The paper does respond to all the inclusion criteria
