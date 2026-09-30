@@ -214,8 +214,10 @@ def merge_papers(
     left_df: DataFrame[SchemaPapers],
     right_df: DataFrame[SchemaPapers],
     right_db_name: str,
+    name_col_title=NAME_COL_TITLE,
+    need_to_slugify=True
 ) -> DataFrame[SchemaPapers]:
-    """Merge two paper DataFrames by DOI/title, keeping only specified fields.
+    """Merge two paper DataFrames by slugify title, keeping only specified fields.
 
     Args:
         left_df: Left DataFrame to merge (can already contain id_{db} columns)
@@ -229,10 +231,12 @@ def merge_papers(
     # Temporary Key is the DOI, Title if the DOI is None.
     # Sometimes, doi / title do not have same uppercase : 10.1017/S0373463319000444 == 10.1017/s0373463319000444.
     # BUG: Will have duplicata if one has doi and not the other
-
-    left_df["temp_key"] = left_df[NAME_COL_TITLE].apply(slugify)
-    right_df["temp_key"] = right_df[NAME_COL_TITLE].apply(slugify)
-
+    if need_to_slugify:
+        left_df["temp_key"] = left_df[name_col_title].apply(slugify)
+        right_df["temp_key"] = right_df[name_col_title].apply(slugify)
+    else:
+        left_df["temp_key"] = left_df[name_col_title]
+        right_df["temp_key"] = right_df[name_col_title]
     # Merge by temp_key
     merged_df = pd.merge(
         left_df,
@@ -242,14 +246,15 @@ def merge_papers(
         suffixes=("", f"_{right_db_name}"),
     )
     merged_df = merged_df.drop(columns=["temp_key"])
-    columns_to_combine = [
+    columns_to_combine = {
         NAME_COL_DOI,
         NAME_COL_TITLE,
         NAME_COL_DATE,
         NAME_COL_ABSTRACT,
         NAME_COL_TYPE,
         NAME_COL_YEAR,
-    ]
+        name_col_title
+    }
     # Combine fields - prefer left database
     for col in columns_to_combine:
         merged_df[col] = merged_df[col].fillna(

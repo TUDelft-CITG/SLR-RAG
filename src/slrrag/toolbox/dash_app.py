@@ -191,7 +191,9 @@ def create_data_table_tab(
 
 
 def create_roc_curve_tab(
-    df_input: pd.DataFrame, model_columns: list[str] | None = None
+    df_input: pd.DataFrame,
+    model_columns: list[str] | None = None,
+    y_true_col: str = "is_picky_kept",
 ) -> html.Div:
     """Create the ROC Curve tab content.
 
@@ -213,7 +215,7 @@ def create_roc_curve_tab(
             ),
             dcc.Graph(
                 id="roc-curve",
-                figure=calculate_roc_data(df_input, model_columns),
+                figure=calculate_roc_data(df_input, model_columns,y_true_col=y_true_col),
             ),
         ]
     )
@@ -328,6 +330,7 @@ class AppLayoutBuilder:
         self,
         df_input: pd.DataFrame | None = None,
         model_columns: list[str] | None = None,
+        y_true_col: str = "is_picky_kept",
     ) -> "AppLayoutBuilder":
         """Add a ROC curve tab to the layout.
 
@@ -344,7 +347,7 @@ class AppLayoutBuilder:
             dcc.Tab(
                 label="ROC Curve",
                 value="roc-curve",
-                children=[create_roc_curve_tab(df, cols)],
+                children=[create_roc_curve_tab(df, cols, y_true_col)],
             )
         )
         return self
@@ -441,6 +444,7 @@ def create_app_layout(
     df_input: pd.DataFrame | None = None,
     model_columns: list[str] | None = None,
     binary_columns: list[str] | None = None,
+    human_kept_col="answer_human",
 ) -> AppLayoutBuilder:
     """Create an AppLayoutBuilder for building Dash app layouts with a functional paradigm.
 

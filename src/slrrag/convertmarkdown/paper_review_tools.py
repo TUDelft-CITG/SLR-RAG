@@ -168,15 +168,28 @@ def write_series_papers_into_markdown(
         >>> created_files = write_paper_into_markdown(df, output_dir="./my_papers", batch_size=50)
         >>> print(f"Created {len(created_files)} markdown files")
     """
-    created_files = []
+    # Sort if relevance in columns, first openalex and then scopus
+        # The boolean indicates if it is ascending or not
+    dict_sort_relevance = {
+        NAME_COL_RELEVANCE_OPENALEX: False,
+        NAME_COL_RELEVANCE_ORDER_SCOPUS: True,
+    }
+    list_col_sort = [x for x in dict_sort_relevance if x in df.columns]
+    list_ascending = [
+        dict_sort_relevance[x] for x in dict_sort_relevance if x in df.columns
+    ]
+    if len(list_col_sort) > 0:
+        df = df.sort_values(by=list_col_sort, ascending=list_ascending)
 
+    created_files = []
+    
     # Ensure output directory exists
     Path(output_dir).mkdir(parents=True, exist_ok=True)
 
     # Calculate number of batches needed
     total_papers = len(df)
     num_batches = (total_papers + batch_size - 1) // batch_size
-
+    nb_duplicates = 0
     # Iterate through each batch
     for batch_num in tqdm(range(num_batches), desc="Processing batches", unit="batch"):
         start_idx = batch_num * batch_size
@@ -203,6 +216,7 @@ def write_series_papers_into_markdown(
 
             # Check if file exists and overwrite is False
             if not overwrite and os.path.exists(filepath):
+                nb_duplicates+=1
                 continue
 
             # Write the paper
@@ -213,8 +227,9 @@ def write_series_papers_into_markdown(
             )
             created_files.append(created_path)
 
-    print(f"\nTotal files created: {len(created_files)} in {num_batches} batch folders")
+    print(f"\nTotal files created: {len(created_files)} in {num_batches} batch folders, {nb_duplicates} duplicates {'overwrited' if overwrite else 'skipped'}.")
     return created_files
+
 
 
 # Example usage
@@ -231,18 +246,7 @@ if __name__ == "__main__":
 
     # Read the CSV
     df = pd.read_csv(input_csv)
-    # Sort if relevance in columns, first openalex and then scopus
-    # The boolean indicates if it is ascending or not
-    dict_sort_relevance = {
-        NAME_COL_RELEVANCE_OPENALEX: False,
-        NAME_COL_RELEVANCE_ORDER_SCOPUS: True,
-    }
-    list_col_sort = [x for x in dict_sort_relevance if x in df.columns]
-    list_ascending = [
-        dict_sort_relevance[x] for x in dict_sort_relevance if x in df.columns
-    ]
-    if len(list_col_sort) > 0:
-        df = df.sort_values(by=list_col_sort, ascending=list_ascending)
+    
     # Create markdown files
     print(f"Processing {len(df)} papers from {input_csv}...")
     created_files = write_series_papers_into_markdown(df, output_dir=output_dir)
