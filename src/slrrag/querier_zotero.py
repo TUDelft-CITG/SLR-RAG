@@ -1,3 +1,4 @@
+import logging
 import os
 import re
 
@@ -18,6 +19,8 @@ from slrrag.settings import (
     PATH_CSV_ZOTERO_QUERY_RESULTS,
     PROJECT_ROOT,
 )
+
+logger = logging.getLogger(__name__)
 
 # Zotero write API accepts at most 50 items per request
 ZOTERO_MAX_ITEMS_PER_REQUEST = 50
@@ -132,8 +135,12 @@ def link_papers_to_collection(
     their DOI to paste into the Zotero magic wand, then the title of those
     without a DOI to retrieve manually — and returned as a DataFrame.
     """
+    logger.info(
+        "Fetching library",
+    )
+    library_papers = fetch_library_papers(zot)
     by_doi, by_title = {}, {}
-    for item in fetch_library_papers(zot):
+    for item in library_papers:
         data = item["data"]
         doi = normalize_doi(data.get("DOI"))
         if doi and doi not in by_doi:
@@ -141,31 +148,61 @@ def link_papers_to_collection(
         title = data.get("title")
         if title and title.strip().lower() not in by_title:
             by_title[title.strip().lower()] = item
+    logger.info(
+        "Library indexed: %d paper(s), %d with a DOI, %d with a title.",
+        len(library_papers),
+        len(by_doi),
+        len(by_title),
+    )
 
     in_collection = {
         item["key"] for item in zot.everything(zot.collection_items(collection_key))
     }
+    logger.info(
+        "Collection '%s' currently holds %d item(s).",
+        collection_key,
+        len(in_collection),
+    )
 
     to_add, unmatched = [], []
     for _, paper in df_papers.iterrows():
-        item = by_doi.get(normalize_doi(paper.get(NAME_COL_DOI)))
+        doi = normalize_doi(paper.get(NAME_COL_DOI))
         title = paper.get(NAME_COL_TITLE)
-        if item is None and pd.notna(title):
-            item = by_title.get(str(title).strip().lower())
+        item = by_doi.get(doi)
+        if item is not None:
+            logger.debug("Matched by DOI %s: %s", doi, item["key"])
+        elif pd.notna(title) and by_title.get(str(title).strip().lower()) is not None:
+            item = by_title[str(title).strip().lower()]
+            logger.debug("Matched by title '%s': %s", title, item["key"])
         if item is None:
             unmatched.append(paper)
+            logger.debug(
+                "No match in library: DOI=%s, title=%s", paper.get(NAME_COL_DOI), title
+            )
         elif item["key"] not in in_collection:
             to_add.append(item)
             in_collection.add(item["key"])
+        else:
+            logger.debug("Already in collection: %s", item["key"])
 
     for item in tqdm(to_add, desc="Linking papers to the collection"):
         zot.addto_collection(collection_key, item)
     print(f"{len(to_add)} existing item(s) added to the collection.")
+    logger.info(
+        "Linking done for %d paper(s): %d added to the collection, %d unmatched.",
+        len(df_papers),
+        len(to_add),
+        len(unmatched),
+    )
 
     df_unmatched = pd.DataFrame(unmatched, columns=df_papers.columns)
     if not df_unmatched.empty:
         with_doi = df_unmatched[df_unmatched[NAME_COL_DOI].notna()]
         if not with_doi.empty:
+            logger.info(
+                "%d paper(s) not in Zotero, DOI to paste in the magic wand.",
+                len(with_doi),
+            )
             print(
                 f"{len(with_doi)} paper(s) not in Zotero, DOI to paste in the magic wand:"
             )
@@ -173,6 +210,10 @@ def link_papers_to_collection(
                 print(f"  {doi}")
         without_doi = df_unmatched[df_unmatched[NAME_COL_DOI].isna()]
         if not without_doi.empty:
+            logger.info(
+                "%d paper(s) not in Zotero and without a DOI, to retrieve manually.",
+                len(without_doi),
+            )
             print(
                 f"{len(without_doi)} paper(s) not in Zotero and without a DOI, to retrieve manually:"
             )
@@ -328,4 +369,7 @@ def main(
 
 
 if __name__ == "__main__":
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s"
+    )
     main(collection_name="SLR-RAG", parent_collection_name=None)

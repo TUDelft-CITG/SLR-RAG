@@ -44,7 +44,7 @@ def create_data_table(
     )
 
 
-def build_conditional_styling(df_input, binary_columns):
+def build_conditional_styling(df_input: pd.DataFrame, binary_columns: list[str]):
     """Build conditional styling for the data table.
 
     Args:
@@ -307,6 +307,7 @@ class AppLayoutBuilder:
         self,
         df_input: pd.DataFrame | None = None,
         model_columns: list[str] | None = None,
+        binary_columns: list[str] | None = None,
     ) -> "AppLayoutBuilder":
         """Add a data table tab to the layout.
 
@@ -319,11 +320,21 @@ class AppLayoutBuilder:
         """
         df = df_input or self.df_input
         cols = model_columns or self.model_columns
+        if binary_columns is not None:
+            style_data_conditional = build_conditional_styling(
+                df, binary_columns=binary_columns
+            )
+        else:
+            style_data_conditional = None
         self.tabs.append(
             dcc.Tab(
                 label="Data Table",
                 value="data-table",
-                children=[create_data_table_tab(df, cols)],
+                children=[
+                    create_data_table_tab(
+                        df, cols, style_data_conditional=style_data_conditional
+                    )
+                ],
             )
         )
         return self
