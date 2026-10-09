@@ -9,6 +9,9 @@ from slrrag.input import OLLAMA_MODELS
 from slrrag.settings import SchemaPapers
 
 tqdm.pandas()
+
+IS_REASONING_ACTIVATED = False
+
 output_schema = {
     "type": "object",
     "properties": {
@@ -30,10 +33,6 @@ output_schema = {
 #     justification: Annotated[str | None, None, "A justification for the answer."]
 # Model configuration
 
-
-def setup_chat_agent(name_ollama_model: str) -> ChatOllama:
-    """Initialize Chat agent."""
-    return ChatOllama(model=name_ollama_model)
 
 # TODO : make it simpler
 DEFAULT_PROMPT = """
@@ -89,8 +88,10 @@ def analyze_papers_with_list_agents(
         return pd.Series(answers)
 
     for agent_model_name in list_agents_name:
-        print("-----", agent_model_name, "-------")
-        agent = ChatOllama(model=agent_model_name).with_structured_output(output_schema)
+        print("-----", agent_model_name, "Reasoning : ", IS_REASONING_ACTIVATED ," -------")
+        agent = ChatOllama(
+            model=agent_model_name, reasoning=IS_REASONING_ACTIVATED
+        ).with_structured_output(output_schema)
         outputs_questions = papers_df.progress_apply(
             lambda paper_el: apply_func(
                 paper_input=paper_el, agent_input=agent, model_name=agent_model_name
@@ -116,7 +117,9 @@ if __name__ == "__main__":
     # Uncomment next line for testing purposes
     # input_df = pd.concat((input_df.head(4), input_df[input_df["is_reference"]]))
     print("Input prompt", DEFAULT_PROMPT)
-    results_df = analyze_papers_with_list_agents(OLLAMA_MODELS, input_df, DEFAULT_PROMPT)
+    results_df = analyze_papers_with_list_agents(
+        OLLAMA_MODELS, input_df, DEFAULT_PROMPT
+    )
     print(f"Saving results to {output_csv}")
     save_dataframe_to_csv(results_df, output_csv)
     print(f"Analysis complete. Results saved to {output_csv}")
